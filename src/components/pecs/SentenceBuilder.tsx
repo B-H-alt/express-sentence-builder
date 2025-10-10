@@ -29,7 +29,7 @@ export const SentenceBuilder = ({ showPictures }: SentenceBuilderProps) => {
 
   return (
     <div 
-      className="h-full bg-sentence-zone rounded-3xl border-2 border-dashed border-primary/30 p-4 flex flex-col"
+      className="min-h-full max-h-full bg-sentence-zone rounded-3xl border-2 border-dashed border-primary/30 p-4 flex flex-col overflow-hidden"
       onDrop={(e) => {
         e.preventDefault();
         const cardData = e.dataTransfer.getData("card");
@@ -68,9 +68,9 @@ export const SentenceBuilder = ({ showPictures }: SentenceBuilderProps) => {
         </div>
       </div>
       
-      <div className="flex-1 flex items-center gap-3 overflow-x-auto pb-2">
+      <div className="flex-1 flex flex-wrap items-start gap-3 overflow-y-auto pb-2">
         {sentence.length === 0 ? (
-          <p className="text-muted-foreground text-center w-full">
+          <p className="text-muted-foreground text-center w-full py-8">
             Tap or drag cards here to build your sentence
           </p>
         ) : (

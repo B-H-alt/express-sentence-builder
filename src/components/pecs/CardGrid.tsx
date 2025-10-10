@@ -8,9 +8,11 @@ interface CardGridProps {
 }
 
 export const CardGrid = ({ selectedCategory, showPictures }: CardGridProps) => {
-  const { cards, favorites, addToSentence, toggleFavorite, incrementUsage } = useCardStore();
+  const { favorites, addToSentence, toggleFavorite, incrementUsage, getFilteredCards } = useCardStore();
 
-  const filteredCards = cards.filter(card => {
+  const levelFilteredCards = getFilteredCards();
+  
+  const filteredCards = levelFilteredCards.filter(card => {
     if (selectedCategory === "all") return true;
     if (selectedCategory === "favorites") return favorites.includes(card.id);
     return card.category === selectedCategory;
