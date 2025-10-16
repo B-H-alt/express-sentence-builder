@@ -283,6 +283,17 @@ export const useCardStore = create<CardStore>()(
     }),
     {
       name: "pecs-storage",
+      version: 2, // Increment to force card updates
+      migrate: (persistedState: any, version: number) => {
+        if (version < 2) {
+          // Force reload with new card data
+          return {
+            ...persistedState,
+            cards: allCards,
+          };
+        }
+        return persistedState;
+      },
     }
   )
 );
