@@ -18,38 +18,69 @@ interface CardStore {
   getFilteredCards: () => Card[];
 }
 
-// Level 1 - Beginner (30 cards)
+// Level 1 - Beginner (46 cards)
 const level1Cards: Card[] = [
-  { id: "l1-1", text: "mom", category: "people", usage: 0, level: 1 },
-  { id: "l1-2", text: "dad", category: "people", usage: 0, level: 1 },
-  { id: "l1-3", text: "teacher", category: "people", usage: 0, level: 1 },
-  { id: "l1-4", text: "happy", category: "feelings", usage: 0, level: 1 },
-  { id: "l1-5", text: "sad", category: "feelings", usage: 0, level: 1 },
-  { id: "l1-6", text: "mad", category: "feelings", usage: 0, level: 1 },
-  { id: "l1-7", text: "tired", category: "feelings", usage: 0, level: 1 },
-  { id: "l1-8", text: "eat", category: "actions", usage: 0, level: 1 },
-  { id: "l1-9", text: "drink", category: "actions", usage: 0, level: 1 },
-  { id: "l1-10", text: "help", category: "actions", usage: 0, level: 1 },
-  { id: "l1-11", text: "stop", category: "actions", usage: 0, level: 1 },
-  { id: "l1-12", text: "more", category: "actions", usage: 0, level: 1 },
-  { id: "l1-13", text: "all done", category: "actions", usage: 0, level: 1 },
-  { id: "l1-14", text: "yes", category: "actions", usage: 0, level: 1 },
-  { id: "l1-15", text: "no", category: "actions", usage: 0, level: 1 },
-  { id: "l1-16", text: "play", category: "activities", usage: 0, level: 1 },
-  { id: "l1-17", text: "read", category: "activities", usage: 0, level: 1 },
-  { id: "l1-18", text: "go outside", category: "activities", usage: 0, level: 1 },
-  { id: "l1-19", text: "music", category: "activities", usage: 0, level: 1 },
-  { id: "l1-20", text: "toy", category: "objects", usage: 0, level: 1 },
-  { id: "l1-21", text: "book", category: "objects", usage: 0, level: 1 },
-  { id: "l1-22", text: "water", category: "food", usage: 0, level: 1 },
-  { id: "l1-23", text: "food", category: "food", usage: 0, level: 1 },
-  { id: "l1-24", text: "hi", category: "social", usage: 0, level: 1 },
-  { id: "l1-25", text: "hello", category: "social", usage: 0, level: 1 },
-  { id: "l1-26", text: "bye", category: "social", usage: 0, level: 1 },
-  { id: "l1-27", text: "I want", category: "actions", usage: 0, level: 1 },
-  { id: "l1-28", text: "I need", category: "actions", usage: 0, level: 1 },
-  { id: "l1-29", text: "finished", category: "actions", usage: 0, level: 1 },
-  { id: "l1-30", text: "I feel", category: "feelings", usage: 0, level: 1 },
+  // People
+  { id: "l1-1", text: "Mom", category: "people", usage: 0, level: 1 },
+  { id: "l1-2", text: "Dad", category: "people", usage: 0, level: 1 },
+  { id: "l1-3", text: "Teacher", category: "people", usage: 0, level: 1 },
+  
+  // Feelings
+  { id: "l1-4", text: "Happy", category: "feelings", usage: 0, level: 1 },
+  { id: "l1-5", text: "Sad", category: "feelings", usage: 0, level: 1 },
+  { id: "l1-6", text: "Mad", category: "feelings", usage: 0, level: 1 },
+  { id: "l1-7", text: "Tired", category: "feelings", usage: 0, level: 1 },
+  { id: "l1-8", text: "Scared", category: "feelings", usage: 0, level: 1 },
+  { id: "l1-9", text: "Excited", category: "feelings", usage: 0, level: 1 },
+  { id: "l1-10", text: "Calm", category: "feelings", usage: 0, level: 1 },
+  
+  // Needs & Actions
+  { id: "l1-11", text: "Eat", category: "actions", usage: 0, level: 1 },
+  { id: "l1-12", text: "Drink", category: "actions", usage: 0, level: 1 },
+  { id: "l1-13", text: "Help", category: "actions", usage: 0, level: 1 },
+  { id: "l1-14", text: "Stop", category: "actions", usage: 0, level: 1 },
+  { id: "l1-15", text: "More", category: "actions", usage: 0, level: 1 },
+  { id: "l1-16", text: "All done", category: "actions", usage: 0, level: 1 },
+  { id: "l1-17", text: "Go", category: "actions", usage: 0, level: 1 },
+  { id: "l1-18", text: "Come", category: "actions", usage: 0, level: 1 },
+  { id: "l1-19", text: "Want", category: "actions", usage: 0, level: 1 },
+  { id: "l1-20", text: "Need", category: "actions", usage: 0, level: 1 },
+  { id: "l1-21", text: "Finished", category: "actions", usage: 0, level: 1 },
+  
+  // Responses
+  { id: "l1-22", text: "Yes", category: "responses", usage: 0, level: 1 },
+  { id: "l1-23", text: "No", category: "responses", usage: 0, level: 1 },
+  { id: "l1-24", text: "Maybe", category: "responses", usage: 0, level: 1 },
+  
+  // Activities
+  { id: "l1-25", text: "Play", category: "activities", usage: 0, level: 1 },
+  { id: "l1-26", text: "Read", category: "activities", usage: 0, level: 1 },
+  { id: "l1-27", text: "Go outside", category: "activities", usage: 0, level: 1 },
+  { id: "l1-28", text: "Listen to music", category: "activities", usage: 0, level: 1 },
+  { id: "l1-29", text: "Draw", category: "activities", usage: 0, level: 1 },
+  { id: "l1-30", text: "Build", category: "activities", usage: 0, level: 1 },
+  
+  // Objects/Items
+  { id: "l1-31", text: "Toy", category: "objects", usage: 0, level: 1 },
+  { id: "l1-32", text: "Book", category: "objects", usage: 0, level: 1 },
+  { id: "l1-33", text: "Water", category: "objects", usage: 0, level: 1 },
+  { id: "l1-34", text: "Food", category: "objects", usage: 0, level: 1 },
+  { id: "l1-35", text: "Ball", category: "objects", usage: 0, level: 1 },
+  { id: "l1-36", text: "Chair", category: "objects", usage: 0, level: 1 },
+  { id: "l1-37", text: "Bed", category: "objects", usage: 0, level: 1 },
+  
+  // Places
+  { id: "l1-38", text: "Home", category: "places", usage: 0, level: 1 },
+  { id: "l1-39", text: "School", category: "places", usage: 0, level: 1 },
+  { id: "l1-40", text: "Park", category: "places", usage: 0, level: 1 },
+  { id: "l1-41", text: "Store", category: "places", usage: 0, level: 1 },
+  
+  // Social
+  { id: "l1-42", text: "Hi", category: "social", usage: 0, level: 1 },
+  { id: "l1-43", text: "Bye", category: "social", usage: 0, level: 1 },
+  { id: "l1-44", text: "Please", category: "social", usage: 0, level: 1 },
+  { id: "l1-45", text: "Thank you", category: "social", usage: 0, level: 1 },
+  { id: "l1-46", text: "Sorry", category: "social", usage: 0, level: 1 },
 ];
 
 // Level 2 - Intermediate (75 cards)

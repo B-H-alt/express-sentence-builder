@@ -11,10 +11,11 @@ const categoryLabels: Record<string, string> = {
   people: "People",
   feelings: "Feelings",
   actions: "Needs & Actions",
+  responses: "Responses",
   activities: "Activities",
   objects: "Objects/Items",
-  social: "Social",
   places: "Places",
+  social: "Social",
   food: "Food",
 };
 

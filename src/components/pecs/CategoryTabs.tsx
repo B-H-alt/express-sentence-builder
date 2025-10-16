@@ -10,11 +10,14 @@ interface CategoryTabsProps {
 const categories = [
   { id: "all", label: "All", icon: Grid3x3 },
   { id: "favorites", label: "Favorites", icon: Star },
-  { id: "actions", label: "Actions", icon: Heart },
   { id: "people", label: "People", icon: User },
-  { id: "places", label: "Places", icon: Home },
-  { id: "food", label: "Food", icon: Utensils },
   { id: "feelings", label: "Feelings", icon: Smile },
+  { id: "actions", label: "Actions", icon: Heart },
+  { id: "responses", label: "Responses", icon: Star },
+  { id: "activities", label: "Activities", icon: Heart },
+  { id: "objects", label: "Objects", icon: Grid3x3 },
+  { id: "places", label: "Places", icon: Home },
+  { id: "social", label: "Social", icon: User },
 ];
 
 export const CategoryTabs = ({ selectedCategory, onSelectCategory }: CategoryTabsProps) => {
