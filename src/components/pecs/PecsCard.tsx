@@ -53,9 +53,9 @@ export const PecsCard = ({
             e.stopPropagation();
             onRemove();
           }}
-          className="absolute -top-2 -right-2 w-7 h-7 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center shadow-lg z-20 hover:scale-110 transition-transform"
+          className="absolute bottom-1.5 right-1.5 w-5 h-5 bg-muted/60 text-muted-foreground rounded-full flex items-center justify-center shadow-sm z-20 hover:bg-muted hover:scale-105 transition-all"
         >
-          <X className="w-4 h-4" />
+          <X className="w-3 h-3" />
         </button>
       )}
 
