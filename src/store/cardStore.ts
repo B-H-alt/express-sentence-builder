@@ -2,6 +2,54 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { Card } from "@/pages/PecsApp";
 
+// Import PECS images
+import momImg from "@/assets/pecs/mom.jpg";
+import dadImg from "@/assets/pecs/dad.jpg";
+import teacherImg from "@/assets/pecs/teacher.jpg";
+import happyImg from "@/assets/pecs/happy.jpg";
+import sadImg from "@/assets/pecs/sad.jpg";
+import madImg from "@/assets/pecs/mad.jpg";
+import tiredImg from "@/assets/pecs/tired.jpg";
+import scaredImg from "@/assets/pecs/scared.jpg";
+import excitedImg from "@/assets/pecs/excited.jpg";
+import calmImg from "@/assets/pecs/calm.jpg";
+import eatImg from "@/assets/pecs/eat.jpg";
+import drinkImg from "@/assets/pecs/drink.jpg";
+import helpImg from "@/assets/pecs/help.jpg";
+import stopImg from "@/assets/pecs/stop.jpg";
+import moreImg from "@/assets/pecs/more.jpg";
+import allDoneImg from "@/assets/pecs/all-done.jpg";
+import goImg from "@/assets/pecs/go.jpg";
+import comeImg from "@/assets/pecs/come.jpg";
+import wantImg from "@/assets/pecs/want.jpg";
+import needImg from "@/assets/pecs/need.jpg";
+import finishedImg from "@/assets/pecs/finished.jpg";
+import yesImg from "@/assets/pecs/yes.jpg";
+import noImg from "@/assets/pecs/no.jpg";
+import maybeImg from "@/assets/pecs/maybe.jpg";
+import playImg from "@/assets/pecs/play.jpg";
+import readImg from "@/assets/pecs/read.jpg";
+import goOutsideImg from "@/assets/pecs/go-outside.jpg";
+import listenToMusicImg from "@/assets/pecs/listen-to-music.jpg";
+import drawImg from "@/assets/pecs/draw.jpg";
+import buildImg from "@/assets/pecs/build.jpg";
+import toyImg from "@/assets/pecs/toy.jpg";
+import bookImg from "@/assets/pecs/book.jpg";
+import waterImg from "@/assets/pecs/water.jpg";
+import foodImg from "@/assets/pecs/food.jpg";
+import ballImg from "@/assets/pecs/ball.jpg";
+import chairImg from "@/assets/pecs/chair.jpg";
+import bedImg from "@/assets/pecs/bed.jpg";
+import homeImg from "@/assets/pecs/home.jpg";
+import schoolImg from "@/assets/pecs/school.jpg";
+import parkImg from "@/assets/pecs/park.jpg";
+import storeImg from "@/assets/pecs/store.jpg";
+import hiImg from "@/assets/pecs/hi.jpg";
+import byeImg from "@/assets/pecs/bye.jpg";
+import pleaseImg from "@/assets/pecs/please.jpg";
+import thankYouImg from "@/assets/pecs/thank-you.jpg";
+import sorryImg from "@/assets/pecs/sorry.jpg";
+
 export type VocabularyLevel = 1 | 2 | 3;
 
 interface CardStore {
@@ -21,66 +69,66 @@ interface CardStore {
 // Level 1 - Beginner (46 cards)
 const level1Cards: Card[] = [
   // People
-  { id: "l1-1", text: "Mom", category: "people", usage: 0, level: 1 },
-  { id: "l1-2", text: "Dad", category: "people", usage: 0, level: 1 },
-  { id: "l1-3", text: "Teacher", category: "people", usage: 0, level: 1 },
+  { id: "l1-1", text: "Mom", category: "people", usage: 0, level: 1, image: momImg },
+  { id: "l1-2", text: "Dad", category: "people", usage: 0, level: 1, image: dadImg },
+  { id: "l1-3", text: "Teacher", category: "people", usage: 0, level: 1, image: teacherImg },
   
   // Feelings
-  { id: "l1-4", text: "Happy", category: "feelings", usage: 0, level: 1 },
-  { id: "l1-5", text: "Sad", category: "feelings", usage: 0, level: 1 },
-  { id: "l1-6", text: "Mad", category: "feelings", usage: 0, level: 1 },
-  { id: "l1-7", text: "Tired", category: "feelings", usage: 0, level: 1 },
-  { id: "l1-8", text: "Scared", category: "feelings", usage: 0, level: 1 },
-  { id: "l1-9", text: "Excited", category: "feelings", usage: 0, level: 1 },
-  { id: "l1-10", text: "Calm", category: "feelings", usage: 0, level: 1 },
+  { id: "l1-4", text: "Happy", category: "feelings", usage: 0, level: 1, image: happyImg },
+  { id: "l1-5", text: "Sad", category: "feelings", usage: 0, level: 1, image: sadImg },
+  { id: "l1-6", text: "Mad", category: "feelings", usage: 0, level: 1, image: madImg },
+  { id: "l1-7", text: "Tired", category: "feelings", usage: 0, level: 1, image: tiredImg },
+  { id: "l1-8", text: "Scared", category: "feelings", usage: 0, level: 1, image: scaredImg },
+  { id: "l1-9", text: "Excited", category: "feelings", usage: 0, level: 1, image: excitedImg },
+  { id: "l1-10", text: "Calm", category: "feelings", usage: 0, level: 1, image: calmImg },
   
   // Needs & Actions
-  { id: "l1-11", text: "Eat", category: "actions", usage: 0, level: 1 },
-  { id: "l1-12", text: "Drink", category: "actions", usage: 0, level: 1 },
-  { id: "l1-13", text: "Help", category: "actions", usage: 0, level: 1 },
-  { id: "l1-14", text: "Stop", category: "actions", usage: 0, level: 1 },
-  { id: "l1-15", text: "More", category: "actions", usage: 0, level: 1 },
-  { id: "l1-16", text: "All done", category: "actions", usage: 0, level: 1 },
-  { id: "l1-17", text: "Go", category: "actions", usage: 0, level: 1 },
-  { id: "l1-18", text: "Come", category: "actions", usage: 0, level: 1 },
-  { id: "l1-19", text: "Want", category: "actions", usage: 0, level: 1 },
-  { id: "l1-20", text: "Need", category: "actions", usage: 0, level: 1 },
-  { id: "l1-21", text: "Finished", category: "actions", usage: 0, level: 1 },
+  { id: "l1-11", text: "Eat", category: "actions", usage: 0, level: 1, image: eatImg },
+  { id: "l1-12", text: "Drink", category: "actions", usage: 0, level: 1, image: drinkImg },
+  { id: "l1-13", text: "Help", category: "actions", usage: 0, level: 1, image: helpImg },
+  { id: "l1-14", text: "Stop", category: "actions", usage: 0, level: 1, image: stopImg },
+  { id: "l1-15", text: "More", category: "actions", usage: 0, level: 1, image: moreImg },
+  { id: "l1-16", text: "All done", category: "actions", usage: 0, level: 1, image: allDoneImg },
+  { id: "l1-17", text: "Go", category: "actions", usage: 0, level: 1, image: goImg },
+  { id: "l1-18", text: "Come", category: "actions", usage: 0, level: 1, image: comeImg },
+  { id: "l1-19", text: "Want", category: "actions", usage: 0, level: 1, image: wantImg },
+  { id: "l1-20", text: "Need", category: "actions", usage: 0, level: 1, image: needImg },
+  { id: "l1-21", text: "Finished", category: "actions", usage: 0, level: 1, image: finishedImg },
   
   // Responses
-  { id: "l1-22", text: "Yes", category: "responses", usage: 0, level: 1 },
-  { id: "l1-23", text: "No", category: "responses", usage: 0, level: 1 },
-  { id: "l1-24", text: "Maybe", category: "responses", usage: 0, level: 1 },
+  { id: "l1-22", text: "Yes", category: "responses", usage: 0, level: 1, image: yesImg },
+  { id: "l1-23", text: "No", category: "responses", usage: 0, level: 1, image: noImg },
+  { id: "l1-24", text: "Maybe", category: "responses", usage: 0, level: 1, image: maybeImg },
   
   // Activities
-  { id: "l1-25", text: "Play", category: "activities", usage: 0, level: 1 },
-  { id: "l1-26", text: "Read", category: "activities", usage: 0, level: 1 },
-  { id: "l1-27", text: "Go outside", category: "activities", usage: 0, level: 1 },
-  { id: "l1-28", text: "Listen to music", category: "activities", usage: 0, level: 1 },
-  { id: "l1-29", text: "Draw", category: "activities", usage: 0, level: 1 },
-  { id: "l1-30", text: "Build", category: "activities", usage: 0, level: 1 },
+  { id: "l1-25", text: "Play", category: "activities", usage: 0, level: 1, image: playImg },
+  { id: "l1-26", text: "Read", category: "activities", usage: 0, level: 1, image: readImg },
+  { id: "l1-27", text: "Go outside", category: "activities", usage: 0, level: 1, image: goOutsideImg },
+  { id: "l1-28", text: "Listen to music", category: "activities", usage: 0, level: 1, image: listenToMusicImg },
+  { id: "l1-29", text: "Draw", category: "activities", usage: 0, level: 1, image: drawImg },
+  { id: "l1-30", text: "Build", category: "activities", usage: 0, level: 1, image: buildImg },
   
   // Objects/Items
-  { id: "l1-31", text: "Toy", category: "objects", usage: 0, level: 1 },
-  { id: "l1-32", text: "Book", category: "objects", usage: 0, level: 1 },
-  { id: "l1-33", text: "Water", category: "objects", usage: 0, level: 1 },
-  { id: "l1-34", text: "Food", category: "objects", usage: 0, level: 1 },
-  { id: "l1-35", text: "Ball", category: "objects", usage: 0, level: 1 },
-  { id: "l1-36", text: "Chair", category: "objects", usage: 0, level: 1 },
-  { id: "l1-37", text: "Bed", category: "objects", usage: 0, level: 1 },
+  { id: "l1-31", text: "Toy", category: "objects", usage: 0, level: 1, image: toyImg },
+  { id: "l1-32", text: "Book", category: "objects", usage: 0, level: 1, image: bookImg },
+  { id: "l1-33", text: "Water", category: "objects", usage: 0, level: 1, image: waterImg },
+  { id: "l1-34", text: "Food", category: "objects", usage: 0, level: 1, image: foodImg },
+  { id: "l1-35", text: "Ball", category: "objects", usage: 0, level: 1, image: ballImg },
+  { id: "l1-36", text: "Chair", category: "objects", usage: 0, level: 1, image: chairImg },
+  { id: "l1-37", text: "Bed", category: "objects", usage: 0, level: 1, image: bedImg },
   
   // Places
-  { id: "l1-38", text: "Home", category: "places", usage: 0, level: 1 },
-  { id: "l1-39", text: "School", category: "places", usage: 0, level: 1 },
-  { id: "l1-40", text: "Park", category: "places", usage: 0, level: 1 },
-  { id: "l1-41", text: "Store", category: "places", usage: 0, level: 1 },
+  { id: "l1-38", text: "Home", category: "places", usage: 0, level: 1, image: homeImg },
+  { id: "l1-39", text: "School", category: "places", usage: 0, level: 1, image: schoolImg },
+  { id: "l1-40", text: "Park", category: "places", usage: 0, level: 1, image: parkImg },
+  { id: "l1-41", text: "Store", category: "places", usage: 0, level: 1, image: storeImg },
   
   // Social
-  { id: "l1-42", text: "Hi", category: "social", usage: 0, level: 1 },
-  { id: "l1-43", text: "Bye", category: "social", usage: 0, level: 1 },
-  { id: "l1-44", text: "Please", category: "social", usage: 0, level: 1 },
-  { id: "l1-45", text: "Thank you", category: "social", usage: 0, level: 1 },
-  { id: "l1-46", text: "Sorry", category: "social", usage: 0, level: 1 },
+  { id: "l1-42", text: "Hi", category: "social", usage: 0, level: 1, image: hiImg },
+  { id: "l1-43", text: "Bye", category: "social", usage: 0, level: 1, image: byeImg },
+  { id: "l1-44", text: "Please", category: "social", usage: 0, level: 1, image: pleaseImg },
+  { id: "l1-45", text: "Thank you", category: "social", usage: 0, level: 1, image: thankYouImg },
+  { id: "l1-46", text: "Sorry", category: "social", usage: 0, level: 1, image: sorryImg },
 ];
 
 // Level 2 - Intermediate (75 cards)
@@ -283,10 +331,10 @@ export const useCardStore = create<CardStore>()(
     }),
     {
       name: "pecs-storage",
-      version: 2, // Increment to force card updates
+      version: 3, // Increment to force card updates with images
       migrate: (persistedState: any, version: number) => {
-        if (version < 2) {
-          // Force reload with new card data
+        if (version < 3) {
+          // Force reload with new card data including images
           return {
             ...persistedState,
             cards: allCards,

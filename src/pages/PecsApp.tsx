@@ -10,6 +10,7 @@ export interface Card {
   text: string;
   category: string;
   imageUrl?: string;
+  image?: string;
   usage: number;
   level?: number;
 }

@@ -79,10 +79,10 @@ export const PecsCard = ({
 
       {/* Card content */}
       <div className="w-full h-full flex flex-col items-center justify-center p-3">
-        {showPicture && card.imageUrl ? (
+        {showPicture && (card.image || card.imageUrl) ? (
           <div className="flex-1 w-full flex items-center justify-center mb-2">
             <img 
-              src={card.imageUrl} 
+              src={card.image || card.imageUrl} 
               alt={card.text}
               className="max-w-full max-h-full object-contain rounded-lg"
             />
