@@ -39,7 +39,7 @@ export const PecsCard = ({
         "bg-card-base hover:bg-card-hover active:bg-card-selected",
         "border-border hover:border-primary/50 active:scale-95",
         "shadow-sm hover:shadow-md",
-        inSentence ? "min-w-[100px]" : "w-full"
+        inSentence ? "w-[100px] h-[100px]" : "w-full"
       )}
       draggable={!inSentence}
       onDragStart={handleDragStart}
