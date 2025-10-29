@@ -3,26 +3,26 @@ import { persist } from "zustand/middleware";
 import { Card } from "@/pages/PecsApp";
 
 // Import PECS images
-import momImg from "@/assets/pecs/mom.png";
-import dadImg from "@/assets/pecs/dad.png";
-import teacherImg from "@/assets/pecs/teacher.png";
+import momImg from "@/assets/pecs/mom.jpg";
+import dadImg from "@/assets/pecs/dad.jpg";
+import teacherImg from "@/assets/pecs/teacher.jpg";
 import happyImg from "@/assets/pecs/happy.jpg";
 import sadImg from "@/assets/pecs/sad.jpg";
-import madImg from "@/assets/pecs/mad.png";
-import tiredImg from "@/assets/pecs/tired.png";
+import madImg from "@/assets/pecs/mad.jpg";
+import tiredImg from "@/assets/pecs/tired.jpg";
 import scaredImg from "@/assets/pecs/scared.jpg";
 import excitedImg from "@/assets/pecs/excited.jpg";
 import calmImg from "@/assets/pecs/calm.jpg";
 import eatImg from "@/assets/pecs/eat.jpg";
-import drinkImg from "@/assets/pecs/drink.png";
+import drinkImg from "@/assets/pecs/drink.jpg";
 import helpImg from "@/assets/pecs/help.jpg";
-import stopImg from "@/assets/pecs/stop.png";
-import moreImg from "@/assets/pecs/more.png";
+import stopImg from "@/assets/pecs/stop.jpg";
+import moreImg from "@/assets/pecs/more.jpg";
 import allDoneImg from "@/assets/pecs/all-done.jpg";
 import goImg from "@/assets/pecs/go.jpg";
-import comeImg from "@/assets/pecs/come.png";
-import wantImg from "@/assets/pecs/want.png";
-import needImg from "@/assets/pecs/need.png";
+import comeImg from "@/assets/pecs/come.jpg";
+import wantImg from "@/assets/pecs/want.jpg";
+import needImg from "@/assets/pecs/need.jpg";
 import finishedImg from "@/assets/pecs/finished.jpg";
 import yesImg from "@/assets/pecs/yes.jpg";
 import noImg from "@/assets/pecs/no.jpg";
@@ -51,10 +51,10 @@ import thankYouImg from "@/assets/pecs/thank-you.jpg";
 import sorryImg from "@/assets/pecs/sorry.jpg";
 
 // Level 2 additional imports
-import brotherImg from "@/assets/pecs/brother.png";
-import sisterImg from "@/assets/pecs/sister.png";
-import friendImg from "@/assets/pecs/friend.png";
-import nurseImg from "@/assets/pecs/nurse.png";
+import brotherImg from "@/assets/pecs/brother.jpg";
+import sisterImg from "@/assets/pecs/sister.jpg";
+import friendImg from "@/assets/pecs/friend.jpg";
+import nurseImg from "@/assets/pecs/nurse.jpg";
 import sillyImg from "@/assets/pecs/silly.jpg";
 import boredImg from "@/assets/pecs/bored.jpg";
 import appleImg from "@/assets/pecs/apple.jpg";
@@ -74,20 +74,20 @@ import eatBreakfastImg from "@/assets/pecs/eat-breakfast.jpg";
 import eatLunchImg from "@/assets/pecs/eat-lunch.jpg";
 import eatDinnerImg from "@/assets/pecs/eat-dinner.jpg";
 import brushTeethImg from "@/assets/pecs/brush-teeth.jpg";
-import washHandsImg from "@/assets/pecs/wash-hands.png";
+import washHandsImg from "@/assets/pecs/wash-hands.jpg";
 import sleepImg from "@/assets/pecs/sleep.jpg";
-import dontWantImg from "@/assets/pecs/don't-want.png";
+import dontWantImg from "@/assets/pecs/don't-want.jpg";
 import likeImg from "@/assets/pecs/like.jpg";
 import dontLikeImg from "@/assets/pecs/dont-like.jpg";
 import lookImg from "@/assets/pecs/look.jpg";
 import listenImg from "@/assets/pecs/listen.jpg";
 import sitImg from "@/assets/pecs/sit.jpg";
 import standImg from "@/assets/pecs/stand.jpg";
-import waitImg from "@/assets/pecs/wait.png";
+import waitImg from "@/assets/pecs/wait.jpg";
 import myTurnImg from "@/assets/pecs/my-turn.jpg";
 import yourTurnImg from "@/assets/pecs/your-turn.jpg";
-import openImg from "@/assets/pecs/open.png";
-import closeImg from "@/assets/pecs/close.png";
+import openImg from "@/assets/pecs/open.jpg";
+import closeImg from "@/assets/pecs/close.jpg";
 import goodJobImg from "@/assets/pecs/good-job.jpg";
 import iLoveYouImg from "@/assets/pecs/i-love-you.jpg";
 import whatImg from "@/assets/pecs/what.jpg";
@@ -104,11 +104,11 @@ import quietImg from "@/assets/pecs/quiet.jpg";
 import grandmaImg from "@/assets/pecs/grandma.jpg";
 import grandpaImg from "@/assets/pecs/grandpa.jpg";
 import classmateImg from "@/assets/pecs/classmate.jpg";
-import doctorImg from "@/assets/pecs/doctor.png";
-import busDriverImg from "@/assets/pecs/bus-driver.png";
+import doctorImg from "@/assets/pecs/doctor.jpg";
+import busDriverImg from "@/assets/pecs/bus-driver.jpg";
 import frustratedImg from "@/assets/pecs/frustrated.jpg";
 import proudImg from "@/assets/pecs/proud.jpg";
-import nervousImg from "@/assets/pecs/nervous.png";
+import nervousImg from "@/assets/pecs/nervous.jpg";
 import surprisedImg from "@/assets/pecs/surprised.jpg";
 import orangeImg from "@/assets/pecs/orange.jpg";
 import pizzaImg from "@/assets/pecs/pizza.jpg";
@@ -133,7 +133,7 @@ import thinkImg from "@/assets/pecs/think.jpg";
 import knowImg from "@/assets/pecs/know.jpg";
 import seeImg from "@/assets/pecs/see.jpg";
 import hearImg from "@/assets/pecs/hear.jpg";
-import touchImg from "@/assets/pecs/touch.png";
+import touchImg from "@/assets/pecs/touch.jpg";
 import feelImg from "@/assets/pecs/feel.jpg";
 import talkImg from "@/assets/pecs/talk.jpg";
 import tellImg from "@/assets/pecs/tell.jpg";
@@ -144,8 +144,6 @@ import takeImg from "@/assets/pecs/take.jpg";
 import makeImg from "@/assets/pecs/make.jpg";
 import findImg from "@/assets/pecs/find.jpg";
 import workImg from "@/assets/pecs/work.jpg";
-import washImg from "@/assets/pecs/wash.jpg";
-import brushImg from "@/assets/pecs/brush.jpg";
 import youreWelcomeImg from "@/assets/pecs/youre-welcome.jpg";
 import howAreYouImg from "@/assets/pecs/how-are-you.jpg";
 import whatsWrongImg from "@/assets/pecs/whats-wrong.jpg";
@@ -359,8 +357,6 @@ const level3Cards: Card[] = [
   { id: "l3-42", text: "Make", category: "actions", usage: 0, level: 3, image: makeImg },
   { id: "l3-43", text: "Find", category: "actions", usage: 0, level: 3, image: findImg },
   { id: "l3-44", text: "Work", category: "actions", usage: 0, level: 3, image: workImg },
-  { id: "l3-45", text: "Wash", category: "actions", usage: 0, level: 3, image: washImg },
-  { id: "l3-46", text: "Brush", category: "actions", usage: 0, level: 3, image: brushImg },
   { id: "l3-47", text: "You're welcome", category: "social", usage: 0, level: 3, image: youreWelcomeImg },
   { id: "l3-48", text: "How are you?", category: "social", usage: 0, level: 3, image: howAreYouImg },
   { id: "l3-49", text: "What's wrong?", category: "social", usage: 0, level: 3, image: whatsWrongImg },
