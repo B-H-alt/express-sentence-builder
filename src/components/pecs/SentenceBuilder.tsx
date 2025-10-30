@@ -140,7 +140,7 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
 
   return (
     <div
-      className="min-h-full max-h-full bg-sentence-zone rounded-3xl border-2 border-dashed border-primary/30 p-4 flex flex-col overflow-hidden"
+      className="relative overflow-hidden min-h-full max-h-full bg-gradient-subtle rounded-3xl border-2 border-dashed border-primary/30 p-4 flex flex-col overflow-hidden"
       onDrop={(e) => {
         e.preventDefault();
         const cardData = e.dataTransfer.getData("card");
@@ -152,7 +152,9 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
       onDragOver={(e) => e.preventDefault()}
     >
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-lg font-semibold text-foreground">My Sentence</h2>
+        <h2 className="text-lg font-semibold bg-gradient-accent bg-clip-text text-transparent">
+          My Sentence
+        </h2>
         <div className="flex gap-2">
           {sentence.length > 0 && (
             <>
