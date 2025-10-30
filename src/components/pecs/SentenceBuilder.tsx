@@ -4,6 +4,7 @@ import { PecsCard } from "./PecsCard";
 import { Button } from "@/components/ui/button";
 import { Trash2, Volume2, Square } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { composeSentence } from "@/utils/compose-sentence"; // ✅ import the utility
 
 interface SentenceBuilderProps {
   showWord: boolean;
@@ -20,9 +21,7 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  const getSentenceText = () =>
-    sentence.map((card) => card.text).join(" ").trim();
-
+  const getSentenceText = () => sentence.map((card) => card.text).join(" ").trim();
   const getSentenceTokens = () => sentence.map((card) => card.text);
 
   const playBlob = async (blob: Blob) => {
@@ -32,7 +31,6 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
     try {
       await audioRef.current.play();
     } finally {
-      // Revoke after playback starts to avoid cutting off the stream
       audioRef.current.onended = () => URL.revokeObjectURL(url);
     }
   };
@@ -72,51 +70,38 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
       const msg = await res.text().catch(() => "");
       throw new Error(`ElevenLabs error (${res.status}): ${msg || res.statusText}`);
     }
-    const blob = await res.blob(); // audio/mpeg
+    const blob = await res.blob();
     await playBlob(blob);
   };
 
   const stopAudio = () => {
-    // Stop any current playback
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
-    // Stop Web Speech API if speaking
     if ("speechSynthesis" in window && window.speechSynthesis.speaking) {
       window.speechSynthesis.cancel();
     }
     setIsSpeaking(false);
   };
 
-  // Ask the Vercel function to compose a natural sentence with a 0.66 confidence gate.
-  // Falls back to raw tokens if the API fails or returns an empty sentence.
-  const composeSentence = async (tokens: string[], raw: string) => {
-    try {
-      const res = await fetch("/api/compose-sentence", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tokens }),
-      });
-      if (!res.ok) return raw;
-      const data: { sentence?: string; confidence?: number } = await res.json();
-      return data?.sentence?.trim() || raw;
-    } catch {
-      return raw;
-    }
-  };
-
+  // ✅ Use the client-side composeSentence utility directly
   const handleSpeak = async () => {
     const raw = getSentenceText();
     if (!raw) return;
 
     setIsSpeaking(true);
 
-    // Compose the sentence via Gemini (serverless function); safe fallback to raw
     const tokens = getSentenceTokens();
-    const spoken = await composeSentence(tokens, raw);
+    let spoken = raw;
 
-    // Show what we’re going to speak
+    try {
+      const result = await composeSentence({ tokens });
+      spoken = result.sentence;
+    } catch (err) {
+      console.error("Failed to compose sentence:", err);
+    }
+
     toast({ title: "Sentence", description: spoken });
 
     try {
@@ -126,7 +111,6 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
         await speakWithWebAPI(spoken);
       }
     } catch (err: any) {
-      // Graceful fallback to Web Speech API on failure
       console.error(err);
       await speakWithWebAPI(spoken);
       toast({
@@ -157,22 +141,12 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
           {sentence.length > 0 && (
             <>
               {!isSpeaking ? (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleSpeak}
-                  className="rounded-xl"
-                >
+                <Button size="sm" variant="outline" onClick={handleSpeak} className="rounded-xl">
                   <Volume2 className="w-4 h-4 mr-1" />
                   Speak
                 </Button>
               ) : (
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={stopAudio}
-                  className="rounded-xl"
-                >
+                <Button size="sm" variant="secondary" onClick={stopAudio} className="rounded-xl">
                   <Square className="w-4 h-4 mr-1" />
                   Stop
                 </Button>
