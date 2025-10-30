@@ -5,10 +5,10 @@ import { Trash2, Volume2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface SentenceBuilderProps {
-  showPictures: boolean;
+  showWord: boolean;
 }
 
-export const SentenceBuilder = ({ showPictures }: SentenceBuilderProps) => {
+export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
   const { sentence, removeFromSentence, clearSentence } = useCardStore();
   const { toast } = useToast();
 
@@ -78,7 +78,7 @@ export const SentenceBuilder = ({ showPictures }: SentenceBuilderProps) => {
             <div key={`${card.id}-${index}`} className="flex-shrink-0">
               <PecsCard
                 card={card}
-                showPicture={showPictures}
+                showWord={showWord}
                 onRemove={() => removeFromSentence(index)}
                 inSentence
               />

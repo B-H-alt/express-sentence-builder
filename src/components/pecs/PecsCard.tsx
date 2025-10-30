@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 interface PecsCardProps {
   card: Card;
-  showPicture: boolean;
+  showWord: boolean;
   onClick?: () => void;
   onFavorite?: () => void;
   onRemove?: () => void;
@@ -14,7 +14,7 @@ interface PecsCardProps {
 
 export const PecsCard = ({
   card,
-  showPicture,
+  showWord,
   onClick,
   onFavorite,
   onRemove,
@@ -68,8 +68,8 @@ export const PecsCard = ({
           }}
           className={cn(
             "absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all z-10",
-            isFavorite 
-              ? "bg-warning text-warning-foreground" 
+            isFavorite
+              ? "bg-warning text-warning-foreground"
               : "bg-muted/80 text-muted-foreground hover:bg-muted"
           )}
         >
@@ -78,28 +78,36 @@ export const PecsCard = ({
       )}
 
       {/* Card content */}
-      <div className="w-full h-full flex flex-col items-center justify-center p-3">
-        {showPicture && (card.image || card.imageUrl) ? (
-          <div className="flex-1 w-full flex items-center justify-center mb-2">
-            <img 
-              src={card.image || card.imageUrl} 
+      <div className="w-full h-full flex flex-col items-center justify-between p-3">
+        {/* Image area: fixed proportion so the label always has room */}
+        <div
+          className={cn(
+            "w-full flex items-center justify-center",
+            showWord ? "h-[68%] mb-1" : "h-full"
+          )}
+        >
+          {(card.image || card.imageUrl) ? (
+            <img
+              src={card.image || card.imageUrl}
               alt={card.text}
               className="max-w-full max-h-full object-contain rounded-lg"
+              draggable={false}
             />
-          </div>
-        ) : (
-          <div className="flex-1 w-full flex items-center justify-center">
-            <div className={cn(
-              "w-16 h-16 rounded-xl flex items-center justify-center text-3xl",
-              "bg-gradient-to-br from-primary/20 to-secondary/20"
-            )}>
+          ) : (
+            <div className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl bg-gradient-to-br from-primary/20 to-secondary/20">
               {card.text.charAt(0).toUpperCase()}
             </div>
-          </div>
+          )}
+        </div>
+
+        {/* Label area: reserve vertical space for up to two lines */}
+        {showWord && (
+          <span
+            className="text-sm font-semibold text-foreground text-center line-clamp-2 mt-1 min-h-[2.5rem]"
+          >
+            {card.text}
+          </span>
         )}
-        <p className="text-sm font-semibold text-center text-foreground line-clamp-2 mt-1">
-          {card.text}
-        </p>
       </div>
     </div>
   );

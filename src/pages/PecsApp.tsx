@@ -16,15 +16,15 @@ export interface Card {
 }
 
 const PecsApp = () => {
-  const [showPictures, setShowPictures] = useState(false);
+  const [showWord, setShowWord] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const { sentence, favorites, currentLevel, setLevel } = useCardStore();
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <AppHeader 
-        showPictures={showPictures} 
-        onTogglePictures={() => setShowPictures(!showPictures)}
+        showWord={showWord} 
+        onTogglePictures={() => setShowWord(!showWord)}
         currentLevel={currentLevel}
         onLevelChange={setLevel}
       />
@@ -32,7 +32,7 @@ const PecsApp = () => {
       <div className="flex-1 container mx-auto p-4 flex flex-col gap-4 max-w-[1200px]">
         {/* Sentence Builder - Top Dynamic Zone */}
         <div className="min-h-[140px] max-h-[400px]">
-          <SentenceBuilder showPictures={showPictures} />
+          <SentenceBuilder showWord={showWord} />
         </div>
 
         {/* Card Selection Area */}
@@ -45,7 +45,7 @@ const PecsApp = () => {
           <div className="flex-1 min-h-0 overflow-hidden">
             <CardGrid 
               selectedCategory={selectedCategory}
-              showPictures={showPictures}
+              showWord={showWord}
             />
           </div>
         </div>

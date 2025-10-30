@@ -10,13 +10,13 @@ import {
 import { VocabularyLevel } from "@/store/cardStore";
 
 interface AppHeaderProps {
-  showPictures: boolean;
+  showWord: boolean;
   onTogglePictures: () => void;
   currentLevel: VocabularyLevel;
   onLevelChange: (level: VocabularyLevel) => void;
 }
 
-export const AppHeader = ({ showPictures, onTogglePictures, currentLevel, onLevelChange }: AppHeaderProps) => {
+export const AppHeader = ({ showWord, onTogglePictures, currentLevel, onLevelChange }: AppHeaderProps) => {
   const getLevelLabel = (level: VocabularyLevel) => {
     switch(level) {
       case 1: return "Level 1 – Beginner";
@@ -43,13 +43,13 @@ export const AppHeader = ({ showPictures, onTogglePictures, currentLevel, onLeve
         
         <div className="flex items-center gap-2">
           <Button
-            variant={showPictures ? "default" : "outline"}
+            variant={showWord ? "default" : "outline"}
             size="lg"
             onClick={onTogglePictures}
             className="rounded-xl gap-2"
           >
-            {showPictures ? <Image className="w-5 h-5" /> : <Type className="w-5 h-5" />}
-            {showPictures ? "Pictures" : "Words"}
+            {showWord ? <Type className="w-5 h-5" /> : <Image className="w-5 h-5" />}
+            {showWord ? "Words" : "Pictures Only"}
           </Button>
           
           <DropdownMenu>

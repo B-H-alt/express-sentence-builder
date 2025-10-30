@@ -4,7 +4,7 @@ import { Card } from "@/pages/PecsApp";
 
 interface CardGridProps {
   selectedCategory: string;
-  showPictures: boolean;
+  showWord: boolean;
 }
 
 const categoryLabels: Record<string, string> = {
@@ -19,7 +19,7 @@ const categoryLabels: Record<string, string> = {
   food: "Food",
 };
 
-export const CardGrid = ({ selectedCategory, showPictures }: CardGridProps) => {
+export const CardGrid = ({ selectedCategory, showWord }: CardGridProps) => {
   const { favorites, addToSentence, toggleFavorite, incrementUsage, getFilteredCards } = useCardStore();
 
   const levelFilteredCards = getFilteredCards();
@@ -59,7 +59,7 @@ export const CardGrid = ({ selectedCategory, showPictures }: CardGridProps) => {
                   <PecsCard
                     key={card.id}
                     card={card}
-                    showPicture={showPictures}
+                    showWord={showWord}
                     onClick={() => handleCardClick(card)}
                     onFavorite={() => toggleFavorite(card.id)}
                     isFavorite={favorites.includes(card.id)}
@@ -75,7 +75,7 @@ export const CardGrid = ({ selectedCategory, showPictures }: CardGridProps) => {
             <PecsCard
               key={card.id}
               card={card}
-              showPicture={showPictures}
+              showWord={showWord}
               onClick={() => handleCardClick(card)}
               onFavorite={() => toggleFavorite(card.id)}
               isFavorite={favorites.includes(card.id)}
