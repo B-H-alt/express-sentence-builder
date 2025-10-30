@@ -35,7 +35,9 @@ export const CategoryTabs = ({ selectedCategory, onSelectCategory }: CategoryTab
             onClick={() => onSelectCategory(category.id)}
             className={cn(
               "rounded-2xl gap-2 whitespace-nowrap transition-all",
-              isSelected && "shadow-md"
+              isSelected
+                ? "bg-gradient-accent text-white border-transparent hover:brightness-110"
+                : "bg-card text-foreground border border-border hover:bg-gradient-accent hover:bg-card/80"
             )}
           >
             <Icon className="w-5 h-5" />

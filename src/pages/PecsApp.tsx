@@ -21,7 +21,7 @@ const PecsApp = () => {
   const { sentence, favorites, currentLevel, setLevel } = useCardStore();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="relative min-h-screen flex flex-col overflow-hidden bg-[radial-gradient(160%_100%_at_50%_-10%,hsl(var(--background)/0.06)_0%,transparent_70%),radial-gradient(120%_80%_at_0%_100%,hsl(var(--accent)/0.10)_0%,transparent_70%),radial-gradient(120%_80%_at_100%_100%,hsl(var(--secondary)/0.10)_0%,transparent_70%),linear-gradient(180deg,hsl(var(--background))_0%,hsl(var(--background))_100%)]">
       <AppHeader 
         showWord={showWord} 
         onTogglePictures={() => setShowWord(!showWord)}

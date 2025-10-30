@@ -46,7 +46,13 @@ export const CardGrid = ({ selectedCategory, showWord }: CardGridProps) => {
     : null;
 
   return (
-    <div className="h-full overflow-y-auto p-4 bg-card rounded-3xl border border-border">
+    <div className="relative overflow-hidden h-full overflow-y-auto p-4 bg-gradient-subtle rounded-3xl border border-border shadow-soft">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -z-10 right-[-20%] top-[-20%] h-[60%] w-[60%]
+                  bg-[radial-gradient(60%_60%_at_50%_50%,hsl(var(--accent)/0.18),transparent_70%)]
+                  blur-3xl"
+      ></div>
       {selectedCategory === "all" && cardsByCategory ? (
         <div className="space-y-6">
           {Object.entries(cardsByCategory).map(([category, cards]) => (
