@@ -185,6 +185,7 @@ interface CardStore {
   sentence: Card[];
   favorites: string[];
   currentLevel: VocabularyLevel;
+  customCards: Card[];
   addToSentence: (card: Card) => void;
   removeFromSentence: (index: number) => void;
   clearSentence: () => void;
@@ -192,6 +193,8 @@ interface CardStore {
   incrementUsage: (cardId: string) => void;
   setLevel: (level: VocabularyLevel) => void;
   getFilteredCards: () => Card[];
+  addCustomCard: (card: Omit<Card, 'id' | 'usage' | 'level'>) => void;
+  deleteCustomCard: (id: string) => void;
 }
 
 // Level 1 - Beginner (46 cards)
@@ -397,6 +400,7 @@ export const useCardStore = create<CardStore>()(
       sentence: [],
       favorites: [],
       currentLevel: 1,
+      customCards: [],
       
       addToSentence: (card) =>
         set((state) => ({
@@ -422,24 +426,45 @@ export const useCardStore = create<CardStore>()(
           cards: state.cards.map((card) =>
             card.id === cardId ? { ...card, usage: card.usage + 1 } : card
           ),
+          customCards: state.customCards.map((card) =>
+            card.id === cardId ? { ...card, usage: card.usage + 1 } : card
+          ),
         })),
       
       setLevel: (level) => set({ currentLevel: level }),
       
       getFilteredCards: () => {
         const state = get();
-        return state.cards.filter(card => (card.level || 1) <= state.currentLevel);
+        const levelCards = state.cards.filter(card => (card.level || 1) <= state.currentLevel);
+        return [...levelCards, ...state.customCards];
       },
+
+      addCustomCard: (card) => set((state) => {
+        const newCard: Card = {
+          id: `custom-${Date.now()}`,
+          text: card.text,
+          category: card.category,
+          imageUrl: card.imageUrl,
+          image: card.image,
+          usage: 0,
+          level: state.currentLevel,
+        };
+        return { customCards: [...state.customCards, newCard] };
+      }),
+
+      deleteCustomCard: (id) => set((state) => ({
+        customCards: state.customCards.filter(card => card.id !== id)
+      })),
     }),
     {
       name: "pecs-storage",
-      version: 5, // Fixed duplicates and capitalization
+      version: 5,
       migrate: (persistedState: any, version: number) => {
         if (version < 5) {
-          // Force reload with fixed cards (removed duplicates, fixed capitalization)
           return {
             ...persistedState,
             cards: allCards,
+            customCards: persistedState.customCards || [],
           };
         }
         return persistedState;
