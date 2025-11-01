@@ -1,10 +1,11 @@
+// src/components/SentenceBuilder.tsx
 import { useRef, useState } from "react";
 import { useCardStore } from "@/store/cardStore";
 import { PecsCard } from "./PecsCard";
 import { Button } from "@/components/ui/button";
 import { Trash2, Volume2, Square } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { composeSentence } from "@/utils/compose-sentence"; // ✅ import the utility
+import { composeSentence } from "@/utils/compose-sentence";
 
 interface SentenceBuilderProps {
   showWord: boolean;
@@ -12,8 +13,7 @@ interface SentenceBuilderProps {
 
 const ELEVEN_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY as string | undefined;
 const ELEVEN_VOICE =
-  (import.meta.env.VITE_ELEVENLABS_VOICE_ID as string | undefined) ??
-  "21m00Tcm4TlvDq8ikWAM"; // Rachel default
+  (import.meta.env.VITE_ELEVENLABS_VOICE_ID as string | undefined) ?? "21m00Tcm4TlvDq8ikWAM";
 
 export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
   const { sentence, removeFromSentence, clearSentence } = useCardStore();
@@ -85,7 +85,6 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
     setIsSpeaking(false);
   };
 
-  // ✅ Use the client-side composeSentence utility directly
   const handleSpeak = async () => {
     const raw = getSentenceText();
     if (!raw) return;
@@ -93,16 +92,21 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
     setIsSpeaking(true);
 
     const tokens = getSentenceTokens();
-    let spoken = raw;
 
+    // Ask Gemini; it returns a string ("" means "no improvement")
+    let spoken = raw; // default fallback is raw input
     try {
-      const result = await composeSentence({ tokens });
-      spoken = result.sentence;
+      const improved = await composeSentence({ tokens }); // <-- string
+      if (improved && improved.trim().length > 0) {
+        spoken = improved.trim();
+      }
     } catch (err) {
       console.error("Failed to compose sentence:", err);
+      // keep fallback `spoken = raw`
     }
 
-    toast({ title: "Sentence", description: spoken });
+    // Show what will actually be spoken
+    toast({ title: spoken });
 
     try {
       if (ELEVEN_KEY) {
@@ -175,14 +179,9 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
             Tap or drag cards here to build your sentence
           </p>
         ) : (
-          sentence.map((card, index) => (
-            <div key={`${card.id}-${index}`} className="flex-shrink-0">
-              <PecsCard
-                card={card}
-                showWord={showWord}
-                onRemove={() => removeFromSentence(index)}
-                inSentence
-              />
+          sentence.map((c, i) => (
+            <div key={`${c.id}-${i}`} className="flex-shrink-0">
+              <PecsCard card={c} showWord={showWord} onRemove={() => removeFromSentence(i)} inSentence />
             </div>
           ))
         )}
