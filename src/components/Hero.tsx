@@ -9,14 +9,16 @@ const Hero = () => {
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div>
-            <Badge className="mb-4 bg-secondary font-semibold text-white hover:bg-secondary/90">Innovation in Communication</Badge>
+            <Badge className="mb-4 bg-secondary font-semibold text-white hover:bg-secondary/90">
+              Innovation in Communication
+            </Badge>
             <h2 className="font-inter font-bold text-3xl md:text-4xl mb-6 text-foreground">
               Beyond Traditional PECS
             </h2>
             <p className="font-inter font-medium text-lg text-muted-foreground mb-8 leading-relaxed">
               Our Expressly platform combines the proven effectiveness of Picture Exchange Communication Systems with
               cutting-edge AI technology. Generate contextual images instantly and build complex sentences that adapt
-              to each learner's needs.
+              to each learner&apos;s needs.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link to="/demo">
@@ -26,8 +28,15 @@ const Hero = () => {
               </Link>
             </div>
           </div>
-          <div className="rounded-lg overflow-hidden shadow-lg bg-gray-200 flex items-center justify-center h-96">
-            <p className="text-gray-500 font-inter font-medium text-lg">Add image later</p>
+
+          {/* Hero image */}
+          <div className="w-full">
+            <img
+              src="/pecs-screenshot.png"
+              alt="Smart PECS App"
+              className="w-full h-auto rounded-2xl shadow-lg object-cover aspect-[4/3]"
+              loading="lazy"
+            />
           </div>
         </div>
       </div>
