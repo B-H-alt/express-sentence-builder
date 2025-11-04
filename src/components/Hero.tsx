@@ -29,12 +29,12 @@ const Hero = () => {
             </div>
           </div>
 
-          {/* Hero image - slightly zoomed out */}
+          {/* Hero image - slightly zoomed out but larger overall */}
           <div className="w-full flex justify-center">
             <img
               src="/pecs-screenshot.png"
               alt="Smart PECS App"
-              className="w-[90%] h-full rounded-2xl shadow-xl object-contain md:scale-95 lg:scale-90"
+              className="w-[95%] md:w-[105%] h-auto rounded-2xl shadow-xl object-contain scale-95 md:scale-90"
               loading="lazy"
             />
           </div>
