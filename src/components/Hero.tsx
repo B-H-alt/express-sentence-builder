@@ -34,7 +34,7 @@ const Hero = () => {
             <img
               src="/pecs-screenshot.png"
               alt="Smart PECS App"
-              className="w-[90%] h-auto rounded-2xl shadow-xl object-contain md:scale-95 lg:scale-90"
+              className="w-[90%] h-full rounded-2xl shadow-xl object-contain md:scale-95 lg:scale-90"
               loading="lazy"
             />
           </div>
