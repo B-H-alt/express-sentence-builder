@@ -75,8 +75,7 @@ import eatLunchImg from "@/assets/pecs/eat-lunch.jpg";
 import eatDinnerImg from "@/assets/pecs/eat-dinner.jpg";
 import brushTeethImg from "@/assets/pecs/brush-teeth.jpg";
 import washHandsImg from "@/assets/pecs/wash-hands.jpg";
-import sleepImg from "@/assets/pecs/sleep.jpg";
-import dontWantImg from "@/assets/pecs/don't-want.jpg";
+import dontWantImg from "@/assets/pecs/don't-want.jpg"; // keep if the file is named with apostrophe
 import likeImg from "@/assets/pecs/like.jpg";
 import dontLikeImg from "@/assets/pecs/dont-like.jpg";
 import lookImg from "@/assets/pecs/look.jpg";
@@ -203,7 +202,7 @@ const level1Cards: Card[] = [
   { id: "l1-1", text: "Mom", category: "people", usage: 0, level: 1, image: momImg },
   { id: "l1-2", text: "Dad", category: "people", usage: 0, level: 1, image: dadImg },
   { id: "l1-3", text: "Teacher", category: "people", usage: 0, level: 1, image: teacherImg },
-  
+
   // Feelings
   { id: "l1-4", text: "Happy", category: "feelings", usage: 0, level: 1, image: happyImg },
   { id: "l1-5", text: "Sad", category: "feelings", usage: 0, level: 1, image: sadImg },
@@ -212,7 +211,7 @@ const level1Cards: Card[] = [
   { id: "l1-8", text: "Scared", category: "feelings", usage: 0, level: 1, image: scaredImg },
   { id: "l1-9", text: "Excited", category: "feelings", usage: 0, level: 1, image: excitedImg },
   { id: "l1-10", text: "Calm", category: "feelings", usage: 0, level: 1, image: calmImg },
-  
+
   // Needs & Actions
   { id: "l1-11", text: "Eat", category: "actions", usage: 0, level: 1, image: eatImg },
   { id: "l1-12", text: "Drink", category: "actions", usage: 0, level: 1, image: drinkImg },
@@ -225,12 +224,12 @@ const level1Cards: Card[] = [
   { id: "l1-19", text: "Want", category: "actions", usage: 0, level: 1, image: wantImg },
   { id: "l1-20", text: "Need", category: "actions", usage: 0, level: 1, image: needImg },
   { id: "l1-21", text: "Finished", category: "actions", usage: 0, level: 1, image: finishedImg },
-  
+
   // Responses
   { id: "l1-22", text: "Yes", category: "responses", usage: 0, level: 1, image: yesImg },
   { id: "l1-23", text: "No", category: "responses", usage: 0, level: 1, image: noImg },
   { id: "l1-24", text: "Maybe", category: "responses", usage: 0, level: 1, image: maybeImg },
-  
+
   // Activities
   { id: "l1-25", text: "Play", category: "activities", usage: 0, level: 1, image: playImg },
   { id: "l1-26", text: "Read", category: "activities", usage: 0, level: 1, image: readImg },
@@ -238,7 +237,7 @@ const level1Cards: Card[] = [
   { id: "l1-28", text: "Listen to music", category: "activities", usage: 0, level: 1, image: listenToMusicImg },
   { id: "l1-29", text: "Draw", category: "activities", usage: 0, level: 1, image: drawImg },
   { id: "l1-30", text: "Build", category: "activities", usage: 0, level: 1, image: buildImg },
-  
+
   // Objects/Items
   { id: "l1-31", text: "Toy", category: "objects", usage: 0, level: 1, image: toyImg },
   { id: "l1-32", text: "Book", category: "objects", usage: 0, level: 1, image: bookImg },
@@ -247,13 +246,13 @@ const level1Cards: Card[] = [
   { id: "l1-35", text: "Ball", category: "objects", usage: 0, level: 1, image: ballImg },
   { id: "l1-36", text: "Chair", category: "objects", usage: 0, level: 1, image: chairImg },
   { id: "l1-37", text: "Bed", category: "objects", usage: 0, level: 1, image: bedImg },
-  
+
   // Places
   { id: "l1-38", text: "Home", category: "places", usage: 0, level: 1, image: homeImg },
   { id: "l1-39", text: "School", category: "places", usage: 0, level: 1, image: schoolImg },
   { id: "l1-40", text: "Park", category: "places", usage: 0, level: 1, image: parkImg },
   { id: "l1-41", text: "Store", category: "places", usage: 0, level: 1, image: storeImg },
-  
+
   // Social
   { id: "l1-42", text: "Hi", category: "social", usage: 0, level: 1, image: hiImg },
   { id: "l1-43", text: "Bye", category: "social", usage: 0, level: 1, image: byeImg },
@@ -262,7 +261,7 @@ const level1Cards: Card[] = [
   { id: "l1-46", text: "Sorry", category: "social", usage: 0, level: 1, image: sorryImg },
 ];
 
-// Level 2 - Intermediate (adds 29 new cards to Level 1's 46 cards)
+// Level 2 - Intermediate
 const level2Cards: Card[] = [
   ...level1Cards,
   { id: "l2-1", text: "Brother", category: "people", usage: 0, level: 2, image: brotherImg },
@@ -314,7 +313,7 @@ const level2Cards: Card[] = [
   { id: "l2-48", text: "Quiet", category: "descriptive", usage: 0, level: 2, image: quietImg },
 ];
 
-// Level 3 - Advanced (adds 75 new cards to Level 2's 75 cards)
+// Level 3 - Advanced
 const level3Cards: Card[] = [
   ...level2Cards,
   { id: "l3-1", text: "Grandma", category: "people", usage: 0, level: 3, image: grandmaImg },
@@ -389,6 +388,10 @@ const level3Cards: Card[] = [
   { id: "l3-73", text: "Sing", category: "activities", usage: 0, level: 3, image: singImg },
   { id: "l3-74", text: "Dance", category: "activities", usage: 0, level: 3, image: danceImg },
   { id: "l3-75", text: "Watch TV", category: "activities", usage: 0, level: 3, image: watchTvImg },
+  { id: "l3-76", text: "Play game", category: "activities", usage: 0, level: 3, image: playGameImg },
+  { id: "l3-77", text: "Ride bike", category: "activities", usage: 0, level: 3, image: rideBikeImg },
+  { id: "l3-78", text: "Go swimming", category: "activities", usage: 0, level: 3, image: goSwimmingImg },
+  { id: "l3-79", text: "Build blocks", category: "activities", usage: 0, level: 3, image: buildBlocksImg },
 ];
 
 const allCards = level3Cards;
@@ -401,26 +404,26 @@ export const useCardStore = create<CardStore>()(
       favorites: [],
       currentLevel: 1,
       customCards: [],
-      
+
       addToSentence: (card) =>
         set((state) => ({
           sentence: [...state.sentence, card],
         })),
-      
+
       removeFromSentence: (index) =>
         set((state) => ({
           sentence: state.sentence.filter((_, i) => i !== index),
         })),
-      
+
       clearSentence: () => set({ sentence: [] }),
-      
+
       toggleFavorite: (cardId) =>
         set((state) => ({
           favorites: state.favorites.includes(cardId)
             ? state.favorites.filter((id) => id !== cardId)
             : [...state.favorites, cardId],
         })),
-      
+
       incrementUsage: (cardId) =>
         set((state) => ({
           cards: state.cards.map((card) =>
@@ -430,9 +433,9 @@ export const useCardStore = create<CardStore>()(
             card.id === cardId ? { ...card, usage: card.usage + 1 } : card
           ),
         })),
-      
+
       setLevel: (level) => set({ currentLevel: level }),
-      
+
       getFilteredCards: () => {
         const state = get();
         const levelCards = state.cards.filter(card => (card.level || 1) <= state.currentLevel);
@@ -458,16 +461,20 @@ export const useCardStore = create<CardStore>()(
     }),
     {
       name: "pecs-storage",
-      version: 5,
-      migrate: (persistedState: any, version: number) => {
-        if (version < 5) {
-          return {
-            ...persistedState,
-            cards: allCards,
-            customCards: persistedState.customCards || [],
-          };
-        }
-        return persistedState;
+      version: 6, // bumped
+      // Only persist user data, never the static cards (which contain hashed image URLs)
+      partialize: (state) => ({
+        sentence: state.sentence,
+        favorites: state.favorites,
+        currentLevel: state.currentLevel,
+        customCards: state.customCards,
+      }),
+      migrate: (persistedState: any, _version: number) => {
+        // Always refresh cards to the current build
+        return {
+          ...persistedState,
+          cards: allCards,
+        };
       },
     }
   )
