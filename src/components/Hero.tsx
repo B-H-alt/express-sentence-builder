@@ -21,11 +21,7 @@ const Hero = () => {
               to each learner&apos;s needs.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/demo">
-                <Button size="lg" className="bg-secondary font-semibold text-white hover:bg-secondary/90">
-                  Try the Demo <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
+              
             </div>
           </div>
 

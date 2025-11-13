@@ -10,12 +10,8 @@ const HeaderNav = () => {
             <span className="font-inter font-bold text-xl">Expressly</span>
           </Link>
           <div className="flex items-center gap-6">
-            <Link to="/" className="font-inter font-medium hover:text-white/80 transition-colors">
-              Home
-            </Link>
-            <Link to="/demo" className="font-inter font-medium hover:text-white/80 transition-colors">
-              Demo
-            </Link>
+            
+            
           </div>
         </div>
       </nav>
