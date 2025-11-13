@@ -23,7 +23,8 @@ export async function composeSentence(input: { tokens?: string[]; text?: string 
   const prompt = `
 You are a sentence composer for PECS-style token sequences.
 Convert this input into a simple, grammatically correct English sentence.
-Prefer short, clear forms in first-person if needed.
+Prefer short, clear forms in first-person if needed. If the first word in the input is a noun, always assume it is the subject of the sentence.
+Always just give me the output sentence, never anything more. If there are multiple possible options, just always default to the first one. 
 Input: ${tokens}
   `.trim();
 
@@ -31,6 +32,11 @@ Input: ${tokens}
     const response = await ai.models.generateContent({
       model,
       contents: prompt,
+      config: {
+        thinkingConfig: {
+          thinkingBudget: 0, // Disables thinking
+        },
+      }
     });
 
     // The SDK automatically returns the text output
