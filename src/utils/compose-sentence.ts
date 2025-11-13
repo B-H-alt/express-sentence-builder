@@ -36,11 +36,10 @@ Examples:
 - "dog eat food" becomes "The dog is eating food."
 `.trim();
 
-    const resp = await model.generateContent({
+    const result = await model.generateContent({
       contents: [
         { role: "user", parts: [{ text: instruction }] },
-        { role: "user", parts: [{ text: "Tokens:\n" + JSON.stringify(tokens) }] },
-        { role: "user", parts: [{ text: "Raw:\n" + raw }] },
+        { role: "user", parts: [{ text: `Tokens:\n${JSON.stringify(tokens)}\nRaw:\n${raw}` }] },
       ],
       generationConfig: {
         temperature: 0.2,
@@ -48,7 +47,8 @@ Examples:
       },
     });
 
-    const out = (resp.response?.text?.() || "").trim();
+    // ✅ Correct way to extract text (Gemini SDK v1.1+)
+    const out = result.response.text().trim();
 
     // If Gemini parrots the input or gives nothing, signal "no improvement"
     const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
