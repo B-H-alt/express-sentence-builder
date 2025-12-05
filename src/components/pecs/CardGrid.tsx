@@ -17,6 +17,8 @@ const categoryLabels: Record<string, string> = {
   places: "Places",
   social: "Social",
   food: "Food",
+  descriptive: "Descriptions",
+  time: "Time"
 };
 
 export const CardGrid = ({ selectedCategory, showWord }: CardGridProps) => {

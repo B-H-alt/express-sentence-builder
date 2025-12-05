@@ -1,13 +1,24 @@
 import { Button } from "@/components/ui/button";
-import { Heart, Home, Utensils, User, Smile, Star, Grid3x3 } from "lucide-react";
+import {
+  Heart,
+  Home,
+  Utensils,
+  User,
+  Smile,
+  Star,
+  Grid3x3,
+  Clock,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CategoryTabsProps {
   selectedCategory: string;
   onSelectCategory: (category: string) => void;
+  currentLevel: number; // <-- new prop
 }
 
-const categories = [
+// Always-visible categories
+const baseCategories = [
   { id: "all", label: "All", icon: Grid3x3 },
   { id: "favorites", label: "Favorites", icon: Star },
   { id: "people", label: "People", icon: User },
@@ -20,13 +31,46 @@ const categories = [
   { id: "social", label: "Social", icon: User },
 ];
 
-export const CategoryTabs = ({ selectedCategory, onSelectCategory }: CategoryTabsProps) => {
+// Level-dependent categories
+const levelCategories: Record<
+  1 | 2 | 3,
+  { id: string; label: string; icon: React.ComponentType<any> }[]
+> = {
+  // Level 1: only Food
+  1: [
+    { id: "food", label: "Food", icon: Utensils }
+  ],
+
+  // Level 2: Food + Descriptive
+  2: [
+    { id: "food", label: "Food", icon: Utensils },
+    { id: "descriptive", label: "Descriptive", icon: Smile },
+  ],
+
+  // Level 3: Food + Descriptive + Time
+  3: [
+    { id: "food", label: "Food", icon: Utensils },
+    { id: "descriptive", label: "Descriptive", icon: Smile },
+    { id: "time", label: "Time", icon: Clock },
+  ],
+};
+
+export const CategoryTabs = ({
+  selectedCategory,
+  onSelectCategory,
+  currentLevel,
+}: CategoryTabsProps) => {
+  // Clamp to 1–3 just in case
+  const levelKey = (Math.max(1, Math.min(3, currentLevel)) as 1 | 2 | 3);
+
+  const categoriesToShow = [...baseCategories, ...levelCategories[levelKey]];
+
   return (
     <div className="flex gap-2 pb-3 overflow-x-auto">
-      {categories.map((category) => {
+      {categoriesToShow.map((category) => {
         const Icon = category.icon;
         const isSelected = selectedCategory === category.id;
-        
+
         return (
           <Button
             key={category.id}
@@ -35,9 +79,14 @@ export const CategoryTabs = ({ selectedCategory, onSelectCategory }: CategoryTab
             onClick={() => onSelectCategory(category.id)}
             className={cn(
               "rounded-2xl gap-2 whitespace-nowrap transition-all",
-              isSelected
-                ? "bg-gradient-accent text-white border-transparent hover:brightness-110"
-                : "bg-card text-foreground border border-border hover:bg-gradient-accent hover:bg-card/80"
+
+              // Selected state
+              isSelected &&
+                "bg-gradient-accent text-white border-transparent hover:brightness-110",
+
+              // Unselected + hover state (keep text visible!)
+              !isSelected &&
+                "bg-card text-foreground border border-border hover:bg-card/90 hover:text-foreground hover:border-accent"
             )}
           >
             <Icon className="w-5 h-5" />
