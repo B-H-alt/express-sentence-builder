@@ -185,16 +185,35 @@ interface CardStore {
   favorites: string[];
   currentLevel: VocabularyLevel;
   customCards: Card[];
+
+  // NEW — Onboarding fields
+  onboardingComplete: boolean;
+  userName: string | null;
+  userImage: string | null;
+
+  // Sentence actions
   addToSentence: (card: Card) => void;
   removeFromSentence: (index: number) => void;
   clearSentence: () => void;
+
+  // Favorites & usage
   toggleFavorite: (cardId: string) => void;
   incrementUsage: (cardId: string) => void;
+
+  // Level control
   setLevel: (level: VocabularyLevel) => void;
+
+  // Card filtering
   getFilteredCards: () => Card[];
-  addCustomCard: (card: Omit<Card, 'id' | 'usage' | 'level'>) => void;
+
+  // Custom cards
+  addCustomCard: (card: Omit<Card, "id" | "usage" | "level">) => void;
   deleteCustomCard: (id: string) => void;
+
+  // NEW — Complete onboarding and create user card
+  completeOnboarding: (name: string, image: string) => void;
 }
+
 
 // Level 1 - Beginner (46 cards)
 const level1Cards: Card[] = [
@@ -405,6 +424,12 @@ export const useCardStore = create<CardStore>()(
       currentLevel: 1,
       customCards: [],
 
+      // --- NEW ONBOARDING FIELDS ---
+      onboardingComplete: false,
+      userName: null,
+      userImage: null,
+
+      // --- SENTENCE ACTIONS ---
       addToSentence: (card) =>
         set((state) => ({
           sentence: [...state.sentence, card],
@@ -417,6 +442,7 @@ export const useCardStore = create<CardStore>()(
 
       clearSentence: () => set({ sentence: [] }),
 
+      // --- FAVORITES ---
       toggleFavorite: (cardId) =>
         set((state) => ({
           favorites: state.favorites.includes(cardId)
@@ -424,6 +450,7 @@ export const useCardStore = create<CardStore>()(
             : [...state.favorites, cardId],
         })),
 
+      // --- USAGE COUNT ---
       incrementUsage: (cardId) =>
         set((state) => ({
           cards: state.cards.map((card) =>
@@ -434,46 +461,81 @@ export const useCardStore = create<CardStore>()(
           ),
         })),
 
+      // --- LEVEL CONTROL ---
       setLevel: (level) => set({ currentLevel: level }),
 
+      // --- CARD FILTERING ---
       getFilteredCards: () => {
         const state = get();
-        const levelCards = state.cards.filter(card => (card.level || 1) <= state.currentLevel);
+        const levelCards = state.cards.filter(
+          (card) => (card.level || 1) <= state.currentLevel
+        );
         return [...levelCards, ...state.customCards];
       },
 
-      addCustomCard: (card) => set((state) => {
-        const newCard: Card = {
-          id: `custom-${Date.now()}`,
-          text: card.text,
-          category: card.category,
-          imageUrl: card.imageUrl,
-          image: card.image,
-          usage: 0,
-          level: state.currentLevel,
-        };
-        return { customCards: [...state.customCards, newCard] };
-      }),
+      // --- CUSTOM CARD CREATION ---
+      addCustomCard: (card) =>
+        set((state) => {
+          const newCard: Card = {
+            id: `custom-${Date.now()}`,
+            text: card.text,
+            category: card.category,
+            imageUrl: card.imageUrl,
+            image: card.image,
+            usage: 0,
+            level: state.currentLevel,
+          };
+          return { customCards: [...state.customCards, newCard] };
+        }),
 
-      deleteCustomCard: (id) => set((state) => ({
-        customCards: state.customCards.filter(card => card.id !== id)
-      })),
+      deleteCustomCard: (id) =>
+        set((state) => ({
+          customCards: state.customCards.filter((card) => card.id !== id),
+        })),
+
+      // --- NEW: COMPLETE ONBOARDING & CREATE USER CARD ---
+      completeOnboarding: (name, image) =>
+        set((state) => {
+          const newCard: Card = {
+            id: `user-${Date.now()}`,
+            text: name,
+            category: "people",
+            usage: 0,
+            level: 1,
+            imageUrl: image,
+            image,
+          };
+
+          return {
+            onboardingComplete: true,
+            userName: name,
+            userImage: image,
+            customCards: [...state.customCards, newCard],
+          };
+        }),
     }),
+
+    // --- PERSIST CONFIG ---
     {
       name: "pecs-storage",
-      version: 6, // bumped
-      // Only persist user data, never the static cards (which contain hashed image URLs)
+      version: 7, // bumped again
+
       partialize: (state) => ({
         sentence: state.sentence,
         favorites: state.favorites,
         currentLevel: state.currentLevel,
         customCards: state.customCards,
+
+        // NEW persisted fields
+        onboardingComplete: state.onboardingComplete,
+        userName: state.userName,
+        userImage: state.userImage,
       }),
+
       migrate: (persistedState: any, _version: number) => {
-        // Always refresh cards to the current build
         return {
           ...persistedState,
-          cards: allCards,
+          cards: allCards, // always refresh static cards
         };
       },
     }
