@@ -25,6 +25,14 @@ const PecsApp = () => {
 
   const { currentLevel } = useCardStore();
 
+  // ✅ pull onboarding state from the store
+  // Pick the one that exists in your store:
+  const hasCompletedOnboarding =
+    useCardStore((s: any) => s.hasCompletedOnboarding) ??
+    useCardStore((s: any) => s.onboardingComplete) ??
+    useCardStore((s: any) => s.didOnboard) ??
+    false;
+
   // Measure fixed header height so content starts exactly below it
   const topBarRef = useRef<HTMLDivElement | null>(null);
   const [topBarH, setTopBarH] = useState(0);
@@ -50,6 +58,11 @@ const PecsApp = () => {
       window.removeEventListener("resize", update);
     };
   }, []);
+
+  // ✅ SHOW ONBOARDING FIRST
+  if (!hasCompletedOnboarding) {
+    return <Onboarding />;
+  }
 
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden flex flex-col bg-[radial-gradient(160%_100%_at_50%_-10%,hsl(var(--background)/0.06)_0%,transparent_70%),radial-gradient(120%_80%_at_0%_100%,hsl(var(--accent)/0.10)_0%,transparent_70%),radial-gradient(120%_80%_at_100%_100%,hsl(var(--secondary)/0.10)_0%,transparent_70%),linear-gradient(180deg,hsl(var(--background))_0%,hsl(var(--background))_100%)]">
