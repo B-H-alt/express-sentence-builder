@@ -35,19 +35,43 @@ const PecsApp = () => {
 
   // Measure fixed header height so content starts exactly below it
   const topBarRef = useRef<HTMLDivElement | null>(null);
-  const [topBarH, setTopBarH] = useState(0);
+
+  // IMPORTANT:
+  // Start with a safe non-zero default so first paint never overlaps.
+  // This prevents the "top 1.5 rows covered" flash on first transition from onboarding.
+  const [topBarH, setTopBarH] = useState(360);
 
   useLayoutEffect(() => {
-    if (!topBarRef.current) return;
-
     const el = topBarRef.current;
+    if (!el) return;
+
+    let raf1 = 0;
+    let raf2 = 0;
+    let t = 0;
 
     const update = () => {
       const rect = el.getBoundingClientRect();
-      setTopBarH(Math.ceil(rect.height));
+      const h = Math.ceil(rect.height);
+      if (h > 0) setTopBarH(h);
     };
 
+    // 1) immediate
     update();
+
+    // 2) next frame(s) catches "settling" layout after mount
+    raf1 = requestAnimationFrame(() => {
+      update();
+      raf2 = requestAnimationFrame(update);
+    });
+
+    // 3) small delayed pass catches late layout shifts (images, hydration, etc.)
+    t = window.setTimeout(update, 60);
+
+    // 4) fonts finishing can change heights after first paint
+    const fonts = (document as any).fonts;
+    if (fonts?.ready) {
+      fonts.ready.then(update).catch(() => {});
+    }
 
     const ro = new ResizeObserver(update);
     ro.observe(el);
@@ -56,6 +80,9 @@ const PecsApp = () => {
     return () => {
       ro.disconnect();
       window.removeEventListener("resize", update);
+      if (raf1) cancelAnimationFrame(raf1);
+      if (raf2) cancelAnimationFrame(raf2);
+      if (t) clearTimeout(t);
     };
   }, []);
 
