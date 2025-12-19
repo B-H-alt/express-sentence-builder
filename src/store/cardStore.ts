@@ -211,8 +211,12 @@ interface CardStore {
   deleteCustomCard: (id: string) => void;
 
   // NEW — Complete onboarding and create user card
-  completeOnboarding: (name: string, image: string) => void;
+  completeOnboarding: (name: string, image?: string) => void;
+
+  // ✅ NEW — update username/picture later and keep the "user card" in sync
+  updateUserProfile: (name: string, image?: string | null) => void;
 }
+
 
 
 // Level 1 - Beginner (46 cards)
@@ -415,6 +419,8 @@ const level3Cards: Card[] = [
 
 const allCards = level3Cards;
 
+export const USER_CARD_ID = "expressly-user-card";
+
 export const useCardStore = create<CardStore>()(
   persist(
     (set, get) => ({
@@ -493,24 +499,65 @@ export const useCardStore = create<CardStore>()(
           customCards: state.customCards.filter((card) => card.id !== id),
         })),
 
-      // --- NEW: COMPLETE ONBOARDING & CREATE USER CARD ---
+      // --- COMPLETE ONBOARDING & CREATE/UPDATE USER CARD ---
       completeOnboarding: (name, image) =>
         set((state) => {
-          const newCard: Card = {
-            id: `user-${Date.now()}`,
-            text: name,
+          const finalName = name?.trim() || "Me";
+          const finalImage = image ?? null;
+
+          const userCard: Card = {
+            id: USER_CARD_ID,          // ✅ stable id so we can update later
+            text: finalName,
             category: "people",
             usage: 0,
             level: 1,
-            imageUrl: image,
-            image,
+            imageUrl: finalImage ?? undefined,
+            image: finalImage ?? undefined,
           };
+
+          const existingIdx = state.customCards.findIndex(
+            (c) => c.id === USER_CARD_ID
+          );
+
+          const nextCustomCards =
+            existingIdx === -1
+              ? [userCard, ...state.customCards]
+              : state.customCards.map((c) =>
+                  c.id === USER_CARD_ID ? { ...c, ...userCard } : c
+                );
 
           return {
             onboardingComplete: true,
-            userName: name,
-            userImage: image,
-            customCards: [...state.customCards, newCard],
+            userName: finalName,
+            userImage: finalImage,
+            customCards: nextCustomCards,
+          };
+        }),
+
+      // --- NEW: UPDATE PROFILE (username + picture) AND SYNC USER CARD ---
+      updateUserProfile: (name, image) =>
+        set((state) => {
+          const finalName = name?.trim() || "Me";
+
+          // undefined means "don't change image"
+          const finalImage =
+            image === undefined ? state.userImage : image ?? null;
+
+          const nextCustomCards = state.customCards.map((c) =>
+            c.id === USER_CARD_ID
+              ? {
+                  ...c,
+                  text: finalName,
+                  imageUrl: finalImage ?? undefined,
+                  image: finalImage ?? undefined,
+                }
+              : c
+          );
+
+          return {
+            userName: finalName,
+            userImage: finalImage,
+            customCards: nextCustomCards,
           };
         }),
     }),
@@ -518,7 +565,7 @@ export const useCardStore = create<CardStore>()(
     // --- PERSIST CONFIG ---
     {
       name: "pecs-storage",
-      version: 7, // bumped again
+      version: 8, // bump because structure changed (stable user card id + new action)
 
       partialize: (state) => ({
         sentence: state.sentence,
@@ -526,16 +573,29 @@ export const useCardStore = create<CardStore>()(
         currentLevel: state.currentLevel,
         customCards: state.customCards,
 
-        // NEW persisted fields
         onboardingComplete: state.onboardingComplete,
         userName: state.userName,
         userImage: state.userImage,
       }),
 
       migrate: (persistedState: any, _version: number) => {
+        // Ensure cards always refresh from allCards, and also fix old user cards
+        const prev = persistedState ?? {};
+
+        const fixedCustomCards = Array.isArray(prev.customCards)
+          ? prev.customCards.map((c: any) => {
+              // if older versions used "user-<timestamp>", normalize to stable id once
+              if (typeof c?.id === "string" && c.id.startsWith("user-")) {
+                return { ...c, id: USER_CARD_ID };
+              }
+              return c;
+            })
+          : [];
+
         return {
-          ...persistedState,
-          cards: allCards, // always refresh static cards
+          ...prev,
+          cards: allCards,
+          customCards: fixedCustomCards,
         };
       },
     }

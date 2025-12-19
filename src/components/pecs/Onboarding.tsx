@@ -22,7 +22,7 @@ export default function Onboarding() {
   };
 
   const handleContinue = () => {
-    completeOnboarding(name || "Me", image || undefined);
+    completeOnboarding(name?.trim() || "Me", image ?? undefined);
   };
 
   const handleSkip = () => {
@@ -38,7 +38,6 @@ export default function Onboarding() {
     <section className="min-h-screen bg-gray-50 flex items-center justify-center py-16 px-4">
       <div className="w-full max-w-5xl">
         <div className="grid md:grid-cols-2 gap-10 items-center">
-          {/* Left: Copy (Hero-style) */}
           <div>
             <Badge className="mb-4 bg-secondary font-semibold text-white hover:bg-secondary/90">
               Innovation in Communication
@@ -58,18 +57,11 @@ export default function Onboarding() {
                 <UserRound className="h-4 w-4" />
                 Optional name + photo
               </span>
-              <span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
-              <span className="inline-flex items-center gap-2">
-                <Upload className="h-4 w-4" />
-                Takes 10 seconds
-              </span>
             </div>
           </div>
 
-          {/* Right: Form Card */}
           <div className="w-full">
             <div className="rounded-2xl bg-white border border-border shadow-xl p-6 md:p-7">
-              {/* Avatar preview */}
               <div className="flex items-center gap-4 mb-6">
                 <div className="relative h-16 w-16 rounded-2xl overflow-hidden bg-gray-100 border border-border flex items-center justify-center">
                   {image ? (
@@ -93,7 +85,6 @@ export default function Onboarding() {
                 )}
               </div>
 
-              {/* Name input */}
               <div className="mb-4">
                 <label className="block text-sm font-inter font-semibold text-foreground mb-2">
                   Name
@@ -106,7 +97,6 @@ export default function Onboarding() {
                 />
               </div>
 
-              {/* Upload */}
               <div className="mb-6">
                 <label className="block text-sm font-inter font-semibold text-foreground mb-2">
                   Picture
@@ -146,7 +136,6 @@ export default function Onboarding() {
                 </p>
               </div>
 
-              {/* Continue */}
               <Button
                 type="button"
                 className="w-full bg-secondary text-white hover:bg-secondary/90"
@@ -157,7 +146,6 @@ export default function Onboarding() {
               </Button>
             </div>
 
-            {/* Small mobile helper text */}
             <p className="mt-4 text-center text-xs text-muted-foreground md:hidden">
               Optional — you can change this later.
             </p>
