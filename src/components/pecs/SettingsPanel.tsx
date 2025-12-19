@@ -64,9 +64,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
 
-      <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      <div className="fixed inset-0 z-[90] flex items-center justify-center px-4">
         <div
           className="relative w-full max-w-4xl rounded-3xl bg-background shadow-2xl border border-border/60 p-6 md:p-8 flex flex-col gap-6 md:gap-8"
           onClick={(e) => e.stopPropagation()}
