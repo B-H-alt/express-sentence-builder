@@ -24,6 +24,24 @@ const HeaderNav = () => {
             >
               Demo
             </Link>
+
+            <Link
+              to="/pecs-app"
+              className="
+                -ml-2
+                inline-flex items-center
+                rounded-full
+                bg-white
+                px-4 py-2
+                text-sm font-semibold
+                text-primary
+                shadow-md
+                transition-all
+                hover:shadow-lg
+              "
+            >
+              Open App →
+            </Link>
           </div>
         </div>
       </nav>
