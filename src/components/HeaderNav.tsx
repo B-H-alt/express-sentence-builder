@@ -7,11 +7,23 @@ const HeaderNav = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
             <img src="/handmade-logo.png" alt="Expressly Logo" className="h-10 w-auto" />
-            <span className="font-inter font-bold text-xl">Expressly</span>
+            <span className="font-bold text-xl">Expressly</span>
           </Link>
-          <div className="flex items-center gap-6">
-            
-            
+
+          <div className="flex items-center gap-10">
+            <Link
+              to="/about"
+              className="font-semibold text-white/90 hover:text-white transition-colors"
+            >
+              About
+            </Link>
+
+            <Link
+              to="/demo"
+              className="font-semibold text-white/90 hover:text-white transition-colors"
+            >
+              Demo
+            </Link>
           </div>
         </div>
       </nav>

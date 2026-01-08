@@ -17,13 +17,6 @@ const FooterLanding = () => {
             <a href="#" className="text-2xl hover:text-secondary transition-colors">💼</a>
           </div>
           
-          <div className="flex flex-wrap justify-center gap-8 text-sm">
-            <a href="#privacy" className="font-inter text-background/60 hover:text-background transition-colors">Privacy Policy</a>
-            <a href="#terms" className="font-inter text-background/60 hover:text-background transition-colors">Terms of Service</a>
-            <a href="#support" className="font-inter text-background/60 hover:text-background transition-colors">Support</a>
-            <a href="#careers" className="font-inter text-background/60 hover:text-background transition-colors">Careers</a>
-          </div>
-          
           <div className="text-center">
             <p className="font-inter text-background/60 text-sm">&copy; 2025 Expressly. All rights reserved.</p>
           </div>

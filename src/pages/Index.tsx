@@ -11,9 +11,9 @@ const Index = () => {
       <HeaderNav />
       <div className="pt-[73px]">
         <HeroHeader />
-      <Hero />
-      <Features />
+        <Hero />
         <About />
+        <Features />
         <FooterLanding />
       </div>
     </div>
