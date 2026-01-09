@@ -7,10 +7,6 @@ export const config = {
   },
 };
 
-const replicate = new Replicate({
-  auth: process.env.REPLICATE_API_TOKEN,
-});
-
 // Download the generated image and return as a data URL so the client
 // can store it locally (matching your current modal behavior).
 async function urlToDataUrl(imageUrl: string): Promise<string> {
@@ -67,6 +63,26 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
+    // ---- ENV GUARDS (helps diagnose Vercel Preview vs Production vs typo) ----
+    const token = process.env.REPLICATE_API_TOKEN;
+
+    if (!token) {
+      // Do NOT print the token; just confirm presence/absence.
+      console.error(
+        "Missing REPLICATE_API_TOKEN. Check Vercel Environment Variables scope (Preview/Production/Development) and redeploy."
+      );
+      res
+        .status(500)
+        .send(
+          "Server misconfigured: missing REPLICATE_API_TOKEN. Check Vercel env scope and redeploy."
+        );
+      return;
+    }
+
+    // Optional: minimal log to confirm it's present in this deployment
+    console.log("REPLICATE_API_TOKEN present:", Boolean(token));
+    // ------------------------------------------------------------------------
+
     const { prompt, seed } = req.body as {
       prompt?: string;
       seed?: number;
@@ -76,6 +92,9 @@ export default async function handler(req: any, res: any) {
       res.status(400).send("Missing prompt.");
       return;
     }
+
+    // Initialize Replicate *after* reading env (helps some deploy setups)
+    const replicate = new Replicate({ auth: token });
 
     const pecsPrompt = buildPecsPrompt(prompt);
 
@@ -112,6 +131,14 @@ export default async function handler(req: any, res: any) {
     res.status(200).json({ dataUrl });
   } catch (err: any) {
     console.error(err);
-    res.status(500).send(err?.message || "Generation failed.");
+
+    // Bubble up the most likely HTTP status if the SDK provides it
+    const status =
+      err?.status ||
+      err?.response?.status ||
+      err?.cause?.status ||
+      500;
+
+    res.status(status).send(err?.message || "Generation failed.");
   }
 }
