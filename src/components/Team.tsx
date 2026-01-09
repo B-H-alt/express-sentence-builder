@@ -29,14 +29,17 @@ const Team = () => {
 
               {/* Team Images */}
               <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="overflow-hidden rounded-2xl border border-border">
+                {/* LEFT image – balanced crop */}
+                <div className="overflow-hidden rounded-2xl border border-border aspect-[5/4]">
                   <img
                     src="/expressly-team.png"
                     alt="Expressly team"
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-cover object-[45%_0%]"
                   />
                 </div>
-                <div className="overflow-hidden rounded-2xl border border-border">
+
+                {/* RIGHT image – unchanged */}
+                <div className="overflow-hidden rounded-2xl border border-border aspect-[5/4]">
                   <img
                     src="/smartpecs-team.webp"
                     alt="Smart PECS team"

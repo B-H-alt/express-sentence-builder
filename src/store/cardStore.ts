@@ -176,6 +176,9 @@ import playGameImg from "@/assets/pecs/play-game.jpg";
 import rideBikeImg from "@/assets/pecs/ride-bike.jpg";
 import goSwimmingImg from "@/assets/pecs/go-swimming.jpg";
 import buildBlocksImg from "@/assets/pecs/build-blocks.jpg";
+import now from "@/assets/pecs/now.jpg";
+import later from "@/assets/pecs/later.jpg";
+import makeBed from "@/assets/pecs/makeBed.jpg";
 
 export type VocabularyLevel = 1 | 2 | 3;
 
@@ -269,6 +272,7 @@ const level1Cards: Card[] = [
   { id: "l1-35", text: "Ball", category: "objects", usage: 0, level: 1, image: ballImg },
   { id: "l1-36", text: "Chair", category: "objects", usage: 0, level: 1, image: chairImg },
   { id: "l1-37", text: "Bed", category: "objects", usage: 0, level: 1, image: bedImg },
+  { id: "l1-47", text: "Clothes", category: "objects", usage: 0, level: 1, image: bedImg },
 
   // Places
   { id: "l1-38", text: "Home", category: "places", usage: 0, level: 1, image: homeImg },
@@ -282,6 +286,10 @@ const level1Cards: Card[] = [
   { id: "l1-44", text: "Please", category: "social", usage: 0, level: 1, image: pleaseImg },
   { id: "l1-45", text: "Thank you", category: "social", usage: 0, level: 1, image: thankYouImg },
   { id: "l1-46", text: "Sorry", category: "social", usage: 0, level: 1, image: sorryImg },
+
+  { id: "l1-47", text: "Hand", category: "body", usage: 0, level: 1, image: sorryImg },
+  { id: "l1-48", text: "Foot", category: "body", usage: 0, level: 1, image: sorryImg },
+  { id: "l1-49", text: "Head", category: "body", usage: 0, level: 1, image: sorryImg },
 ];
 
 // Level 2 - Intermediate
@@ -334,6 +342,23 @@ const level2Cards: Card[] = [
   { id: "l2-46", text: "Hot", category: "descriptive", usage: 0, level: 2, image: hotImg },
   { id: "l2-47", text: "Cold", category: "descriptive", usage: 0, level: 2, image: coldImg },
   { id: "l2-48", text: "Quiet", category: "descriptive", usage: 0, level: 2, image: quietImg },
+  { id: "l2-49", text: "Make Bed", category: "activities", usage: 0, level: 2, image: makeBed },
+  { id: "l2-50", text: "Put Away", category: "actions", usage: 0, level: 2, image: buildBlocksImg },
+  { id: "l2-51", text: "Brush", category: "actions", usage: 0, level: 2, image: buildBlocksImg },
+  { id: "l2-52", text: "Shower", category: "activities", usage: 0, level: 2, image: buildBlocksImg },
+  { id: "l2-53", text: "Blow", category: "actions", usage: 0, level: 2, image: buildBlocksImg },
+  { id: "l2-53", text: "Nose", category: "body", usage: 0, level: 2, image: buildBlocksImg },
+  { id: "l2-53", text: "Bubbles", category: "objects", usage: 0, level: 2, image: buildBlocksImg },
+  { id: "l2-53", text: "Hair", category: "body", usage: 0, level: 2, image: buildBlocksImg },
+  { id: "l2-54", text: "Cut", category: "actions", usage: 0, level: 3, image: later },
+  { id: "l3-55", text: "Nails", category: "body", usage: 0, level: 3, image: later },
+  { id: "l3-56", text: "Teeth", category: "body", usage: 0, level: 3, image: later },
+  { id: "l3-57", text: "Arm", category: "body", usage: 0, level: 3, image: later },
+  { id: "l3-58", text: "Stomach", category: "body", usage: 0, level: 3, image: later },
+  { id: "l3-59", text: "Toe", category: "body", usage: 0, level: 3, image: later },
+  { id: "l3-60", text: "Finger", category: "body", usage: 0, level: 3, image: later },
+  { id: "l3-61", text: "Leg", category: "body", usage: 0, level: 3, image: later },
+
 ];
 
 // Level 3 - Advanced
@@ -415,6 +440,9 @@ const level3Cards: Card[] = [
   { id: "l3-77", text: "Ride bike", category: "activities", usage: 0, level: 3, image: rideBikeImg },
   { id: "l3-78", text: "Go swimming", category: "activities", usage: 0, level: 3, image: goSwimmingImg },
   { id: "l3-79", text: "Build blocks", category: "activities", usage: 0, level: 3, image: buildBlocksImg },
+  { id: "l3-80", text: "Now", category: "time", usage: 0, level: 3, image: now },
+  { id: "l3-81", text: "Later", category: "time", usage: 0, level: 3, image: later },
+  { id: "l3-82", text: "Floss", category: "activities", usage: 0, level: 3, image: later },
 ];
 
 const allCards = level3Cards;
