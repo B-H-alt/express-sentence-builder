@@ -3,7 +3,7 @@ import { CheckCircle2, ShieldCheck, Users } from "lucide-react";
 
 const Team = () => {
   return (
-    <section className="py-16 md:py-20 bg-gray-50">
+    <section className="py-16 md:py-20 bg-[#E3F4F8]">
       <div className="container mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Team Card */}
