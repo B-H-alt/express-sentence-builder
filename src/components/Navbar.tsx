@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 
-const HeaderNav = () => {
+const Navbar = () => {
   const [open, setOpen] = useState(false);
 
   return (
@@ -80,7 +80,7 @@ const HeaderNav = () => {
                 className="font-semibold text-white/90 hover:text-white"
                 onClick={() => setOpen(false)}
               >
-                About
+                About Us
               </Link>
 
               <Link
@@ -114,4 +114,4 @@ const HeaderNav = () => {
   );
 };
 
-export default HeaderNav;
+export default Navbar;

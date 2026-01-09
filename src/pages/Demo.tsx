@@ -1,14 +1,14 @@
 import PECSDemo from "@/components/PECSDemo";
-import HeaderNav from "@/components/HeaderNav";
-import FooterLanding from "@/components/FooterLanding";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const Demo = () => {
   return (
     <div className="min-h-screen">
-      <HeaderNav />
+      <Navbar />
       <div className="pt-[73px]">
         <PECSDemo />
-        <FooterLanding />
+        <Footer />
       </div>
     </div>
   );

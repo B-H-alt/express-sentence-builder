@@ -3,7 +3,7 @@ import { CheckCircle2, ShieldCheck, Users } from "lucide-react";
 
 const Team = () => {
   return (
-    <section className="py-16 md:py-20 bg-background">
+    <section className="py-16 md:py-20 bg-gray-50">
       <div className="container mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Team Card */}
@@ -27,9 +27,7 @@ const Team = () => {
                 </div>
               </div>
 
-              {/* Team Images */}
               <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* LEFT image – balanced crop */}
                 <div className="overflow-hidden rounded-2xl border border-border aspect-[5/4]">
                   <img
                     src="/expressly-team.png"
@@ -38,7 +36,6 @@ const Team = () => {
                   />
                 </div>
 
-                {/* RIGHT image – unchanged */}
                 <div className="overflow-hidden rounded-2xl border border-border aspect-[5/4]">
                   <img
                     src="/smartpecs-team.webp"
@@ -56,9 +53,9 @@ const Team = () => {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                    Research & transparency
+                    Research & Transparency
                   </h2>
-                  <p className="mt-4 text-muted-foreground leading-relaxed">
+                  <p className="mt-4 text-[15px] md:text-base text-muted-foreground leading-relaxed">
                     Expressly is grounded in established research on PECS, AAC effectiveness,
                     and communication access. We are committed to transparency, ethical
                     development, and ongoing evaluation as the system is tested and refined.
@@ -69,19 +66,23 @@ const Team = () => {
                 </div>
               </div>
 
-              <div className="mt-6 rounded-2xl border border-border bg-background/60 p-5">
-                <div className="text-sm font-semibold text-foreground">
+              {/* INNER CARD — bumped again */}
+              <div className="mt-10 rounded-2xl border border-border bg-background/60 p-7">
+                <div className="text-base md:text-lg font-semibold text-foreground">
                   What this means in practice
                 </div>
-                <div className="mt-3 space-y-3">
+
+                <div className="mt-6 space-y-5">
                   {[
                     "We validate behavior in real settings.",
                     "We prioritize user safety and clarity.",
                     "We iterate with clinical input.",
                   ].map((t) => (
-                    <div key={t} className="flex items-start gap-3">
-                      <CheckCircle2 className="mt-0.5 h-5 w-5 text-secondary" />
-                      <p className="text-muted-foreground leading-relaxed">{t}</p>
+                    <div key={t} className="flex items-start gap-4">
+                      <CheckCircle2 className="mt-1 h-5 w-5 text-secondary" />
+                      <p className="text-[15px] md:text-base text-muted-foreground leading-relaxed">
+                        {t}
+                      </p>
                     </div>
                   ))}
                 </div>
