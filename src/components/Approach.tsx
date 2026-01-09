@@ -74,16 +74,6 @@ const Approach = () => {
         <div className="mt-10">
           <Card className="border-0 shadow-none bg-transparent">
             <CardContent className="p-0">
-              <div className="flex items-start justify-between gap-6 flex-col lg:flex-row mb-6 px-2">
-                <div>
-                  <h3 className="text-xl font-semibold text-foreground">Expressly system architecture</h3>
-                  <p className="mt-2 text-muted-foreground leading-relaxed max-w-2xl">
-                    A clean layered system: input flows through clinically constrained reasoning to produce consistent
-                    output, with learning insights captured over time.
-                  </p>
-                </div>
-              </div>
-
               <div className="rounded-3xl border border-border bg-secondary/5 overflow-hidden">
                 <img
                   src="/expressly-architecture.png"
