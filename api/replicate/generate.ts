@@ -56,45 +56,93 @@ Strict constraints:
 `.trim();
 }
 
-export default async function handler(req: any, res: any) {
-  try {
-    if (req.method !== "POST") {
-      res.status(405).send("Method Not Allowed");
-      return;
-    }
+async function runReplicateHealthCheck(replicate: Replicate) {
+  // Auth-only, no image generation.
+  // NOTE: replicate.models.get expects (model_owner, model_name, options?)
+  const model = await replicate.models.get("black-forest-labs", "flux-1.1-pro");
 
-    // ---- ENV GUARDS (helps diagnose Vercel Preview vs Production vs typo) ----
+  return {
+    ok: true,
+    model: {
+      owner: (model as any)?.owner ?? "black-forest-labs",
+      name: (model as any)?.name ?? "flux-1.1-pro",
+    },
+  };
+}
+
+export default async function handler(req: any, res: any) {
+  // Health can be triggered by:
+  // - GET  /api/replicate/generate?health=1
+  // - POST /api/replicate/generate?health=1  (useful if GET is blocked upstream)
+  const isHealth = Boolean(req?.query?.health);
+
+  try {
     const token = process.env.REPLICATE_API_TOKEN;
 
     if (!token) {
-      // Do NOT print the token; just confirm presence/absence.
-      console.error(
-        "Missing REPLICATE_API_TOKEN. Check Vercel Environment Variables scope (Preview/Production/Development) and redeploy."
-      );
-      res
-        .status(500)
-        .send(
-          "Server misconfigured: missing REPLICATE_API_TOKEN. Check Vercel env scope and redeploy."
-        );
+      res.status(500).json({
+        ok: false,
+        error: "Missing REPLICATE_API_TOKEN",
+        hint:
+          "Set REPLICATE_API_TOKEN in your deployment environment variables (correct scope) and redeploy.",
+        method: req.method,
+        health: isHealth,
+      });
       return;
     }
 
-    // Optional: minimal log to confirm it's present in this deployment
-    console.log("REPLICATE_API_TOKEN present:", Boolean(token));
-    // ------------------------------------------------------------------------
+    const replicate = new Replicate({ auth: token });
 
-    const { prompt, seed } = req.body as {
-      prompt?: string;
-      seed?: number;
-    };
+    // ---- HEALTH CHECK ----
+    if (isHealth) {
+      try {
+        const health = await runReplicateHealthCheck(replicate);
+        res.status(200).json({
+          ok: true,
+          tokenPresent: true,
+          replicate: health,
+          method: req.method,
+        });
+      } catch (err: any) {
+        const status =
+          err?.status || err?.response?.status || err?.cause?.status || 500;
+
+        console.error("Replicate health check failed:", {
+          status,
+          message: err?.message,
+          details: err?.response?.data ?? err?.body ?? err,
+        });
+
+        res.status(status).json({
+          ok: false,
+          tokenPresent: true,
+          error: err?.message || "Health check failed",
+          status,
+          method: req.method,
+        });
+      }
+      return;
+    }
+
+    // ---- GENERATION ----
+    if (req.method !== "POST") {
+      res.status(405).json({
+        ok: false,
+        error: "Method Not Allowed",
+        allowed: ["POST"],
+        hint:
+          "To debug, visit /api/replicate/generate?health=1 (GET) or call it with POST if GET is blocked.",
+        method: req.method,
+      });
+      return;
+    }
+
+    const { prompt, seed } = req.body as { prompt?: string; seed?: number };
 
     if (!prompt || typeof prompt !== "string") {
-      res.status(400).send("Missing prompt.");
+      res.status(400).json({ ok: false, error: "Missing prompt." });
       return;
     }
-
-    // Initialize Replicate *after* reading env (helps some deploy setups)
-    const replicate = new Replicate({ auth: token });
 
     const pecsPrompt = buildPecsPrompt(prompt);
 
@@ -102,10 +150,8 @@ export default async function handler(req: any, res: any) {
       input: {
         prompt: pecsPrompt,
 
-        // Force square PECS-card framing
-        aspect_ratio: "custom",
-        width: 768,
-        height: 768,
+        // Prefer canonical square aspect ratio
+        aspect_ratio: "1:1",
 
         // Conservative safety setting
         safety_tolerance: 2,
@@ -123,22 +169,26 @@ export default async function handler(req: any, res: any) {
 
     const url = Array.isArray(output) ? output[0] : (output as any);
     if (!url || typeof url !== "string") {
-      res.status(500).send("Model did not return an image URL.");
+      res.status(500).json({ ok: false, error: "Model did not return an image URL." });
       return;
     }
 
     const dataUrl = await urlToDataUrl(url);
-    res.status(200).json({ dataUrl });
+    res.status(200).json({ ok: true, dataUrl });
   } catch (err: any) {
-    console.error(err);
-
-    // Bubble up the most likely HTTP status if the SDK provides it
     const status =
-      err?.status ||
-      err?.response?.status ||
-      err?.cause?.status ||
-      500;
+      err?.status || err?.response?.status || err?.cause?.status || 500;
 
-    res.status(status).send(err?.message || "Generation failed.");
+    console.error("Replicate generate failed:", {
+      status,
+      message: err?.message,
+      details: err?.response?.data ?? err?.body ?? err,
+    });
+
+    res.status(status).json({
+      ok: false,
+      error: err?.message || "Generation failed.",
+      status,
+    });
   }
 }
