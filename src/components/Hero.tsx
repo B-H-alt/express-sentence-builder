@@ -1,7 +1,4 @@
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
 
 const Hero = () => {
   return (
@@ -16,9 +13,10 @@ const Hero = () => {
               Beyond Traditional PECS
             </h2>
             <p className="font-inter font-medium text-lg text-muted-foreground mb-8 leading-relaxed">
-              Our Expressly platform combines the proven effectiveness of Picture Exchange Communication Systems with
-              cutting-edge AI technology. Generate contextual images instantly and build complex sentences that adapt
-              to each learner&apos;s needs.
+              Expressly preserves the clinically trusted structure of Picture Exchange Communication Systems
+              (PECS) while removing the limitations of static cards. By enabling real-time sentence building
+              within clearly defined rules and visual constraints, Expressly helps learners express new ideas
+              safely, clearly, and immediately.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               

@@ -1,9 +1,7 @@
 // src/pages/about.tsx
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  ArrowRight,
   CheckCircle2,
   ShieldCheck,
   HeartHandshake,
@@ -11,17 +9,19 @@ import {
   Scale,
   Users,
   Workflow,
-  Sparkles,
   Tablet,
   Mic,
   Image as ImageIcon,
-  Brain,
+  Home,
+  School,
+  Award,
 } from "lucide-react";
+import Approach from "@/components/Approach";
 import CoreIdea from "@/components/CoreIdea";
-import FooterLanding from "@/components/FooterLanding";
-import HeaderNav from "@/components/HeaderNav";
+import Footer from "@/components/Footer";
+import Navbar from "@/components/Navbar";
+import Problem from "@/components/Problem";
 import Team from "@/components/Team";
-import { Link } from "react-router-dom";
 
 const AboutPage = () => {
   const values = [
@@ -55,182 +55,105 @@ const AboutPage = () => {
     { icon: Users, text: "Supports use across home, school, and therapy environments" },
   ];
 
-  const commitment = [
-    "Clinical alignment",
-    "Safety over novelty",
-    "Respect for users",
-    "Access and affordability",
-  ];
-
   return (
     <main className="bg-background pt-16">
-      <HeaderNav/>
+      <Navbar />
       {/* HERO */}
-      <CoreIdea/>
+      <CoreIdea />
+      <Problem/>
+      <Approach/>
 
-      {/* PROBLEM */}
+      {/* IN PRACTICE (with real visuals from image 2) */}
       <section className="py-16 md:py-20 bg-gray-50">
         <div className="container mx-auto px-6">
-          <div className="max-w-3xl">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground">The problem we’re addressing</h2>
-            <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
-              Many nonverbal individuals rely on the Picture Exchange Communication System (PECS) to communicate. PECS is
-              evidence-based and widely used, but it breaks down when the right picture has not been prepared in advance.
-              When communication fails in the moment intent arises, the opportunity to communicate is often lost. This
-              creates frustration for learners and places a significant preparation burden on caregivers, educators, and
-              therapists. These breakdowns are not caused by lack of effort or ability. They are caused by systems that
-              cannot adapt in real time.
-            </p>
-          </div>
+          <div className="grid lg:grid-cols-2 gap-10 items-start">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground">Expressly in practice</h2>
+              <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
+                Expressly is designed for use in real environments, not controlled demonstrations.
+              </p>
 
-          {/* SIMPLE DIAGRAM: breakdown vs real-time */}
-          <div className="mt-10 grid lg:grid-cols-2 gap-8">
-            <Card className="border-0 shadow-soft">
-              <CardContent className="p-8">
-                <div className="flex items-center justify-between gap-4">
-                  <h3 className="text-xl font-semibold text-foreground">Traditional PECS breakdown</h3>
-                  <Badge className="bg-muted text-muted-foreground hover:bg-muted">When a card is missing</Badge>
-                </div>
-
-                <div className="mt-6 space-y-4">
-                  {[
-                    "Vocabulary limited to what was prepared",
-                    "Manual printing and organization",
-                    "Communication breaks when vocabulary is missing",
-                  ].map((t) => (
-                    <div key={t} className="flex items-start gap-3">
-                      <div className="mt-1.5 h-2.5 w-2.5 rounded-full bg-muted-foreground/50" />
-                      <p className="text-muted-foreground leading-relaxed">{t}</p>
+              <div className="mt-8 space-y-4">
+                {practicePoints.map((p) => {
+                  const Icon = p.icon;
+                  return (
+                    <div key={p.text} className="flex items-start gap-3">
+                      <div className="mt-0.5 rounded-xl bg-secondary/10 p-2">
+                        <Icon className="h-5 w-5 text-secondary" />
+                      </div>
+                      <p className="text-muted-foreground leading-relaxed">{p.text}</p>
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
+              </div>
+            </div>
 
-                <div className="mt-8 rounded-2xl border border-border bg-background/60 p-4">
-                  <div className="text-sm text-muted-foreground">Moment of intent</div>
-                  <div className="mt-1 flex items-center gap-2 text-foreground font-semibold">
-                    Intent arises <ArrowRight className="h-4 w-4 text-muted-foreground" /> Card missing{" "}
-                    <ArrowRight className="h-4 w-4 text-muted-foreground" /> Communication lost
+            <Card className="border-0 shadow-medium overflow-hidden">
+              <CardContent className="p-0">
+                <div className="p-6 md:p-8">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-semibold text-foreground">Real-world usage visuals</h3>
+                    <Badge className="bg-muted text-muted-foreground hover:bg-muted">Home • School • Therapy</Badge>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
 
-            <Card className="border-0 shadow-medium">
-              <CardContent className="p-8">
-                <div className="flex items-center justify-between gap-4">
-                  <h3 className="text-xl font-semibold text-foreground">Expressly</h3>
-                  <Badge className="bg-secondary text-white hover:bg-secondary/90">Real-time continuity</Badge>
+                  <p className="mt-3 text-muted-foreground leading-relaxed">
+                    These contexts are where communication needs to work immediately: classrooms, kitchens, and therapy
+                    spaces.
+                  </p>
                 </div>
 
-                <div className="mt-6 space-y-4">
-                  {[
-                    "Real-time visual symbol creation",
-                    "Expanding vocabulary within PECS rules",
-                    "Digital sentence strips with spoken output",
-                    "Communication continues at the moment of intent",
-                  ].map((t) => (
-                    <div key={t} className="flex items-start gap-3">
-                      <CheckCircle2 className="mt-0.5 h-5 w-5 text-secondary" />
-                      <p className="text-muted-foreground leading-relaxed">{t}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-8 rounded-2xl bg-gradient-to-br from-secondary/10 to-primary/10 p-4 border border-secondary/20">
-                  <div className="text-sm text-muted-foreground">Moment of intent</div>
-                  <div className="mt-1 flex items-center gap-2 text-foreground font-semibold">
-                    Intent arises <ArrowRight className="h-4 w-4 text-muted-foreground" /> Build sentence{" "}
-                    <ArrowRight className="h-4 w-4 text-muted-foreground" /> Visual + Speech output
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* APPROACH */}
-      <section className="py-16 md:py-20 bg-background">
-        <div className="container mx-auto px-6">
-          <div className="max-w-3xl">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground">Our approach</h2>
-            <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
-              Expressly is a PECS-aligned assistive communication system that enables real-time sentence construction
-              using visual symbols. Learners select familiar picture cards, build sentences within a structured sentence
-              strip, and receive spoken language output.
-            </p>
-            <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
-              The system operates through a clinically constrained pipeline: user input → sentence construction logic →
-              visual and spoken output → learning insights over time. Vocabulary can be expanded instantly while
-              preserving visual consistency, predictability, and cognitive safety.
-            </p>
-          </div>
-
-          {/* PIPELINE / ARCH DIAGRAM */}
-          <div className="mt-10">
-            <Card className="border-0 shadow-soft">
-              <CardContent className="p-8">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-2xl bg-secondary/10 p-3">
-                    <Workflow className="h-6 w-6 text-secondary" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-foreground">Clinically constrained pipeline</h3>
-                    <p className="text-muted-foreground">
-                      A predictable workflow that supports safety, clarity, and consistent learning.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-8 grid lg:grid-cols-4 gap-4">
+                <div className="px-6 pb-6 md:px-8 md:pb-8">
+                {/* 3-up settings gallery */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {[
                     {
-                      title: "User input",
-                      desc: "Learner selects familiar symbols.",
-                      icon: Users,
+                      label: "In the Classroom",
+                      icon: School,
+                      src: "/expressly-classroom.png",
                     },
                     {
-                      title: "Sentence logic",
-                      desc: "Rules-based structure aligned to PECS.",
-                      icon: Brain,
+                      label: "At Home",
+                      icon: Home,
+                      src: "/expressly-home.png",
                     },
                     {
-                      title: "Visual + spoken output",
-                      desc: "Sentence strip plus speech output.",
-                      icon: Mic,
+                      label: "At Therapy",
+                      icon: Stethoscope,
+                      src: "/expressly-therapy.png",
                     },
-                    {
-                      title: "Learning insights",
-                      desc: "Patterns over time support growth.",
-                      icon: Sparkles,
-                    },
-                  ].map((step, idx) => {
-                    const Icon = step.icon;
+                  ].map((x) => {
+                    const Icon = x.icon;
+
                     return (
-                      <div key={step.title} className="relative">
-                        <div className="h-full rounded-2xl border border-border bg-background/60 p-5">
-                          <div className="flex items-center justify-between">
-                            <div className="rounded-xl bg-secondary/10 p-2">
-                              <Icon className="h-5 w-5 text-secondary" />
-                            </div>
-                            <div className="text-xs font-semibold text-muted-foreground">
-                              Step {idx + 1}
-                            </div>
-                          </div>
-                          <div className="mt-4 font-semibold text-foreground">{step.title}</div>
-                          <div className="mt-2 text-sm text-muted-foreground leading-relaxed">{step.desc}</div>
+                      <div
+                        key={x.label}
+                        className="rounded-2xl border border-border bg-background/60 overflow-hidden"
+                      >
+                        {/* Fixed aspect ratio so all three images match height */}
+                        <div className="relative w-full aspect-[4/3] bg-muted/30">
+                          <img
+                            src={x.src}
+                            alt={x.label}
+                            className="absolute inset-0 h-full w-full object-cover"
+                            loading="lazy"
+                          />
                         </div>
 
-                        {idx < 3 && (
-                          <div className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 items-center">
-                            <div className="h-px w-6 bg-border" />
-                            <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                        {/* Label */}
+                        <div className="p-4">
+                          <div className="flex items-center gap-3">
+                            <div className="rounded-xl bg-secondary/10 p-2">
+                              <Icon className="h-4 w-4 text-secondary" />
+                            </div>
+                            <div className="text-sm font-semibold text-foreground">{x.label}</div>
                           </div>
-                        )}
+                        </div>
                       </div>
                     );
                   })}
                 </div>
+              </div>
+
               </CardContent>
             </Card>
           </div>
@@ -238,7 +161,7 @@ const AboutPage = () => {
       </section>
 
       {/* VALUES */}
-      <section className="py-16 md:py-20 bg-gray-50">
+      <section className="py-16 md:py-20">
         <div className="container mx-auto px-6">
           <div className="max-w-3xl">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground">Our values</h2>
@@ -251,7 +174,10 @@ const AboutPage = () => {
             {values.map((v) => {
               const Icon = v.icon;
               return (
-                <Card key={v.title} className="border-0 shadow-soft hover:shadow-medium transition-all duration-300 hover:-translate-y-1">
+                <Card
+                  key={v.title}
+                  className="border-0 shadow-soft hover:shadow-medium transition-all duration-300 hover:-translate-y-1"
+                >
                   <CardContent className="p-7">
                     <div className="w-12 h-12 rounded-2xl bg-secondary/10 flex items-center justify-center">
                       <Icon className="h-6 w-6 text-secondary" />
@@ -265,53 +191,77 @@ const AboutPage = () => {
           </div>
         </div>
       </section>
+      
+      <Team />
 
-      {/* TEAM + RESEARCH */}
-      <Team/>
-
-      {/* COMMITMENT */}
-      <section className="py-16 md:py-20 bg-gray-50">
+      {/* PATENT */}
+      <section className="py-16 md:py-20 bg-background">
         <div className="container mx-auto px-6">
-          <Card className="border-0 shadow-medium">
+          <Card className="border-0 shadow-[0_10px_25px_-10px_rgba(0,0,0,0.12),0_-6px_16px_-8px_rgba(0,0,0,0.08)] overflow-hidden">
             <CardContent className="p-8 md:p-10">
-              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-10">
-                <div className="max-w-3xl">
-                  <h2 className="text-3xl md:text-4xl font-bold text-foreground">Our commitment</h2>
+              <div className="grid lg:grid-cols-2 gap-10 items-center">
+                <div>
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-2xl bg-secondary/10 p-3">
+                      <Award className="h-6 w-6 text-secondary" />
+                    </div>
+                    <Badge className="bg-secondary text-white hover:bg-secondary/90">Milestone</Badge>
+                  </div>
+
+                  <h2 className="mt-4 text-3xl md:text-4xl font-bold text-foreground">
+                    Patented innovation
+                  </h2>
                   <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
-                    Expressly is built with a focus on clinical alignment, safety over novelty, respect for users, and
-                    access and affordability. We believe communication tools should be reliable, ethical, and designed to
-                    serve the people who depend on them every day.
+                    The Expressly team successfully patented the core idea behind the system. This milestone reflects a
+                    long-term commitment to building a reliable, clinically aligned communication tool that can be
+                    deployed broadly.
                   </p>
 
-                  <div className="mt-7 grid sm:grid-cols-2 gap-3">
-                    {commitment.map((t) => (
+                  <div className="mt-7 grid gap-3">
+                    {[
+                      "Protects the foundational system design",
+                      "Supports long-term product stability and investment",
+                      "Signals novelty while preserving clinical alignment",
+                    ].map((t) => (
                       <div
                         key={t}
-                        className="rounded-2xl border border-border bg-background/60 px-4 py-3 flex items-center gap-3"
+                        className="rounded-2xl border border-border bg-background/60 px-4 py-3 flex items-start gap-3"
                       >
-                        <CheckCircle2 className="h-5 w-5 text-secondary" />
-                        <span className="font-semibold text-foreground">{t}</span>
+                        <CheckCircle2 className="mt-0.5 h-5 w-5 text-secondary" />
+                        <span className="text-muted-foreground leading-relaxed">{t}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="w-full lg:w-auto flex flex-col gap-3">
-                  <Button asChild className="gap-2">
-                    <Link to="/pecs-app">
-                      Get started <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline">
-                    <Link to="/">Back to home</Link>
-                  </Button>
+                <div className="relative">
+                  <div className="rounded-3xl border border-border bg-gradient-to-br from-secondary/10 to-primary/10 p-4 md:p-6">
+                    {/* Patent image */}
+                    <div className="relative aspect-[16/10] rounded-2xl border border-border bg-background/60 overflow-hidden">
+                      <img
+                        src="/expressly-patent.png"
+                        alt="Expressly patented milestone illustration"
+                        className="absolute inset-0 h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+
+                    <div className="mt-4 rounded-2xl border border-border bg-background/60 p-4">
+                      <div className="text-sm font-semibold text-foreground">What this means</div>
+                      <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+                        We can continue improving Expressly with confidence, while keeping the interaction model stable
+                        and predictable for learners and caregivers.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
       </section>
-      <FooterLanding/>
+
+      <Footer />
     </main>
   );
 };

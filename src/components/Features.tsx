@@ -6,37 +6,37 @@ const Features = () => {
     {
       icon: "📱",
       title: "Digital PECS Platform",
-      description: "Modern, intuitive app that brings PECS into the digital age with interactive features and progress tracking.",
+      description: "A structured, tablet-based PECS interface designed for clarity, predictability, and ease of use",
       color: "feature-red"
     },
     {
       icon: "🎨",
-      title: "Customizable Picture Library",
-      description: "Thousands of high-quality symbols and the ability to add personalized photos for maximum relevance.",
+      title: "Custom Vocabulary Within Structure",
+      description: "Create and upload personalized symbols while preserving PECS-aligned sentence frameworks and visual consistency",
       color: "feature-blue"
     },
     {
-      icon: "📊",
-      title: "Progress Analytics",
-      description: "Detailed insights and reports to track your child's communication development over time.",
+      icon: "🧩",
+      title: "Sentence Construction Logic",
+      description: "Build multi-symbol phrases and sentences using rule-based construction that prevents cognitive overload",
       color: "feature-teal"
     },
     {
-      icon: "👥",
+      icon: "🗣",
       title: "Family & Educator Portal",
-      description: "Collaborative platform connecting parents, teachers, and therapists for consistent support.",
+      description: "Communicate using pictures alone or with spoken language output, supporting multiple ability levels",
       color: "feature-red"
     },
     {
-      icon: "🔧",
+      icon: "📈",
       title: "Adaptive Learning",
-      description: "AI-powered personalization that adjusts to your child's learning pace and preferences.",
+      description: "Track vocabulary usage and sentence patterns to support progression from single words to longer phrases",
       color: "feature-blue"
     },
     {
-      icon: "🏥",
+      icon: "👥",
       title: "Clinical Support",
-      description: "Access to certified PECS professionals and ongoing guidance throughout your journey.",
+      description: "Designed for consistent use across home, school, and therapy without recreating materials",
       color: "feature-teal"
     }
   ];
@@ -46,11 +46,11 @@ const Features = () => {
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-6">
-            How Expressly Transforms PECS
+            How Expressly Works
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            We've reimagined traditional PECS for the digital era, making it more accessible, 
-            engaging, and effective for today's families.
+            Expressly operates as a clinically constrained communication system rather than an open-ended
+            app.
           </p>
         </div>
 
