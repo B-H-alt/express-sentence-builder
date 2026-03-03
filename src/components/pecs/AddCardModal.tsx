@@ -138,8 +138,24 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose }) => 
       });
 
       if (!resp.ok) {
-        const msg = await resp.text();
-        throw new Error(msg || "Failed to generate image.");
+        if (resp.status === 404) {
+          throw new Error(
+            "Image API route not found (/api/replicate/generate). If you're running locally, use `vercel dev` so API routes are available."
+          );
+        }
+
+        const contentType = resp.headers.get("content-type") || "";
+        let msg = "Failed to generate image.";
+
+        if (contentType.includes("application/json")) {
+          const body = (await resp.json()) as { error?: string; hint?: string; message?: string };
+          msg = body.error || body.message || body.hint || msg;
+        } else {
+          const text = await resp.text();
+          if (text) msg = text;
+        }
+
+        throw new Error(msg);
       }
 
       const data = (await resp.json()) as { dataUrl?: string; imageUrl?: string };

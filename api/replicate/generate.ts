@@ -1,4 +1,3 @@
-// api/replicate/generate.ts
 import Replicate from "replicate";
 
 export const config = {
@@ -7,8 +6,6 @@ export const config = {
   },
 };
 
-// Download the generated image and return as a data URL so the client
-// can store it locally (matching your current modal behavior).
 async function urlToDataUrl(imageUrl: string): Promise<string> {
   const res = await fetch(imageUrl);
   if (!res.ok) throw new Error("Failed to download generated image.");
@@ -20,8 +17,6 @@ async function urlToDataUrl(imageUrl: string): Promise<string> {
   return `data:${contentType};base64,${base64}`;
 }
 
-// Single general PECS prompt that teaches the model
-// how to visually extrapolate meaning from examples.
 function buildPecsPrompt(conceptRaw: string) {
   const concept = conceptRaw.trim();
 
@@ -57,8 +52,6 @@ Strict constraints:
 }
 
 async function runReplicateHealthCheck(replicate: Replicate) {
-  // Auth-only, no image generation.
-  // NOTE: replicate.models.get expects (model_owner, model_name, options?)
   const model = await replicate.models.get("black-forest-labs", "flux-1.1-pro");
 
   return {
@@ -71,9 +64,6 @@ async function runReplicateHealthCheck(replicate: Replicate) {
 }
 
 export default async function handler(req: any, res: any) {
-  // Health can be triggered by:
-  // - GET  /api/replicate/generate?health=1
-  // - POST /api/replicate/generate?health=1  (useful if GET is blocked upstream)
   const isHealth = Boolean(req?.query?.health);
 
   try {
@@ -93,7 +83,6 @@ export default async function handler(req: any, res: any) {
 
     const replicate = new Replicate({ auth: token });
 
-    // ---- HEALTH CHECK ----
     if (isHealth) {
       try {
         const health = await runReplicateHealthCheck(replicate);
@@ -124,7 +113,6 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
-    // ---- GENERATION ----
     if (req.method !== "POST") {
       res.status(405).json({
         ok: false,
@@ -138,42 +126,22 @@ export default async function handler(req: any, res: any) {
     }
 
     const { prompt, seed } = req.body as { prompt?: string; seed?: number };
-    const { prompt } = req.body as { prompt?: string };
 
     if (!prompt || typeof prompt !== "string") {
       res.status(400).json({ ok: false, error: "Missing prompt." });
       return;
     }
-    if (!prompt) {
-      return res.status(400).send("Missing prompt.");
-    }
-
-    const genAI = new GoogleGenerativeAI(apiKey);
-
-    // ⚠️ IMPORTANT: Use Nano Banana model
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash-image-preview", // Nano Banana equivalent image model
-    });
 
     const pecsPrompt = buildPecsPrompt(prompt);
 
     const output = await replicate.run("black-forest-labs/flux-1.1-pro", {
       input: {
         prompt: pecsPrompt,
-
-        // Prefer canonical square aspect ratio
         aspect_ratio: "1:1",
-
-        // Conservative safety setting
         safety_tolerance: 2,
-
-        // Prevent the model from "improving" the prompt creatively
         prompt_upsampling: false,
-
-        // Smaller payload than PNG for base64 transport
         output_format: "webp",
         output_quality: 85,
-
         ...(typeof seed === "number" ? { seed } : {}),
       },
     });
@@ -186,34 +154,8 @@ export default async function handler(req: any, res: any) {
 
     const dataUrl = await urlToDataUrl(url);
     res.status(200).json({ ok: true, dataUrl });
-    const result = await model.generateContent({
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: pecsPrompt }],
-        },
-      ],
-    });
-
-    const response = await result.response;
-
-    const imagePart = response.candidates?.[0]?.content?.parts?.find(
-      (p: any) => p.inlineData
-    );
-
-    if (!imagePart?.inlineData?.data) {
-      return res.status(500).send("No image returned.");
-    }
-
-    const base64 = imagePart.inlineData.data;
-    const mimeType = imagePart.inlineData.mimeType || "image/png";
-
-    const dataUrl = base64ToDataUrl(base64, mimeType);
-
-    res.status(200).json({ dataUrl });
   } catch (err: any) {
-    const status =
-      err?.status || err?.response?.status || err?.cause?.status || 500;
+    const status = err?.status || err?.response?.status || err?.cause?.status || 500;
 
     console.error("Replicate generate failed:", {
       status,
@@ -226,7 +168,5 @@ export default async function handler(req: any, res: any) {
       error: err?.message || "Generation failed.",
       status,
     });
-    console.error(err);
-    res.status(500).send(err?.message || "Generation failed.");
   }
 }
