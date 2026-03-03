@@ -17,6 +17,56 @@ async function urlToDataUrl(imageUrl: string): Promise<string> {
   return `data:${contentType};base64,${base64}`;
 }
 
+function isImageLikeUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value) || value.startsWith("data:image/");
+}
+
+async function extractFirstImageUrl(value: unknown): Promise<string | null> {
+  if (!value) return null;
+
+  if (typeof value === "string") {
+    return isImageLikeUrl(value) ? value : null;
+  }
+
+  if (value instanceof URL) {
+    return value.href;
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const nested = await extractFirstImageUrl(item);
+      if (nested) return nested;
+    }
+    return null;
+  }
+
+  if (typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+
+    if (typeof obj.url === "string" && isImageLikeUrl(obj.url)) return obj.url;
+    if (typeof obj.href === "string" && isImageLikeUrl(obj.href)) return obj.href;
+
+    if (typeof obj.url === "function") {
+      try {
+        const maybeUrl = await (obj.url as () => Promise<unknown> | unknown)();
+        const nested = await extractFirstImageUrl(maybeUrl);
+        if (nested) return nested;
+      } catch {
+        // Ignore url() resolution failures and continue scanning nested fields.
+      }
+    }
+
+    for (const key of ["image", "image_url", "images", "output", "data", "result", "files", "urls"]) {
+      if (key in obj) {
+        const nested = await extractFirstImageUrl(obj[key]);
+        if (nested) return nested;
+      }
+    }
+  }
+
+  return null;
+}
+
 function buildPecsPrompt(conceptRaw: string) {
   const concept = conceptRaw.trim();
 
@@ -146,16 +196,42 @@ export default async function handler(req: any, res: any) {
       },
     });
 
-    const url = Array.isArray(output) ? output[0] : (output as any);
-    if (!url || typeof url !== "string") {
-      res.status(500).json({ ok: false, error: "Model did not return an image URL." });
+    const url = await extractFirstImageUrl(output);
+    if (!url) {
+      const outputType = Array.isArray(output) ? "array" : typeof output;
+      const outputKeys =
+        output && typeof output === "object" && !Array.isArray(output)
+          ? Object.keys(output as Record<string, unknown>).slice(0, 10)
+          : [];
+
+      res.status(500).json({
+        ok: false,
+        error: "Model did not return an image URL.",
+        debug: { outputType, outputKeys },
+      });
       return;
     }
 
-    const dataUrl = await urlToDataUrl(url);
+    const dataUrl = url.startsWith("data:image/") ? url : await urlToDataUrl(url);
     res.status(200).json({ ok: true, dataUrl });
   } catch (err: any) {
     const status = err?.status || err?.response?.status || err?.cause?.status || 500;
+    const upstreamMessage =
+      err?.response?.data?.detail ||
+      err?.response?.data?.title ||
+      err?.message ||
+      "Generation failed.";
+
+    if (status === 401) {
+      res.status(401).json({
+        ok: false,
+        error: "Replicate authentication failed.",
+        hint: "Set a valid REPLICATE_API_TOKEN for the runtime and restart/redeploy.",
+        status,
+        upstream: upstreamMessage,
+      });
+      return;
+    }
 
     console.error("Replicate generate failed:", {
       status,
@@ -165,7 +241,7 @@ export default async function handler(req: any, res: any) {
 
     res.status(status).json({
       ok: false,
-      error: err?.message || "Generation failed.",
+      error: upstreamMessage,
       status,
     });
   }
