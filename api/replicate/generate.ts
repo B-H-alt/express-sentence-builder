@@ -1,5 +1,5 @@
-// api/replicate/generate.ts
-import Replicate from "replicate";
+// api/generate.ts
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export const config = {
   api: {
@@ -7,21 +7,11 @@ export const config = {
   },
 };
 
-// Download the generated image and return as a data URL so the client
-// can store it locally (matching your current modal behavior).
-async function urlToDataUrl(imageUrl: string): Promise<string> {
-  const res = await fetch(imageUrl);
-  if (!res.ok) throw new Error("Failed to download generated image.");
-
-  const contentType = res.headers.get("content-type") || "image/webp";
-  const arrayBuffer = await res.arrayBuffer();
-  const base64 = Buffer.from(arrayBuffer).toString("base64");
-
-  return `data:${contentType};base64,${base64}`;
+// Convert base64 image to data URL
+function base64ToDataUrl(base64: string, mimeType: string) {
+  return `data:${mimeType};base64,${base64}`;
 }
 
-// Single general PECS prompt that teaches the model
-// how to visually extrapolate meaning from examples.
 function buildPecsPrompt(conceptRaw: string) {
   const concept = conceptRaw.trim();
 
@@ -30,7 +20,7 @@ PECS-style educational illustration representing the concept "${concept}".
 
 Use the following examples as guidance for style and intent:
 - Simple, child-friendly illustrations used in PECS cards
-- Visual metaphors for abstract concepts (for example: pointing to a wrist to mean "now")
+- Visual metaphors for abstract concepts
 - One clear action or object that communicates meaning immediately
 
 Style guidelines:
@@ -39,7 +29,7 @@ Style guidelines:
 - Bright but controlled colors
 - Clean white background
 - Centered subject with generous whitespace
-- Square, card-like framing
+- Square framing
 
 Content rules:
 - Depict the concept visually using a simple, concrete action or object
@@ -59,86 +49,59 @@ Strict constraints:
 export default async function handler(req: any, res: any) {
   try {
     if (req.method !== "POST") {
-      res.status(405).send("Method Not Allowed");
-      return;
+      return res.status(405).send("Method Not Allowed");
     }
 
-    // ---- ENV GUARDS (helps diagnose Vercel Preview vs Production vs typo) ----
-    const token = process.env.REPLICATE_API_TOKEN;
+    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
-    if (!token) {
-      // Do NOT print the token; just confirm presence/absence.
-      console.error(
-        "Missing REPLICATE_API_TOKEN. Check Vercel Environment Variables scope (Preview/Production/Development) and redeploy."
-      );
-      res
+    if (!apiKey) {
+      return res
         .status(500)
-        .send(
-          "Server misconfigured: missing REPLICATE_API_TOKEN. Check Vercel env scope and redeploy."
-        );
-      return;
+        .send("Missing GOOGLE_GENERATIVE_AI_API_KEY");
     }
 
-    // Optional: minimal log to confirm it's present in this deployment
-    console.log("REPLICATE_API_TOKEN present:", Boolean(token));
-    // ------------------------------------------------------------------------
+    const { prompt } = req.body as { prompt?: string };
 
-    const { prompt, seed } = req.body as {
-      prompt?: string;
-      seed?: number;
-    };
-
-    if (!prompt || typeof prompt !== "string") {
-      res.status(400).send("Missing prompt.");
-      return;
+    if (!prompt) {
+      return res.status(400).send("Missing prompt.");
     }
 
-    // Initialize Replicate *after* reading env (helps some deploy setups)
-    const replicate = new Replicate({ auth: token });
+    const genAI = new GoogleGenerativeAI(apiKey);
+
+    // ⚠️ IMPORTANT: Use Nano Banana model
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash-image-preview", // Nano Banana equivalent image model
+    });
 
     const pecsPrompt = buildPecsPrompt(prompt);
 
-    const output = await replicate.run("black-forest-labs/flux-1.1-pro", {
-      input: {
-        prompt: pecsPrompt,
-
-        // Force square PECS-card framing
-        aspect_ratio: "custom",
-        width: 768,
-        height: 768,
-
-        // Conservative safety setting
-        safety_tolerance: 2,
-
-        // Prevent the model from "improving" the prompt creatively
-        prompt_upsampling: false,
-
-        // Smaller payload than PNG for base64 transport
-        output_format: "webp",
-        output_quality: 85,
-
-        ...(typeof seed === "number" ? { seed } : {}),
-      },
+    const result = await model.generateContent({
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: pecsPrompt }],
+        },
+      ],
     });
 
-    const url = Array.isArray(output) ? output[0] : (output as any);
-    if (!url || typeof url !== "string") {
-      res.status(500).send("Model did not return an image URL.");
-      return;
+    const response = await result.response;
+
+    const imagePart = response.candidates?.[0]?.content?.parts?.find(
+      (p: any) => p.inlineData
+    );
+
+    if (!imagePart?.inlineData?.data) {
+      return res.status(500).send("No image returned.");
     }
 
-    const dataUrl = await urlToDataUrl(url);
+    const base64 = imagePart.inlineData.data;
+    const mimeType = imagePart.inlineData.mimeType || "image/png";
+
+    const dataUrl = base64ToDataUrl(base64, mimeType);
+
     res.status(200).json({ dataUrl });
   } catch (err: any) {
     console.error(err);
-
-    // Bubble up the most likely HTTP status if the SDK provides it
-    const status =
-      err?.status ||
-      err?.response?.status ||
-      err?.cause?.status ||
-      500;
-
-    res.status(status).send(err?.message || "Generation failed.");
+    res.status(500).send(err?.message || "Generation failed.");
   }
 }

@@ -182,6 +182,12 @@ import makeBed from "@/assets/pecs/makeBed.jpg";
 
 export type VocabularyLevel = 1 | 2 | 3;
 
+const dedupeCardsById = (cards: Card[]): Card[] => {
+  const seen = new Map<string, Card>();
+  for (const card of cards) seen.set(card.id, card);
+  return Array.from(seen.values());
+};
+
 interface CardStore {
   cards: Card[];
   sentence: Card[];
@@ -287,9 +293,9 @@ const level1Cards: Card[] = [
   { id: "l1-45", text: "Thank you", category: "social", usage: 0, level: 1, image: thankYouImg },
   { id: "l1-46", text: "Sorry", category: "social", usage: 0, level: 1, image: sorryImg },
 
-  { id: "l1-47", text: "Hand", category: "body", usage: 0, level: 1, image: sorryImg },
-  { id: "l1-48", text: "Foot", category: "body", usage: 0, level: 1, image: sorryImg },
-  { id: "l1-49", text: "Head", category: "body", usage: 0, level: 1, image: sorryImg },
+  { id: "l1-48", text: "Hand", category: "body", usage: 0, level: 1, image: sorryImg },
+  { id: "l1-49", text: "Foot", category: "body", usage: 0, level: 1, image: sorryImg },
+  { id: "l1-50", text: "Head", category: "body", usage: 0, level: 1, image: sorryImg },
 ];
 
 // Level 2 - Intermediate
@@ -347,17 +353,17 @@ const level2Cards: Card[] = [
   { id: "l2-51", text: "Brush", category: "actions", usage: 0, level: 2, image: buildBlocksImg },
   { id: "l2-52", text: "Shower", category: "activities", usage: 0, level: 2, image: buildBlocksImg },
   { id: "l2-53", text: "Blow", category: "actions", usage: 0, level: 2, image: buildBlocksImg },
-  { id: "l2-53", text: "Nose", category: "body", usage: 0, level: 2, image: buildBlocksImg },
-  { id: "l2-53", text: "Bubbles", category: "objects", usage: 0, level: 2, image: buildBlocksImg },
-  { id: "l2-53", text: "Hair", category: "body", usage: 0, level: 2, image: buildBlocksImg },
-  { id: "l2-54", text: "Cut", category: "actions", usage: 0, level: 3, image: later },
-  { id: "l3-55", text: "Nails", category: "body", usage: 0, level: 3, image: later },
-  { id: "l3-56", text: "Teeth", category: "body", usage: 0, level: 3, image: later },
-  { id: "l3-57", text: "Arm", category: "body", usage: 0, level: 3, image: later },
-  { id: "l3-58", text: "Stomach", category: "body", usage: 0, level: 3, image: later },
-  { id: "l3-59", text: "Toe", category: "body", usage: 0, level: 3, image: later },
-  { id: "l3-60", text: "Finger", category: "body", usage: 0, level: 3, image: later },
-  { id: "l3-61", text: "Leg", category: "body", usage: 0, level: 3, image: later },
+  { id: "l2-54", text: "Nose", category: "body", usage: 0, level: 2, image: buildBlocksImg },
+  { id: "l2-55", text: "Bubbles", category: "objects", usage: 0, level: 2, image: buildBlocksImg },
+  { id: "l2-56", text: "Hair", category: "body", usage: 0, level: 2, image: buildBlocksImg },
+  { id: "l2-57", text: "Cut", category: "actions", usage: 0, level: 3, image: later },
+  { id: "l2-58", text: "Nails", category: "body", usage: 0, level: 3, image: later },
+  { id: "l2-59", text: "Teeth", category: "body", usage: 0, level: 3, image: later },
+  { id: "l2-60", text: "Arm", category: "body", usage: 0, level: 3, image: later },
+  { id: "l2-61", text: "Stomach", category: "body", usage: 0, level: 3, image: later },
+  { id: "l2-62", text: "Toe", category: "body", usage: 0, level: 3, image: later },
+  { id: "l2-63", text: "Finger", category: "body", usage: 0, level: 3, image: later },
+  { id: "l2-64", text: "Leg", category: "body", usage: 0, level: 3, image: later },
 
 ];
 
@@ -504,7 +510,7 @@ export const useCardStore = create<CardStore>()(
         const levelCards = state.cards.filter(
           (card) => (card.level || 1) <= state.currentLevel
         );
-        return [...levelCards, ...state.customCards];
+        return dedupeCardsById([...levelCards, ...state.customCards]);
       },
 
       // --- CUSTOM CARD CREATION ---
@@ -623,7 +629,7 @@ export const useCardStore = create<CardStore>()(
         return {
           ...prev,
           cards: allCards,
-          customCards: fixedCustomCards,
+          customCards: dedupeCardsById(fixedCustomCards),
         };
       },
     }
