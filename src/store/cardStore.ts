@@ -181,7 +181,7 @@ import later from "@/assets/pecs/later.jpg";
 import makeBed from "@/assets/pecs/makeBed.jpg";
 
 export type VocabularyLevel = 1 | 2 | 3;
-
+export type CharacterGender = "girl" | "boy";
 const dedupeCardsById = (cards: Card[]): Card[] => {
   const seen = new Map<string, Card>();
   for (const card of cards) seen.set(card.id, card);
@@ -199,7 +199,8 @@ interface CardStore {
   onboardingComplete: boolean;
   userName: string | null;
   userImage: string | null;
-
+  characterGender: CharacterGender;
+setCharacterGender: (gender: CharacterGender) => void;
   // Sentence actions
   addToSentence: (card: Card) => void;
   removeFromSentence: (index: number) => void;
@@ -468,7 +469,9 @@ export const useCardStore = create<CardStore>()(
       onboardingComplete: false,
       userName: null,
       userImage: null,
-
+      characterGender: "girl",
+      setCharacterGender: (gender) =>
+        set({ characterGender: gender }),
       // --- SENTENCE ACTIONS ---
       addToSentence: (card) =>
         set((state) => ({
@@ -599,7 +602,7 @@ export const useCardStore = create<CardStore>()(
     // --- PERSIST CONFIG ---
     {
       name: "pecs-storage",
-      version: 8, // bump because structure changed (stable user card id + new action)
+      version: 9, // bump because structure changed (stable user card id + new action)
 
       partialize: (state) => ({
         sentence: state.sentence,
@@ -610,6 +613,7 @@ export const useCardStore = create<CardStore>()(
         onboardingComplete: state.onboardingComplete,
         userName: state.userName,
         userImage: state.userImage,
+        characterGender: state.characterGender,
       }),
 
       migrate: (persistedState: any, _version: number) => {
