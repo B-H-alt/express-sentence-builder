@@ -1,18 +1,23 @@
 // src/components/pecs/Onboarding.tsx
 import { useRef, useState } from "react";
-import { useCardStore } from "@/store/cardStore";
+import { useCardStore, type CharacterGender } from "@/store/cardStore";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Upload, UserRound, X } from "lucide-react";
 
 export default function Onboarding() {
   const completeOnboarding = useCardStore((s) => s.completeOnboarding);
+  const saveCharacterGender = useCardStore((s) => s.setCharacterGender);
 
   const [name, setName] = useState("");
   const [image, setImage] = useState<string | null>(null);
+  const [gender, setGender] = useState<CharacterGender>("girl");
+
   const fileRef = useRef<HTMLInputElement | null>(null);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -22,16 +27,21 @@ export default function Onboarding() {
   };
 
   const handleContinue = () => {
-    completeOnboarding(name?.trim() || "Me", image ?? undefined);
+    saveCharacterGender(gender);
+    completeOnboarding(name.trim() || "Me", image ?? undefined);
   };
 
   const handleSkip = () => {
+    saveCharacterGender(gender);
     completeOnboarding("Me", undefined);
   };
 
   const clearImage = () => {
     setImage(null);
-    if (fileRef.current) fileRef.current.value = "";
+
+    if (fileRef.current) {
+      fileRef.current.value = "";
+    }
   };
 
   return (
@@ -48,14 +58,14 @@ export default function Onboarding() {
             </h2>
 
             <p className="font-inter font-medium text-lg text-muted-foreground mb-8 leading-relaxed">
-              Add a name and optional photo. This helps make sentence building feel more personal — you can always
-              change it later.
+              Add a name, choose a card character, and optionally upload
+              a photo. You can change these settings later.
             </p>
 
             <div className="hidden md:flex items-center gap-3 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-2">
                 <UserRound className="h-4 w-4" />
-                Optional name + photo
+                Name, card character, and optional photo
               </span>
             </div>
           </div>
@@ -65,21 +75,34 @@ export default function Onboarding() {
               <div className="flex items-center gap-4 mb-6">
                 <div className="relative h-16 w-16 rounded-2xl overflow-hidden bg-gray-100 border border-border flex items-center justify-center">
                   {image ? (
-                    <img src={image} alt="preview" className="h-full w-full object-cover" />
+                    <img
+                      src={image}
+                      alt="Profile preview"
+                      className="h-full w-full object-cover"
+                    />
                   ) : (
                     <UserRound className="h-6 w-6 text-muted-foreground" />
                   )}
                 </div>
 
                 <div className="flex-1">
-                  <p className="font-inter font-semibold text-foreground">Profile (optional)</p>
+                  <p className="font-inter font-semibold text-foreground">
+                    Learner profile
+                  </p>
+
                   <p className="text-sm text-muted-foreground">
-                    Upload an image and enter a display name.
+                    Enter a name and choose the card character.
                   </p>
                 </div>
 
                 {image && (
-                  <Button variant="ghost" size="icon" onClick={clearImage} aria-label="Remove photo">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={clearImage}
+                    aria-label="Remove photo"
+                  >
                     <X className="h-4 w-4" />
                   </Button>
                 )}
@@ -89,6 +112,7 @@ export default function Onboarding() {
                 <label className="block text-sm font-inter font-semibold text-foreground mb-2">
                   Name
                 </label>
+
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -97,9 +121,48 @@ export default function Onboarding() {
                 />
               </div>
 
+              <div className="mb-4">
+                <label className="block text-sm font-inter font-semibold text-foreground mb-2">
+                  Card character
+                </label>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setGender("girl")}
+                    aria-pressed={gender === "girl"}
+                    className={`h-11 rounded-xl border text-sm font-inter font-semibold transition-colors ${
+                      gender === "girl"
+                        ? "border-secondary bg-secondary text-white"
+                        : "border-border bg-white text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    Girl
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setGender("boy")}
+                    aria-pressed={gender === "boy"}
+                    className={`h-11 rounded-xl border text-sm font-inter font-semibold transition-colors ${
+                      gender === "boy"
+                        ? "border-secondary bg-secondary text-white"
+                        : "border-border bg-white text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    Boy
+                  </button>
+                </div>
+
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Choose which character appears on applicable communication
+                  cards.
+                </p>
+              </div>
+
               <div className="mb-6">
                 <label className="block text-sm font-inter font-semibold text-foreground mb-2">
-                  Picture
+                  Profile picture
                 </label>
 
                 <input
@@ -132,7 +195,7 @@ export default function Onboarding() {
                 </div>
 
                 <p className="mt-3 text-xs text-muted-foreground">
-                  This stays on your device unless you implement sync/storage.
+                  This stays on your device unless account syncing is added.
                 </p>
               </div>
 
@@ -147,7 +210,7 @@ export default function Onboarding() {
             </div>
 
             <p className="mt-4 text-center text-xs text-muted-foreground md:hidden">
-              Optional — you can change this later.
+              You can change these settings later.
             </p>
           </div>
         </div>
