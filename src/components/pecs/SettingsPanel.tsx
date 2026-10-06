@@ -1,10 +1,11 @@
 // src/components/pecs/SettingsPanel.tsx
 import React, { useEffect, useRef, useState } from "react";
 import { useCardStore } from "@/store/cardStore";
-import { X, User, SunMoon, Plus, Layers, Upload, Trash2, Save } from "lucide-react";
+import { X, User, Sun, Moon, Plus, Layers, Upload, Trash2, Save } from "lucide-react";
 import { AddCardModal } from "@/components/pecs/AddCardModal";
 import { Button } from "@/components/ui/button";
 import type { CharacterGender, VocabularyLevel } from "@/store/cardStore";
+import { useTheme } from "next-themes";
 
 interface SettingsPanelProps {
   open: boolean;
@@ -19,6 +20,8 @@ const levelOptions: { level: VocabularyLevel; label: string; subtitle: string }[
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) => {
   const { currentLevel, setLevel } = useCardStore();
+  const { theme, setTheme } = useTheme();
+  const currentTheme = theme === "dark" ? "dark" : "light";
 
   const userName = useCardStore((s) => s.userName);
   const userImage = useCardStore((s) => s.userImage);
@@ -178,20 +181,40 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                 </Button>
               </div>
 
-              {/* Theme placeholder */}
+              {/* Theme */}
               <div className="space-y-2 mt-auto">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium text-muted-foreground">Theme</span>
-                  <span className="text-[11px] text-muted-foreground">Light / Dark – coming soon</span>
+                  <span className="text-[11px] text-muted-foreground">Choose your display</span>
                 </div>
-                <button
-                  className="flex items-center justify-between w-full rounded-xl border border-dashed border-border/70 px-3 py-2 text-sm text-muted-foreground cursor-not-allowed"
-                  type="button"
-                  disabled
-                >
-                  <span>Light</span>
-                  <SunMoon className="w-4 h-4" />
-                </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    aria-pressed={currentTheme === "light"}
+                    onClick={() => setTheme("light")}
+                    className={`h-10 rounded-xl border text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
+                      currentTheme === "light"
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-background/70 text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <Sun className="w-4 h-4" />
+                    Light
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={currentTheme === "dark"}
+                    onClick={() => setTheme("dark")}
+                    className={`h-10 rounded-xl border text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
+                      currentTheme === "dark"
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-background/70 text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <Moon className="w-4 h-4" />
+                    Dark
+                  </button>
+                </div>
               </div>
             </div>
 
