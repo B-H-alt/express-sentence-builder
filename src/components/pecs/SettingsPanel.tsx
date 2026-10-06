@@ -330,7 +330,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
 
           <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border/70 bg-background px-6 py-4 md:px-8">
             <p className="hidden text-xs text-muted-foreground sm:block">
-              Press Escape or click outside to close.
+              Theme, level, and card display save automatically.
             </p>
             <div className="ml-auto flex items-center gap-2">
               <Button type="button" variant="outline" onClick={onClose}>
@@ -338,7 +338,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
               </Button>
               <Button type="button" onClick={handleSave} disabled={!hasChanges}>
                 <Save className="mr-2 h-4 w-4" />
-                Save changes
+                Save profile
               </Button>
             </div>
           </div>

@@ -1,8 +1,17 @@
 // src/components/pecs/AppHeader.tsx
 import { Button } from "@/components/ui/button";
-import { Settings, Image, Type, ArrowLeft } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Settings, Image, Type, ArrowLeft, ChevronDown, LayoutDashboard } from "lucide-react";
 import { Link } from "react-router-dom";
-import { VocabularyLevel } from "@/store/cardStore";
+import { useCardStore, VocabularyLevel } from "@/store/cardStore";
 
 interface AppHeaderProps {
   showWord: boolean;
@@ -17,6 +26,9 @@ export const AppHeader = ({
   currentLevel,
   onOpenSettings,
 }: AppHeaderProps) => {
+  const userName = useCardStore((state) => state.userName?.trim() || "Me");
+  const userImage = useCardStore((state) => state.userImage);
+
   const getLevelLabel = (level: VocabularyLevel) => {
     switch (level) {
       case 1:
@@ -27,6 +39,8 @@ export const AppHeader = ({
         return "Level 3 – Advanced";
     }
   };
+
+  const profileInitial = userName.charAt(0).toUpperCase();
 
   return (
     <header className="relative overflow-hidden bg-gradient-subtle border-b border-border px-6 py-4">
@@ -59,17 +73,56 @@ export const AppHeader = ({
             className="rounded-xl gap-2 data-[state=on]:shadow-glow"
           >
             {showWord ? <Type className="w-5 h-5" /> : <Image className="w-5 h-5" />}
-            {showWord ? "Words" : "Pictures Only"}
+            <span className="hidden sm:inline">{showWord ? "Words" : "Pictures Only"}</span>
           </Button>
 
-          <Button
-            variant="outline"
-            size="icon"
-            className="rounded-xl"
-            onClick={onOpenSettings}
-          >
-            <Settings className="w-5 h-5" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="h-11 gap-2 rounded-xl px-2 pr-3 shadow-sm"
+                aria-label={`Open ${userName}'s learner profile`}
+              >
+                <Avatar className="h-8 w-8 border border-border">
+                  {userImage && <AvatarImage src={userImage} alt={`${userName}'s profile`} />}
+                  <AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">
+                    {profileInitial}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="hidden max-w-28 truncate text-sm font-semibold md:inline">
+                  {userName}
+                </span>
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              </Button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent align="end" className="w-64 rounded-xl p-2">
+              <DropdownMenuLabel className="flex items-center gap-3 px-2 py-2 font-normal">
+                <Avatar className="h-10 w-10 border border-border">
+                  {userImage && <AvatarImage src={userImage} alt="" />}
+                  <AvatarFallback className="bg-primary/10 font-semibold text-primary">
+                    {profileInitial}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="min-w-0">
+                  <span className="block truncate font-semibold text-foreground">{userName}</span>
+                  <span className="block text-xs text-muted-foreground">
+                    Learner profile · Level {currentLevel}
+                  </span>
+                </span>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="cursor-pointer rounded-lg py-2.5" onSelect={onOpenSettings}>
+                <Settings className="mr-2 h-4 w-4" />
+                Profile & settings
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled className="rounded-lg py-2.5">
+                <LayoutDashboard className="mr-2 h-4 w-4" />
+                Parent dashboard
+                <span className="ml-auto text-xs">Soon</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
