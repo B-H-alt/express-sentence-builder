@@ -1,14 +1,8 @@
 import { FormEvent, useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
-import { Cloud, LogOut, Mail, ShieldCheck } from "lucide-react";
+import { Cloud, KeyRound, LockKeyhole, LogOut, Mail, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getSupabase, isCloudAccountConfigured } from "@/lib/supabase";
 
 interface ParentAccountDialogProps {
@@ -16,15 +10,19 @@ interface ParentAccountDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+type AccountView = "sign-in" | "sign-up" | "forgot" | "reset";
+
 export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogProps) => {
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [view, setView] = useState<AccountView>("sign-in");
   const [user, setUser] = useState<User | null>(null);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!isCloudAccountConfigured) return;
-
     let mounted = true;
     let unsubscribe: (() => void) | undefined;
 
@@ -33,8 +31,13 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
       supabase.auth.getUser().then(({ data }) => {
         if (mounted) setUser(data.user ?? null);
       });
-      const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-        if (mounted) setUser(session?.user ?? null);
+      const { data } = supabase.auth.onAuthStateChange((event, session) => {
+        if (!mounted) return;
+        setUser(session?.user ?? null);
+        if (event === "PASSWORD_RECOVERY") {
+          setView("reset");
+          setMessage("Choose a new password for your parent account.");
+        }
       });
       unsubscribe = () => data.subscription.unsubscribe();
     });
@@ -45,42 +48,143 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
     };
   }, []);
 
-  const handleSignIn = async (event: FormEvent) => {
+  const finishRequest = (nextMessage: string) => {
+    setMessage(nextMessage);
+    setLoading(false);
+  };
+
+  const changeView = (nextView: AccountView) => {
+    setView(nextView);
+    setPassword("");
+    setConfirmPassword("");
+    setMessage("");
+  };
+
+  const handlePasswordSubmit = async (event: FormEvent) => {
     event.preventDefault();
     const address = email.trim();
-    if (!address) return;
+    if (!address || password.length < 8) {
+      setMessage("Use a valid email and a password with at least 8 characters.");
+      return;
+    }
+    if (view === "sign-up" && password !== confirmPassword) {
+      setMessage("The passwords do not match.");
+      return;
+    }
 
     setLoading(true);
     setMessage("");
     const supabase = await getSupabase();
     if (!supabase) {
-      setMessage("Parent accounts are not configured yet.");
-      setLoading(false);
+      finishRequest("Parent accounts are not configured yet.");
       return;
     }
 
+    if (view === "sign-up") {
+      const { data, error } = await supabase.auth.signUp({
+        email: address,
+        password,
+        options: { emailRedirectTo: `${window.location.origin}/pecs-app` },
+      });
+      setPassword("");
+      setConfirmPassword("");
+      if (error) {
+        finishRequest(error.message || "We could not create the account. Please try again.");
+        return;
+      }
+      finishRequest(data.session
+        ? "Account created. You are signed in."
+        : "Account created. Check your email to confirm it before signing in.");
+      return;
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({ email: address, password });
+    setPassword("");
+    finishRequest(error ? "The email or password is incorrect." : "Signed in securely.");
+  };
+
+  const handleMagicLink = async () => {
+    const address = email.trim();
+    if (!address) {
+      setMessage("Enter your email first.");
+      return;
+    }
+    setLoading(true);
+    setMessage("");
+    const supabase = await getSupabase();
+    if (!supabase) {
+      finishRequest("Parent accounts are not configured yet.");
+      return;
+    }
     const { error } = await supabase.auth.signInWithOtp({
       email: address,
       options: {
         emailRedirectTo: `${window.location.origin}/pecs-app`,
+        shouldCreateUser: false,
       },
     });
+    finishRequest(error
+      ? "We could not send the sign-in link. Check the email or create an account first."
+      : "If an account exists for that email, a secure sign-in link is on its way.");
+  };
 
-    setMessage(error ? "We could not send the sign-in email. Please try again." : "Check your email for a secure sign-in link.");
-    setLoading(false);
+  const handleForgotPassword = async (event: FormEvent) => {
+    event.preventDefault();
+    const address = email.trim();
+    if (!address) return;
+    setLoading(true);
+    setMessage("");
+    const supabase = await getSupabase();
+    if (!supabase) {
+      finishRequest("Parent accounts are not configured yet.");
+      return;
+    }
+    await supabase.auth.resetPasswordForEmail(address, {
+      redirectTo: `${window.location.origin}/pecs-app`,
+    });
+    finishRequest("If an account exists for that email, a password reset link is on its way.");
+  };
+
+  const handleResetPassword = async (event: FormEvent) => {
+    event.preventDefault();
+    if (password.length < 8) {
+      setMessage("Use a password with at least 8 characters.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setMessage("The passwords do not match.");
+      return;
+    }
+
+    setLoading(true);
+    setMessage("");
+    const supabase = await getSupabase();
+    if (!supabase) {
+      finishRequest("Parent accounts are not configured yet.");
+      return;
+    }
+    const { error } = await supabase.auth.updateUser({ password });
+    setPassword("");
+    setConfirmPassword("");
+    if (error) {
+      finishRequest("We could not update the password. Please request a new reset link.");
+      return;
+    }
+    setView("sign-in");
+    finishRequest("Password updated. You are signed in.");
   };
 
   const handleSignOut = async () => {
     setLoading(true);
+    setMessage("");
     const supabase = await getSupabase();
     await supabase?.auth.signOut();
-    setMessage("Signed out on this device.");
-    setLoading(false);
+    finishRequest("Signed out on this device.");
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md rounded-2xl border-border/70">
+      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto rounded-2xl border-border/70">
         <DialogHeader>
           <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <ShieldCheck className="h-5 w-5" />
@@ -95,7 +199,7 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
           <div className="rounded-xl border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
             Cloud accounts are not configured on this version of Expressly.
           </div>
-        ) : user ? (
+        ) : user && view !== "reset" ? (
           <div className="space-y-4">
             <div className="flex items-start gap-3 rounded-xl border border-border bg-muted/35 p-4">
               <Cloud className="mt-0.5 h-5 w-5 text-primary" />
@@ -109,29 +213,78 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
               Sign out
             </Button>
           </div>
-        ) : (
-          <form className="space-y-4" onSubmit={handleSignIn}>
+        ) : view === "forgot" ? (
+          <form className="space-y-4" onSubmit={handleForgotPassword}>
             <div className="space-y-2">
-              <label htmlFor="parent-email" className="text-sm font-medium">Parent email</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  id="parent-email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="parent@example.com"
-                  className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-sm outline-none ring-offset-background focus:ring-2 focus:ring-ring"
-                />
-              </div>
+              <FieldLabel>Email</FieldLabel>
+              <EmailField email={email} setEmail={setEmail} />
             </div>
             <Button className="w-full" type="submit" disabled={loading}>
-              {loading ? "Sending…" : "Email me a sign-in link"}
+              {loading ? "Sending…" : "Send password reset link"}
             </Button>
+            <div className="text-center">
+              <TextButton onClick={() => changeView("sign-in")}>Back to sign in</TextButton>
+            </div>
+          </form>
+        ) : view === "reset" ? (
+          <form className="space-y-4" onSubmit={handleResetPassword}>
+            <PasswordFields
+              password={password}
+              confirmPassword={confirmPassword}
+              setPassword={setPassword}
+              setConfirmPassword={setConfirmPassword}
+              includeConfirmation
+            />
+            <Button className="w-full" type="submit" disabled={loading}>
+              {loading ? "Saving…" : "Save new password"}
+            </Button>
+          </form>
+        ) : (
+          <form className="space-y-4" onSubmit={handlePasswordSubmit}>
+            <div className="grid grid-cols-2 gap-1 rounded-xl bg-muted p-1" aria-label="Parent account options">
+              <button
+                type="button"
+                onClick={() => changeView("sign-in")}
+                className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${view === "sign-in" ? "bg-background shadow-sm" : "text-muted-foreground"}`}
+              >
+                Sign in
+              </button>
+              <button
+                type="button"
+                onClick={() => changeView("sign-up")}
+                className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${view === "sign-up" ? "bg-background shadow-sm" : "text-muted-foreground"}`}
+              >
+                Create account
+              </button>
+            </div>
+            <div className="space-y-2">
+              <FieldLabel>Email</FieldLabel>
+              <EmailField email={email} setEmail={setEmail} />
+            </div>
+            <PasswordFields
+              password={password}
+              confirmPassword={confirmPassword}
+              setPassword={setPassword}
+              setConfirmPassword={setConfirmPassword}
+              includeConfirmation={view === "sign-up"}
+            />
+            <Button className="w-full" type="submit" disabled={loading}>
+              {loading ? "Please wait…" : view === "sign-up" ? "Create parent account" : "Sign in"}
+            </Button>
+            {view === "sign-in" && (
+              <div className="space-y-3 text-center">
+                <TextButton onClick={() => changeView("forgot")}>Forgot password?</TextButton>
+                <div className="flex items-center gap-3 text-xs text-muted-foreground before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
+                  or
+                </div>
+                <Button type="button" variant="outline" className="w-full" onClick={handleMagicLink} disabled={loading}>
+                  <KeyRound className="mr-2 h-4 w-4" />
+                  Email me a sign-in link
+                </Button>
+              </div>
+            )}
             <p className="text-xs leading-relaxed text-muted-foreground">
-              No password is needed. The learner does not need their own email.
+              This account belongs to the parent or caregiver. The learner does not need an email.
             </p>
           </form>
         )}
@@ -145,3 +298,73 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
     </Dialog>
   );
 };
+
+const FieldLabel = ({ children }: { children: string }) => (
+  <label className="text-sm font-medium">{children}</label>
+);
+
+const EmailField = ({ email, setEmail }: { email: string; setEmail: (value: string) => void }) => (
+  <div className="relative">
+    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+    <input
+      type="email"
+      autoComplete="email"
+      required
+      value={email}
+      onChange={(event) => setEmail(event.target.value)}
+      placeholder="parent@example.com"
+      className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-sm outline-none ring-offset-background focus:ring-2 focus:ring-ring"
+    />
+  </div>
+);
+
+const PasswordFields = ({ password, confirmPassword, setPassword, setConfirmPassword, includeConfirmation }: {
+  password: string;
+  confirmPassword: string;
+  setPassword: (value: string) => void;
+  setConfirmPassword: (value: string) => void;
+  includeConfirmation: boolean;
+}) => (
+  <div className="space-y-3">
+    <div className="space-y-2">
+      <FieldLabel>Password</FieldLabel>
+      <div className="relative">
+        <LockKeyhole className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <input
+          type="password"
+          autoComplete={includeConfirmation ? "new-password" : "current-password"}
+          required
+          minLength={8}
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          placeholder="At least 8 characters"
+          className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-sm outline-none ring-offset-background focus:ring-2 focus:ring-ring"
+        />
+      </div>
+    </div>
+    {includeConfirmation && (
+      <div className="space-y-2">
+        <FieldLabel>Confirm password</FieldLabel>
+        <div className="relative">
+          <LockKeyhole className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="password"
+            autoComplete="new-password"
+            required
+            minLength={8}
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+            placeholder="Enter it again"
+            className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-sm outline-none ring-offset-background focus:ring-2 focus:ring-ring"
+          />
+        </div>
+      </div>
+    )}
+  </div>
+);
+
+const TextButton = ({ children, onClick }: { children: string; onClick: () => void }) => (
+  <button type="button" onClick={onClick} className="text-sm font-medium text-primary hover:underline">
+    {children}
+  </button>
+);
