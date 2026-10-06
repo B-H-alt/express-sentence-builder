@@ -81,3 +81,5 @@ uploads/
 # Original proofed image drop. The app uses the normalized copies in src/assets/pecs/girl.
 / Expressly Images-girl/
 /Non-Gender/
+.vercel
+.env*
