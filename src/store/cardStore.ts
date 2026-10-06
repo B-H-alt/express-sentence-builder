@@ -218,6 +218,10 @@ interface CardStore {
 
   // Custom cards
   addCustomCard: (card: Omit<Card, "id" | "usage" | "level">) => void;
+  updateCustomCard: (
+    id: string,
+    updates: Pick<Card, "text" | "category" | "imageUrl">
+  ) => void;
   deleteCustomCard: (id: string) => void;
 
   // NEW — Complete onboarding and create user card
@@ -531,9 +535,21 @@ export const useCardStore = create<CardStore>()(
           return { customCards: [...state.customCards, newCard] };
         }),
 
+      updateCustomCard: (id, updates) =>
+        set((state) => ({
+          customCards: state.customCards.map((card) =>
+            card.id === id ? { ...card, ...updates, image: undefined } : card
+          ),
+          sentence: state.sentence.map((card) =>
+            card.id === id ? { ...card, ...updates, image: undefined } : card
+          ),
+        })),
+
       deleteCustomCard: (id) =>
         set((state) => ({
           customCards: state.customCards.filter((card) => card.id !== id),
+          sentence: state.sentence.filter((card) => card.id !== id),
+          favorites: state.favorites.filter((cardId) => cardId !== id),
         })),
 
       // --- COMPLETE ONBOARDING & CREATE/UPDATE USER CARD ---
