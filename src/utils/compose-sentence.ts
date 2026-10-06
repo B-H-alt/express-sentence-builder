@@ -1,80 +1,8 @@
 // src/utils/compose-sentence.ts
 import { getAccessToken } from "@/lib/supabase";
+import { composeSentenceLocally } from "@/utils/local-grammar";
 
 const compositionCache = new Map<string, string>();
-
-const finishSentence = (text: string, isQuestion = false) => {
-  const cleaned = text.replace(/\s+/g, " ").trim();
-  if (!cleaned) return "";
-  const capitalized = cleaned.charAt(0).toLocaleUpperCase() + cleaned.slice(1);
-  if (/[.!?]$/.test(capitalized)) return capitalized;
-  return `${capitalized}${isQuestion ? "?" : "."}`;
-};
-
-const composeCommonPattern = (labels: string[]) => {
-  const cleanLabels = labels.map((label) => label.trim()).filter(Boolean);
-  if (cleanLabels.length === 0) return "";
-
-  const first = cleanLabels[0];
-  const firstLower = first.toLocaleLowerCase();
-  const remaining = cleanLabels.slice(1).join(" ").toLocaleLowerCase();
-
-  if (cleanLabels.length === 1 && /[.!?]$/.test(first)) return finishSentence(first);
-
-  if (first.endsWith("?") && remaining) {
-    return finishSentence(`${first.slice(0, -1)} ${remaining}`, true);
-  }
-
-  const selfSubjects = new Set(["me", "i"]);
-  const otherPronouns = new Set(["you", "he", "she"]);
-  const linkingWords = new Set([
-    "happy", "sad", "mad", "tired", "scared", "excited", "calm", "silly",
-    "bored", "frustrated", "proud", "nervous", "surprised", "hot", "cold",
-  ]);
-  const clearSelfActions = new Set([
-    "want", "need", "like", "don't like", "dont like", "don't want", "dont want",
-    "feel", "go", "eat", "drink", "play", "read", "help",
-  ]);
-
-  if (selfSubjects.has(firstLower) && cleanLabels.length > 1) {
-    const secondLower = cleanLabels[1].toLocaleLowerCase();
-    const rest = cleanLabels.slice(1).join(" ").toLocaleLowerCase();
-    return finishSentence(linkingWords.has(secondLower) ? `I am ${rest}` : `I ${rest}`);
-  }
-
-  if (otherPronouns.has(firstLower) && cleanLabels.length > 1) {
-    const secondLower = cleanLabels[1].toLocaleLowerCase();
-    const rest = cleanLabels.slice(1).join(" ").toLocaleLowerCase();
-    if (linkingWords.has(secondLower)) {
-      return finishSentence(`${first} ${firstLower === "you" ? "are" : "is"} ${rest}`);
-    }
-
-    const thirdPersonActions: Record<string, string> = {
-      want: "wants",
-      need: "needs",
-      like: "likes",
-      feel: "feels",
-      go: "goes",
-      eat: "eats",
-      drink: "drinks",
-      play: "plays",
-      read: "reads",
-      help: "helps",
-    };
-    const action =
-      firstLower === "you" ? secondLower : thirdPersonActions[secondLower];
-    if (action) {
-      const tail = cleanLabels.slice(2).join(" ").toLocaleLowerCase();
-      return finishSentence(`${first} ${action}${tail ? ` ${tail}` : ""}`);
-    }
-  }
-
-  if (clearSelfActions.has(firstLower)) {
-    return finishSentence(`I ${[first, ...cleanLabels.slice(1)].join(" ").toLocaleLowerCase()}`);
-  }
-
-  return "";
-};
 
 // Compose a sentence from input tokens or text using Gemini 2.5 Flash
 export async function composeSentence(input: { tokens?: string[]; text?: string }): Promise<string> {
@@ -89,7 +17,7 @@ export async function composeSentence(input: { tokens?: string[]; text?: string 
   const cached = compositionCache.get(cacheKey);
   if (cached !== undefined) return cached;
 
-  const commonResult = composeCommonPattern(inputLabels);
+  const commonResult = composeSentenceLocally(inputLabels);
   if (commonResult) {
     compositionCache.set(cacheKey, commonResult);
     return commonResult;

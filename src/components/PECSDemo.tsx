@@ -1,16 +1,10 @@
 // PECSDemo.tsx (no Supabase; uses Zustand card store + /api/compose-sentence)
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Card as UiCard, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useCardStore } from "@/store/cardStore";
 import type { Card as PecsCardType } from "@/pages/PecsApp";
-
-// --- Optional ElevenLabs (falls back to Web Speech if not configured)
-const ELEVEN_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY as string | undefined;
-const ELEVEN_VOICE =
-  (import.meta.env.VITE_ELEVENLABS_VOICE_ID as string | undefined) ??
-  "21m00Tcm4TlvDq8ikWAM";
 
 // --- Local demo visual set (you can keep/trim as you like)
 import iWantImg from "@/assets/pecs/want.jpg";
@@ -93,7 +87,6 @@ const PECSDemo = () => {
   const [aiSentence, setAiSentence] = useState("");
   const [isConstructing, setIsConstructing] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Derived tokens from the store sentence
   const tokens = useMemo(() => sentence.map((c) => c.text), [sentence]);
@@ -127,43 +120,6 @@ const PECSDemo = () => {
       window.speechSynthesis.speak(u);
     });
 
-  const playBlob = async (blob: Blob) => {
-    if (!audioRef.current) audioRef.current = new Audio();
-    const url = URL.createObjectURL(blob);
-    audioRef.current.src = url;
-    try {
-      await audioRef.current.play();
-    } finally {
-      audioRef.current.onended = () => URL.revokeObjectURL(url);
-    }
-  };
-
-  const speakWithElevenLabs = async (text: string) => {
-    if (!ELEVEN_KEY || !ELEVEN_VOICE) throw new Error("Missing ElevenLabs env");
-    const endpoint = `https://api.elevenlabs.io/v1/text-to-speech/${ELEVEN_VOICE}?optimize_streaming_latency=0`;
-    const body = {
-      text,
-      model_id: "eleven_turbo_v2",
-      voice_settings: {
-        stability: 0.5,
-        similarity_boost: 0.75,
-        style: 0.0,
-        use_speaker_boost: true,
-      },
-    };
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "xi-api-key": ELEVEN_KEY,
-        "Content-Type": "application/json",
-        Accept: "audio/mpeg",
-      },
-      body: JSON.stringify(body),
-    });
-    if (!res.ok) throw new Error(`ElevenLabs ${res.status}`);
-    await playBlob(await res.blob());
-  };
-
   const speakSentence = async () => {
     if (tokens.length === 0) return;
 
@@ -187,11 +143,7 @@ const PECSDemo = () => {
     toast({ title: "Sentence", description: textToSpeak });
 
     try {
-      if (ELEVEN_KEY) {
-        await speakWithElevenLabs(textToSpeak);
-      } else {
-        await speakWithWebAPI(textToSpeak);
-      }
+      await speakWithWebAPI(textToSpeak);
     } catch (e) {
       console.error("speak error", e);
       await speakWithWebAPI(textToSpeak);

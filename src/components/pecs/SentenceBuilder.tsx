@@ -6,14 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Check, Loader2, MessageSquareText, Trash2, Volume2, Square, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { composeSentence } from "@/utils/compose-sentence";
+import { getAccessToken } from "@/lib/supabase";
 
 interface SentenceBuilderProps {
   showWord: boolean;
 }
-
-const ELEVEN_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY as string | undefined;
-const ELEVEN_VOICE =
-  (import.meta.env.VITE_ELEVENLABS_VOICE_ID as string | undefined) ?? "21m00Tcm4TlvDq8ikWAM";
 
 export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
   const { sentence, removeFromSentence, clearSentence, completeSentence } = useCardStore();
@@ -24,6 +21,7 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
   const [composedText, setComposedText] = useState("");
   const [composedSource, setComposedSource] = useState("");
   const [showComposed, setShowComposed] = useState(false);
+  const [usedOriginalWords, setUsedOriginalWords] = useState(false);
 
   const getSentenceText = () => sentence.map((card) => card.text).join(" ").trim();
   const getSentenceTokens = () => sentence.map((card) => card.text);
@@ -32,6 +30,7 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
     setComposedText("");
     setComposedSource("");
     setShowComposed(false);
+    setUsedOriginalWords(false);
   }, [sentence]);
 
   const resolveSentence = async () => {
@@ -43,6 +42,7 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
     try {
       const improved = await composeSentence({ tokens: getSentenceTokens() });
       const finalText = improved?.trim() || raw;
+      setUsedOriginalWords(!improved?.trim());
       setComposedText(finalText);
       setComposedSource(raw);
       return finalText;
@@ -50,6 +50,7 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
       console.error("Failed to compose sentence:", error);
       setComposedText(raw);
       setComposedSource(raw);
+      setUsedOriginalWords(true);
       return raw;
     } finally {
       setIsComposing(false);
@@ -77,26 +78,15 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
   };
 
   const speakWithElevenLabs = async (text: string) => {
-    if (!ELEVEN_KEY || !ELEVEN_VOICE) throw new Error("Missing ElevenLabs config");
-    const endpoint = `https://api.elevenlabs.io/v1/text-to-speech/${ELEVEN_VOICE}?optimize_streaming_latency=0`;
-    const body = {
-      text,
-      model_id: "eleven_turbo_v2",
-      voice_settings: {
-        stability: 0.5,
-        similarity_boost: 0.75,
-        style: 0.0,
-        use_speaker_boost: true,
-      },
-    };
-    const res = await fetch(endpoint, {
+    const accessToken = await getAccessToken();
+    if (!accessToken) throw new Error("Sign in required for enhanced voice");
+    const res = await fetch("/api/speak", {
       method: "POST",
       headers: {
-        "xi-api-key": ELEVEN_KEY,
         "Content-Type": "application/json",
-        Accept: "audio/mpeg",
+        Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ text }),
     });
     if (!res.ok) {
       const msg = await res.text().catch(() => "");
@@ -131,11 +121,7 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
     toast({ title: spoken });
 
     try {
-      if (ELEVEN_KEY) {
-        await speakWithElevenLabs(spoken);
-      } else {
-        await speakWithWebAPI(spoken);
-      }
+      await speakWithElevenLabs(spoken);
     } catch (err: unknown) {
       console.error(err);
       await speakWithWebAPI(spoken);
@@ -242,9 +228,14 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
         >
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
-              Sentence
+              {usedOriginalWords ? "Original cards" : "Sentence"}
             </p>
             <p className="mt-1 text-lg font-semibold leading-7">{composedText}</p>
+            {usedOriginalWords && (
+              <p className="mt-1 text-sm text-muted-foreground">
+                Grammar correction is temporarily unavailable for this combination.
+              </p>
+            )}
           </div>
           <button
             type="button"
