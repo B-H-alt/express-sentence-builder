@@ -4,7 +4,7 @@ import { useCardStore } from "@/store/cardStore";
 import { X, User, SunMoon, Plus, Layers, Upload, Trash2, Save } from "lucide-react";
 import { AddCardModal } from "@/components/pecs/AddCardModal";
 import { Button } from "@/components/ui/button";
-import type { VocabularyLevel } from "@/store/cardStore";
+import type { CharacterGender, VocabularyLevel } from "@/store/cardStore";
 
 interface SettingsPanelProps {
   open: boolean;
@@ -23,11 +23,14 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
   const userName = useCardStore((s) => s.userName);
   const userImage = useCardStore((s) => s.userImage);
   const updateUserProfile = useCardStore((s) => s.updateUserProfile);
+  const characterGender = useCardStore((s) => s.characterGender);
+  const setCharacterGender = useCardStore((s) => s.setCharacterGender);
 
   const [showAddCard, setShowAddCard] = useState(false);
 
   const [draftName, setDraftName] = useState("Me");
   const [draftImage, setDraftImage] = useState<string | null>(null);
+  const [draftGender, setDraftGender] = useState<CharacterGender>("girl");
 
   const fileRef = useRef<HTMLInputElement | null>(null);
 
@@ -35,13 +38,15 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
     if (!open) return;
     setDraftName(userName?.trim() || "Me");
     setDraftImage(userImage ?? null);
-  }, [open, userName, userImage]);
+    setDraftGender(characterGender);
+  }, [open, userName, userImage, characterGender]);
 
   if (!open) return null;
 
   const hasChanges =
     (draftName.trim() || "Me") !== (userName?.trim() || "Me") ||
-    (draftImage ?? null) !== (userImage ?? null);
+    (draftImage ?? null) !== (userImage ?? null) ||
+    draftGender !== characterGender;
 
   const handlePickImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -54,6 +59,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
 
   const handleSave = () => {
     updateUserProfile(draftName.trim() || "Me", draftImage);
+    setCharacterGender(draftGender);
   };
 
   const handleRemovePhoto = () => {
@@ -138,6 +144,31 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                   onChange={(e) => setDraftName(e.target.value)}
                   placeholder="Me"
                 />
+              </div>
+
+              {/* Card character */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Card character</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(["girl", "boy"] as CharacterGender[]).map((gender) => (
+                    <button
+                      key={gender}
+                      type="button"
+                      aria-pressed={draftGender === gender}
+                      onClick={() => setDraftGender(gender)}
+                      className={`h-10 rounded-xl border text-sm font-medium capitalize transition-colors ${
+                        draftGender === gender
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-background/70 text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      {gender}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Choose which character appears on applicable communication cards.
+                </p>
               </div>
 
               <div className="flex justify-end">
