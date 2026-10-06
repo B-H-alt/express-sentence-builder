@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import PecsApp from "./pages/PecsApp";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
+import { ParentDashboard } from "./components/pecs/ParentDashboard";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/pecs-app" element={<PecsApp />} />
+            <Route path="/parent" element={<ParentDashboard />} />
             <Route path="/about" element={<About />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -1,12 +1,12 @@
 // src/pages/PecsApp.tsx
 import { useLayoutEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { SentenceBuilder } from "@/components/pecs/SentenceBuilder";
 import { CardGrid } from "@/components/pecs/CardGrid";
 import { CategoryTabs } from "@/components/pecs/CategoryTabs";
 import { AppHeader } from "@/components/pecs/AppHeader";
 import { useCardStore } from "@/store/cardStore";
 import { SettingsPanel } from "@/components/pecs/SettingsPanel";
-import { ParentDashboard } from "@/components/pecs/ParentDashboard";
 import { ParentAccountDialog } from "@/components/pecs/ParentAccountDialog";
 import Onboarding from "@/components/pecs/Onboarding";
 
@@ -23,8 +23,8 @@ export interface Card {
 const PecsApp = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [showSettings, setShowSettings] = useState(false);
-  const [showParentDashboard, setShowParentDashboard] = useState(false);
   const [showParentAccount, setShowParentAccount] = useState(false);
+  const navigate = useNavigate();
 
   const { currentLevel, showWords, setShowWords } = useCardStore();
 
@@ -113,7 +113,7 @@ const PecsApp = () => {
             onSetDisplayMode={setShowWords}
             currentLevel={currentLevel}
             onOpenSettings={() => setShowSettings(true)}
-            onOpenParentDashboard={() => setShowParentDashboard(true)}
+            onOpenParentDashboard={() => navigate("/parent")}
             onOpenParentAccount={() => setShowParentAccount(true)}
           />
         </div>
@@ -144,10 +144,6 @@ const PecsApp = () => {
       <SettingsPanel
         open={showSettings}
         onClose={() => setShowSettings(false)}
-      />
-      <ParentDashboard
-        open={showParentDashboard}
-        onClose={() => setShowParentDashboard(false)}
       />
       <ParentAccountDialog
         open={showParentAccount}
