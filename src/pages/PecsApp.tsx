@@ -21,13 +21,12 @@ export interface Card {
 }
 
 const PecsApp = () => {
-  const [showWord, setShowWord] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [showSettings, setShowSettings] = useState(false);
   const [showParentDashboard, setShowParentDashboard] = useState(false);
   const [showParentAccount, setShowParentAccount] = useState(false);
 
-  const { currentLevel } = useCardStore();
+  const { currentLevel, showWords, setShowWords } = useCardStore();
 
   // ✅ pull onboarding state from the store
   // Pick the one that exists in your store:
@@ -110,8 +109,8 @@ const PecsApp = () => {
         {/* NAV (full width) */}
         <div className="w-full px-0">
           <AppHeader
-            showWord={showWord}
-            onSetDisplayMode={setShowWord}
+            showWord={showWords}
+            onSetDisplayMode={setShowWords}
             currentLevel={currentLevel}
             onOpenSettings={() => setShowSettings(true)}
             onOpenParentDashboard={() => setShowParentDashboard(true)}
@@ -122,7 +121,7 @@ const PecsApp = () => {
         {/* Builder + Tabs (contained) */}
         <div className="w-full px-4 sm:px-6 lg:px-8 py-3 flex flex-col gap-4">
           <div className="min-h-[140px] max-h-[400px]">
-            <SentenceBuilder showWord={showWord} />
+            <SentenceBuilder showWord={showWords} />
           </div>
 
           <CategoryTabs
@@ -137,7 +136,7 @@ const PecsApp = () => {
       <main className="flex-1 pb-8" style={{ paddingTop: topBarH }}>
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="mt-4">
-            <CardGrid selectedCategory={selectedCategory} showWord={showWord} />
+            <CardGrid selectedCategory={selectedCategory} showWord={showWords} />
           </div>
         </div>
       </main>

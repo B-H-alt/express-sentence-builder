@@ -206,6 +206,7 @@ interface CardStore {
   favorites: string[];
   currentLevel: VocabularyLevel;
   cardsPerPage: CardDisplayAmount;
+  showWords: boolean;
   customCards: Card[];
   progressEntries: ProgressEntry[];
 
@@ -229,6 +230,7 @@ interface CardStore {
   // Level control
   setLevel: (level: VocabularyLevel) => void;
   setCardsPerPage: (amount: CardDisplayAmount) => void;
+  setShowWords: (showWords: boolean) => void;
 
   // Card filtering
   getFilteredCards: () => Card[];
@@ -489,6 +491,7 @@ export const useCardStore = create<CardStore>()(
       favorites: [],
       currentLevel: 1,
       cardsPerPage: "all",
+      showWords: true,
       customCards: [],
       progressEntries: [],
 
@@ -562,6 +565,7 @@ export const useCardStore = create<CardStore>()(
       // --- LEVEL CONTROL ---
       setLevel: (level) => set({ currentLevel: level }),
       setCardsPerPage: (amount) => set({ cardsPerPage: amount }),
+      setShowWords: (showWords) => set({ showWords }),
 
       // --- CARD FILTERING ---
       getFilteredCards: () => {
@@ -670,13 +674,14 @@ export const useCardStore = create<CardStore>()(
     // --- PERSIST CONFIG ---
     {
       name: "pecs-storage",
-      version: 11,
+      version: 12,
 
       partialize: (state) => ({
         sentence: state.sentence,
         favorites: state.favorites,
         currentLevel: state.currentLevel,
         cardsPerPage: state.cardsPerPage,
+        showWords: state.showWords,
         customCards: state.customCards,
         progressEntries: state.progressEntries,
 
@@ -706,6 +711,7 @@ export const useCardStore = create<CardStore>()(
           cardsPerPage: [4, 8, 12, "all"].includes(prev.cardsPerPage)
             ? prev.cardsPerPage
             : "all",
+          showWords: typeof prev.showWords === "boolean" ? prev.showWords : true,
           customCards: dedupeCardsById(fixedCustomCards),
           progressEntries: Array.isArray(prev.progressEntries) ? prev.progressEntries : [],
         };
