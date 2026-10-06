@@ -1,100 +1,37 @@
-import { Link } from "react-router-dom";
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Menu, X } from "lucide-react";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="bg-secondary text-white fixed top-0 left-0 right-0 z-50">
-      <nav className="border-b border-white/10">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-3">
-            <img
-              src="/handmade-logo.png"
-              alt="Expressly Logo"
-              className="h-10 w-auto"
-            />
-            <span className="font-bold text-xl">Expressly</span>
-          </Link>
-
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-10">
-            <Link
-              to="/about"
-              className="font-semibold text-white/90 hover:text-white transition-colors"
-            >
-              About
-            </Link>
-
-            <Link
-              to="/pecs-app"
-              className="
-                inline-flex items-center
-                rounded-full
-                -ml-2
-                bg-white
-                px-4 py-2
-                text-sm font-semibold
-                text-primary
-                shadow-md
-                transition-all
-                hover:shadow-lg
-              "
-            >
-              Open App →
-            </Link>
-          </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden inline-flex items-center justify-center rounded-lg p-2 hover:bg-white/10"
-            onClick={() => setOpen(!open)}
-            aria-label="Toggle menu"
-          >
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-border/70 bg-background/90 backdrop-blur-xl">
+      <nav className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 md:px-10">
+        <Link to="/" className="flex items-center gap-3" aria-label="Expressly home">
+          <img src="/handmade-logo.png" alt="" className="h-10 w-10 rounded-xl object-contain" />
+          <span className="text-xl font-semibold tracking-tight">Expressly</span>
+        </Link>
+        <div className="hidden items-center gap-8 md:flex">
+          <a href="#how-it-works" className="text-sm font-medium text-muted-foreground hover:text-foreground">How it works</a>
+          <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground">Features</a>
+          <Link to="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground">About</Link>
+          <Link to="/pecs-app" className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">Open app</Link>
         </div>
-
-        {/* Mobile Dropdown */}
-        {open && (
-          <div className="md:hidden border-t border-white/10 bg-secondary">
-            <div className="flex flex-col gap-4 px-4 py-6">
-              <Link
-                to="/about"
-                className="font-semibold text-white/90 hover:text-white"
-                onClick={() => setOpen(false)}
-              >
-                About Us
-              </Link>
-
-              <Link
-                to="/pecs-app"
-                className="
-                  inline-flex items-center justify-center
-                  rounded-full
-                  bg-white
-                  px-4 py-2
-                  text-sm font-semibold
-                  text-primary
-                  shadow-md
-                "
-                onClick={() => setOpen(false)}
-              >
-                Open App →
-              </Link>
-            </div>
-          </div>
-        )}
+        <button type="button" aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen((value) => !value)} className="rounded-xl border border-border p-2 md:hidden">
+          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
       </nav>
+      {open && (
+        <div className="border-t border-border bg-background px-6 py-5 md:hidden">
+          <div className="mx-auto flex max-w-7xl flex-col gap-4">
+            <a href="#how-it-works" onClick={() => setOpen(false)} className="font-medium">How it works</a>
+            <a href="#features" onClick={() => setOpen(false)} className="font-medium">Features</a>
+            <Link to="/about" onClick={() => setOpen(false)} className="font-medium">About</Link>
+            <Link to="/pecs-app" onClick={() => setOpen(false)} className="mt-1 rounded-full bg-primary px-5 py-3 text-center font-semibold text-primary-foreground">Open app</Link>
+          </div>
+        </div>
+      )}
     </header>
   );
 };
