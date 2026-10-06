@@ -109,7 +109,7 @@ const PecsApp = () => {
         <div className="w-full px-0">
           <AppHeader
             showWord={showWord}
-            onTogglePictures={() => setShowWord(!showWord)}
+            onSetDisplayMode={setShowWord}
             currentLevel={currentLevel}
             onOpenSettings={() => setShowSettings(true)}
             onOpenParentDashboard={() => setShowParentDashboard(true)}
