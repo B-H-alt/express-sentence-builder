@@ -80,11 +80,11 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
   const handleSave = () => {
     updateUserProfile(draftName.trim() || "Me", draftImage);
     setCharacterGender(draftGender);
+    onClose();
   };
 
   const handleRemovePhoto = () => {
     setDraftImage(null);
-    updateUserProfile(draftName.trim() || "Me", null);
     if (fileRef.current) fileRef.current.value = "";
   };
 

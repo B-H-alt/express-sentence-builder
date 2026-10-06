@@ -1,9 +1,9 @@
 // src/components/SentenceBuilder.tsx
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCardStore } from "@/store/cardStore";
 import { PecsCard } from "./PecsCard";
 import { Button } from "@/components/ui/button";
-import { Trash2, Volume2, Square } from "lucide-react";
+import { Check, Loader2, MessageSquareText, Trash2, Volume2, Square, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { composeSentence } from "@/utils/compose-sentence";
 
@@ -16,13 +16,45 @@ const ELEVEN_VOICE =
   (import.meta.env.VITE_ELEVENLABS_VOICE_ID as string | undefined) ?? "21m00Tcm4TlvDq8ikWAM";
 
 export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
-  const { sentence, removeFromSentence, clearSentence } = useCardStore();
+  const { sentence, removeFromSentence, clearSentence, completeSentence } = useCardStore();
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isComposing, setIsComposing] = useState(false);
+  const [composedText, setComposedText] = useState("");
+  const [composedSource, setComposedSource] = useState("");
+  const [showComposed, setShowComposed] = useState(false);
 
   const getSentenceText = () => sentence.map((card) => card.text).join(" ").trim();
   const getSentenceTokens = () => sentence.map((card) => card.text);
+
+  useEffect(() => {
+    setComposedText("");
+    setComposedSource("");
+    setShowComposed(false);
+  }, [sentence]);
+
+  const resolveSentence = async () => {
+    const raw = getSentenceText();
+    if (!raw) return "";
+    if (composedSource === raw && composedText) return composedText;
+
+    setIsComposing(true);
+    try {
+      const improved = await composeSentence({ tokens: getSentenceTokens() });
+      const finalText = improved?.trim() || raw;
+      setComposedText(finalText);
+      setComposedSource(raw);
+      return finalText;
+    } catch (error) {
+      console.error("Failed to compose sentence:", error);
+      setComposedText(raw);
+      setComposedSource(raw);
+      return raw;
+    } finally {
+      setIsComposing(false);
+    }
+  };
 
   const playBlob = async (blob: Blob) => {
     if (!audioRef.current) audioRef.current = new Audio();
@@ -86,23 +118,13 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
   };
 
   const handleSpeak = async () => {
-    const raw = getSentenceText();
-    if (!raw) return;
+    if (!getSentenceText()) return;
 
     setIsSpeaking(true);
-
-    const tokens = getSentenceTokens();
-
-    // Ask Gemini; it returns a string ("" means "no improvement")
-    let spoken = raw; // default fallback is raw input
-    try {
-      const improved = await composeSentence({ tokens }); // <-- string
-      if (improved && improved.trim().length > 0) {
-        spoken = improved.trim();
-      }
-    } catch (err) {
-      console.error("Failed to compose sentence:", err);
-      // keep fallback `spoken = raw`
+    const spoken = await resolveSentence();
+    if (!spoken) {
+      setIsSpeaking(false);
+      return;
     }
 
     // Show what will actually be spoken
@@ -114,7 +136,7 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
       } else {
         await speakWithWebAPI(spoken);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       await speakWithWebAPI(spoken);
       toast({
@@ -124,6 +146,22 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
     } finally {
       setIsSpeaking(false);
     }
+  };
+
+  const handleShowSentence = async () => {
+    const text = await resolveSentence();
+    if (text) setShowComposed(true);
+  };
+
+  const handleComplete = () => {
+    stopAudio();
+    const completed = completeSentence();
+    if (!completed) return;
+
+    toast({
+      title: "Sentence saved",
+      description: "A fresh sentence is ready to build.",
+    });
   };
 
   return (
@@ -139,15 +177,39 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
       }}
       onDragOver={(e) => e.preventDefault()}
     >
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-start justify-between gap-3 mb-2">
         <h2 className="text-lg font-semibold bg-gradient-accent bg-clip-text text-transparent">
           My Sentence
         </h2>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           {sentence.length > 0 && (
             <>
+              <Button size="sm" onClick={handleComplete} className="rounded-xl">
+                <Check className="w-4 h-4 mr-1" />
+                Done
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleShowSentence}
+                className="rounded-xl"
+                disabled={isComposing}
+              >
+                {isComposing ? (
+                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                ) : (
+                  <MessageSquareText className="w-4 h-4 mr-1" />
+                )}
+                Show sentence
+              </Button>
               {!isSpeaking ? (
-                <Button size="sm" variant="outline" onClick={handleSpeak} className="rounded-xl">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleSpeak}
+                  className="rounded-xl"
+                  disabled={isComposing}
+                >
                   <Volume2 className="w-4 h-4 mr-1" />
                   Speak
                 </Button>
@@ -173,6 +235,27 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
           )}
         </div>
       </div>
+      {showComposed && composedText && (
+        <div
+          className="mb-3 flex items-start justify-between gap-3 rounded-2xl border border-secondary/25 bg-secondary/5 px-4 py-3"
+          aria-live="polite"
+        >
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+              Sentence
+            </p>
+            <p className="mt-1 text-lg font-semibold leading-7">{composedText}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowComposed(false)}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            aria-label="Hide corrected sentence"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
       <div className="flex-1 flex flex-wrap items-start gap-3 overflow-y-auto pb-2">
         {sentence.length === 0 ? (
           <p className="text-muted-foreground text-center w-full py-8">

@@ -18,6 +18,7 @@ interface AppHeaderProps {
   onTogglePictures: () => void;
   currentLevel: VocabularyLevel;
   onOpenSettings: () => void;
+  onOpenParentDashboard: () => void;
 }
 
 export const AppHeader = ({
@@ -25,6 +26,7 @@ export const AppHeader = ({
   onTogglePictures,
   currentLevel,
   onOpenSettings,
+  onOpenParentDashboard,
 }: AppHeaderProps) => {
   const userName = useCardStore((state) => state.userName?.trim() || "Me");
   const userImage = useCardStore((state) => state.userImage);
@@ -116,10 +118,12 @@ export const AppHeader = ({
                 <Settings className="mr-2 h-4 w-4" />
                 Profile & settings
               </DropdownMenuItem>
-              <DropdownMenuItem disabled className="rounded-lg py-2.5">
+              <DropdownMenuItem
+                className="cursor-pointer rounded-lg py-2.5"
+                onSelect={onOpenParentDashboard}
+              >
                 <LayoutDashboard className="mr-2 h-4 w-4" />
                 Parent dashboard
-                <span className="ml-auto text-xs">Soon</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
