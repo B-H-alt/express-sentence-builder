@@ -7,6 +7,7 @@ import { AppHeader } from "@/components/pecs/AppHeader";
 import { useCardStore } from "@/store/cardStore";
 import { SettingsPanel } from "@/components/pecs/SettingsPanel";
 import { ParentDashboard } from "@/components/pecs/ParentDashboard";
+import { ParentAccountDialog } from "@/components/pecs/ParentAccountDialog";
 import Onboarding from "@/components/pecs/Onboarding";
 
 export interface Card {
@@ -24,6 +25,7 @@ const PecsApp = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [showSettings, setShowSettings] = useState(false);
   const [showParentDashboard, setShowParentDashboard] = useState(false);
+  const [showParentAccount, setShowParentAccount] = useState(false);
 
   const { currentLevel } = useCardStore();
 
@@ -113,6 +115,7 @@ const PecsApp = () => {
             currentLevel={currentLevel}
             onOpenSettings={() => setShowSettings(true)}
             onOpenParentDashboard={() => setShowParentDashboard(true)}
+            onOpenParentAccount={() => setShowParentAccount(true)}
           />
         </div>
 
@@ -146,6 +149,10 @@ const PecsApp = () => {
       <ParentDashboard
         open={showParentDashboard}
         onClose={() => setShowParentDashboard(false)}
+      />
+      <ParentAccountDialog
+        open={showParentAccount}
+        onOpenChange={setShowParentAccount}
       />
     </div>
   );

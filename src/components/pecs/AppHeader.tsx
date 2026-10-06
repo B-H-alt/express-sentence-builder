@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Settings, Image, Type, ArrowLeft, ChevronDown, LayoutDashboard } from "lucide-react";
+import { Settings, Image, Type, ArrowLeft, ChevronDown, LayoutDashboard, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCardStore, VocabularyLevel } from "@/store/cardStore";
 
@@ -19,6 +19,7 @@ interface AppHeaderProps {
   currentLevel: VocabularyLevel;
   onOpenSettings: () => void;
   onOpenParentDashboard: () => void;
+  onOpenParentAccount: () => void;
 }
 
 export const AppHeader = ({
@@ -27,6 +28,7 @@ export const AppHeader = ({
   currentLevel,
   onOpenSettings,
   onOpenParentDashboard,
+  onOpenParentAccount,
 }: AppHeaderProps) => {
   const userName = useCardStore((state) => state.userName?.trim() || "Me");
   const userImage = useCardStore((state) => state.userImage);
@@ -148,6 +150,13 @@ export const AppHeader = ({
               >
                 <LayoutDashboard className="mr-2 h-4 w-4" />
                 Parent dashboard
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer rounded-lg py-2.5"
+                onSelect={onOpenParentAccount}
+              >
+                <ShieldCheck className="mr-2 h-4 w-4" />
+                Parent account
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
