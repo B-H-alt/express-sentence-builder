@@ -1,6 +1,7 @@
 import { Card } from "@/pages/PecsApp";
 import { Pencil, Star, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { boyCardImages } from "@/lib/boyCardImages";
 import { girlCardImages } from "@/lib/girlCardImages";
 import { sharedCardImages } from "@/lib/sharedCardImages";
 import { useCardStore } from "@/store/cardStore";
@@ -29,7 +30,9 @@ export const PecsCard = ({
   const characterGender = useCardStore((state) => state.characterGender);
   const existingImage = card.image || card.imageUrl;
   const genderImage =
-    characterGender === "girl" ? girlCardImages[card.id] : undefined;
+    characterGender === "girl"
+      ? girlCardImages[card.id]
+      : boyCardImages[card.id];
   const displayedImage =
     sharedCardImages[card.id] || genderImage || existingImage;
 
