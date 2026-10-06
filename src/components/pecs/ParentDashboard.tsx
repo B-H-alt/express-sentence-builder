@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   BarChart3,
@@ -69,13 +69,19 @@ export const ParentDashboard = () => {
   const [isConfirmingClear, setIsConfirmingClear] = useState(false);
   const lockTimer = useRef<number | undefined>();
 
+  const lockDashboard = useCallback(() => {
+    setPin("");
+    setConfirmPin("");
+    setError("");
+    setUnlocked(false);
+  }, []);
+
   useEffect(() => {
     if (!unlocked) return;
     const resetTimer = () => {
       if (lockTimer.current) window.clearTimeout(lockTimer.current);
       lockTimer.current = window.setTimeout(() => {
-        setUnlocked(false);
-        setPin("");
+        lockDashboard();
       }, AUTO_LOCK_MS);
     };
     const events = ["pointerdown", "keydown", "scroll"] as const;
@@ -85,7 +91,7 @@ export const ParentDashboard = () => {
       if (lockTimer.current) window.clearTimeout(lockTimer.current);
       events.forEach((event) => window.removeEventListener(event, resetTimer));
     };
-  }, [unlocked]);
+  }, [lockDashboard, unlocked]);
 
   const handlePin = async (event: FormEvent) => {
     event.preventDefault();
@@ -234,7 +240,7 @@ export const ParentDashboard = () => {
             <h1 className="text-xl font-semibold sm:text-2xl">{userName}&apos;s progress</h1>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setUnlocked(false)}>
+            <Button variant="outline" onClick={lockDashboard}>
               <LockKeyhole className="mr-2 h-4 w-4" />
               Lock
             </Button>
@@ -354,7 +360,7 @@ const PinField = ({ label, value, onChange }: { label: string; value: string; on
       <input
         type="password"
         inputMode="numeric"
-        autoComplete="off"
+        autoComplete="one-time-code"
         pattern="[0-9]{4,6}"
         maxLength={6}
         required
