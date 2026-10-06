@@ -183,6 +183,13 @@ import makeBed from "@/assets/pecs/makeBed.jpg";
 export type VocabularyLevel = 1 | 2 | 3;
 export type CharacterGender = "girl" | "boy";
 export type CardDisplayAmount = 4 | 8 | 12 | "all";
+export interface ProgressEntry {
+  id: string;
+  completedAt: string;
+  cardLabels: string[];
+  sentenceText: string;
+  wordCount: number;
+}
 const dedupeCardsById = (cards: Card[]): Card[] => {
   const seen = new Map<string, Card>();
   for (const card of cards) seen.set(card.id, card);
@@ -196,6 +203,7 @@ interface CardStore {
   currentLevel: VocabularyLevel;
   cardsPerPage: CardDisplayAmount;
   customCards: Card[];
+  progressEntries: ProgressEntry[];
 
   // NEW — Onboarding fields
   onboardingComplete: boolean;
@@ -207,6 +215,8 @@ interface CardStore {
   addToSentence: (card: Card) => void;
   removeFromSentence: (index: number) => void;
   clearSentence: () => void;
+  completeSentence: () => ProgressEntry | null;
+  clearProgress: () => void;
 
   // Favorites & usage
   toggleFavorite: (cardId: string) => void;
@@ -472,6 +482,7 @@ export const useCardStore = create<CardStore>()(
       currentLevel: 1,
       cardsPerPage: "all",
       customCards: [],
+      progressEntries: [],
 
       // --- NEW ONBOARDING FIELDS ---
       onboardingComplete: false,
@@ -492,6 +503,34 @@ export const useCardStore = create<CardStore>()(
         })),
 
       clearSentence: () => set({ sentence: [] }),
+
+      completeSentence: () => {
+        const state = get();
+        if (state.sentence.length === 0) return null;
+
+        const cardLabels = state.sentence.map((card) => card.text.trim()).filter(Boolean);
+        const sentenceText = cardLabels.join(" ");
+        const wordCount = cardLabels.reduce(
+          (total, label) => total + label.split(/\s+/).filter(Boolean).length,
+          0
+        );
+        const entry: ProgressEntry = {
+          id: `progress-${Date.now()}`,
+          completedAt: new Date().toISOString(),
+          cardLabels,
+          sentenceText,
+          wordCount,
+        };
+
+        set((current) => ({
+          progressEntries: [entry, ...current.progressEntries].slice(0, 500),
+          sentence: [],
+        }));
+
+        return entry;
+      },
+
+      clearProgress: () => set({ progressEntries: [] }),
 
       // --- FAVORITES ---
       toggleFavorite: (cardId) =>
@@ -623,7 +662,7 @@ export const useCardStore = create<CardStore>()(
     // --- PERSIST CONFIG ---
     {
       name: "pecs-storage",
-      version: 10,
+      version: 11,
 
       partialize: (state) => ({
         sentence: state.sentence,
@@ -631,6 +670,7 @@ export const useCardStore = create<CardStore>()(
         currentLevel: state.currentLevel,
         cardsPerPage: state.cardsPerPage,
         customCards: state.customCards,
+        progressEntries: state.progressEntries,
 
         onboardingComplete: state.onboardingComplete,
         userName: state.userName,
@@ -659,6 +699,7 @@ export const useCardStore = create<CardStore>()(
             ? prev.cardsPerPage
             : "all",
           customCards: dedupeCardsById(fixedCustomCards),
+          progressEntries: Array.isArray(prev.progressEntries) ? prev.progressEntries : [],
         };
       },
     }
