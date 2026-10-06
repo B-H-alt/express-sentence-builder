@@ -4,7 +4,7 @@ import { useCardStore } from "@/store/cardStore";
 import { X, User, Sun, Moon, Plus, Layers, Upload, Trash2, Save } from "lucide-react";
 import { AddCardModal } from "@/components/pecs/AddCardModal";
 import { Button } from "@/components/ui/button";
-import type { CharacterGender, VocabularyLevel } from "@/store/cardStore";
+import type { CardDisplayAmount, CharacterGender, VocabularyLevel } from "@/store/cardStore";
 import { useTheme } from "next-themes";
 
 interface SettingsPanelProps {
@@ -19,7 +19,7 @@ const levelOptions: { level: VocabularyLevel; label: string; subtitle: string }[
 ];
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) => {
-  const { currentLevel, setLevel } = useCardStore();
+  const { currentLevel, setLevel, cardsPerPage, setCardsPerPage } = useCardStore();
   const { theme, setTheme } = useTheme();
   const currentTheme = theme === "dark" ? "dark" : "light";
 
@@ -80,7 +80,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
 
       <div className="fixed inset-0 z-[90] flex items-center justify-center px-4">
         <div
-          className="relative w-full max-w-4xl rounded-3xl bg-background shadow-2xl border border-border/60 p-6 md:p-8 flex flex-col gap-6 md:gap-8"
+          className="relative w-full max-w-4xl max-h-[calc(100vh-2rem)] overflow-y-auto rounded-3xl bg-background shadow-2xl border border-border/60 p-6 md:p-8 flex flex-col gap-6 md:gap-8"
           onClick={(e) => e.stopPropagation()}
         >
           <button
@@ -252,6 +252,32 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                           {opt.subtitle}
                         </span>
                       </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-border/80 bg-muted/30 p-4 flex flex-col gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold">Cards shown at a time</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Show fewer cards to reduce visual overload. Page buttons appear when needed.
+                  </p>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {([4, 8, 12, "all"] as CardDisplayAmount[]).map((amount) => (
+                    <button
+                      key={amount}
+                      type="button"
+                      aria-pressed={cardsPerPage === amount}
+                      onClick={() => setCardsPerPage(amount)}
+                      className={`h-10 min-w-0 rounded-xl border text-sm font-medium capitalize transition-colors ${
+                        cardsPerPage === amount
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-background/70 text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      {amount}
                     </button>
                   ))}
                 </div>

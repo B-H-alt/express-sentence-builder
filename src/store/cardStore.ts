@@ -182,6 +182,7 @@ import makeBed from "@/assets/pecs/makeBed.jpg";
 
 export type VocabularyLevel = 1 | 2 | 3;
 export type CharacterGender = "girl" | "boy";
+export type CardDisplayAmount = 4 | 8 | 12 | "all";
 const dedupeCardsById = (cards: Card[]): Card[] => {
   const seen = new Map<string, Card>();
   for (const card of cards) seen.set(card.id, card);
@@ -193,6 +194,7 @@ interface CardStore {
   sentence: Card[];
   favorites: string[];
   currentLevel: VocabularyLevel;
+  cardsPerPage: CardDisplayAmount;
   customCards: Card[];
 
   // NEW — Onboarding fields
@@ -212,6 +214,7 @@ interface CardStore {
 
   // Level control
   setLevel: (level: VocabularyLevel) => void;
+  setCardsPerPage: (amount: CardDisplayAmount) => void;
 
   // Card filtering
   getFilteredCards: () => Card[];
@@ -467,6 +470,7 @@ export const useCardStore = create<CardStore>()(
       sentence: [],
       favorites: [],
       currentLevel: 1,
+      cardsPerPage: "all",
       customCards: [],
 
       // --- NEW ONBOARDING FIELDS ---
@@ -510,6 +514,7 @@ export const useCardStore = create<CardStore>()(
 
       // --- LEVEL CONTROL ---
       setLevel: (level) => set({ currentLevel: level }),
+      setCardsPerPage: (amount) => set({ cardsPerPage: amount }),
 
       // --- CARD FILTERING ---
       getFilteredCards: () => {
@@ -618,12 +623,13 @@ export const useCardStore = create<CardStore>()(
     // --- PERSIST CONFIG ---
     {
       name: "pecs-storage",
-      version: 9, // bump because structure changed (stable user card id + new action)
+      version: 10,
 
       partialize: (state) => ({
         sentence: state.sentence,
         favorites: state.favorites,
         currentLevel: state.currentLevel,
+        cardsPerPage: state.cardsPerPage,
         customCards: state.customCards,
 
         onboardingComplete: state.onboardingComplete,
@@ -649,6 +655,9 @@ export const useCardStore = create<CardStore>()(
         return {
           ...prev,
           cards: allCards,
+          cardsPerPage: [4, 8, 12, "all"].includes(prev.cardsPerPage)
+            ? prev.cardsPerPage
+            : "all",
           customCards: dedupeCardsById(fixedCustomCards),
         };
       },
