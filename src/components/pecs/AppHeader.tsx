@@ -15,7 +15,7 @@ import { useCardStore, VocabularyLevel } from "@/store/cardStore";
 
 interface AppHeaderProps {
   showWord: boolean;
-  onTogglePictures: () => void;
+  onSetDisplayMode: (showWords: boolean) => void;
   currentLevel: VocabularyLevel;
   onOpenSettings: () => void;
   onOpenParentDashboard: () => void;
@@ -23,7 +23,7 @@ interface AppHeaderProps {
 
 export const AppHeader = ({
   showWord,
-  onTogglePictures,
+  onSetDisplayMode,
   currentLevel,
   onOpenSettings,
   onOpenParentDashboard,
@@ -50,7 +50,7 @@ export const AppHeader = ({
         aria-hidden
         className="pointer-events-none absolute inset-x-0 -top-24 h-48 bg-[radial-gradient(40%_60%_at_20%_0%,hsl(var(--accent)/0.22),transparent_60%),radial-gradient(40%_60%_at_80%_0%,hsl(var(--primary)/0.22),transparent_60%)] blur-2xl"
       ></div>
-      <div className="container mx-auto flex items-center justify-between max-w-[1200px] relative">
+      <div className="container relative mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-4">
           <Link to="/">
             <Button variant="ghost" size="icon" className="rounded-xl">
@@ -68,15 +68,39 @@ export const AppHeader = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant={showWord ? "default" : "outline"}
-            size="lg"
-            onClick={onTogglePictures}
-            className="rounded-xl gap-2 data-[state=on]:shadow-glow"
+          <div
+            className="flex items-center rounded-xl border border-border/80 bg-muted/70 p-1 shadow-sm"
+            role="group"
+            aria-label="Card display"
           >
-            {showWord ? <Type className="w-5 h-5" /> : <Image className="w-5 h-5" />}
-            <span className="hidden sm:inline">{showWord ? "Words" : "Pictures Only"}</span>
-          </Button>
+            <button
+              type="button"
+              aria-pressed={!showWord}
+              onClick={() => onSetDisplayMode(false)}
+              className={`flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold transition-all sm:px-3 ${
+                !showWord
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Image className="h-4 w-4" />
+              <span>Pictures</span>
+            </button>
+            <button
+              type="button"
+              aria-pressed={showWord}
+              onClick={() => onSetDisplayMode(true)}
+              className={`flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold transition-all sm:px-3 ${
+                showWord
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Type className="h-4 w-4" />
+              <span className="sm:hidden">+ Words</span>
+              <span className="hidden sm:inline">Pictures + words</span>
+            </button>
+          </div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
