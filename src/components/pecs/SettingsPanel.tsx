@@ -44,6 +44,23 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
     setDraftGender(characterGender);
   }, [open, userName, userImage, characterGender]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open, onClose]);
+
   if (!open) return null;
 
   const hasChanges =
@@ -78,28 +95,36 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
         onClick={onClose}
       />
 
-      <div className="fixed inset-0 z-[90] flex items-center justify-center px-4">
+      <div
+        className="fixed inset-0 z-[90] flex items-center justify-center p-4"
+        onClick={onClose}
+      >
         <div
-          className="relative w-full max-w-4xl max-h-[calc(100vh-2rem)] overflow-y-auto rounded-3xl bg-background shadow-2xl border border-border/60 p-6 md:p-8 flex flex-col gap-6 md:gap-8"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="settings-title"
+          className="relative flex max-h-[calc(100vh-2rem)] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-border/60 bg-background shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
-          <button
-            className="absolute right-4 top-4 rounded-full border border-border/60 p-1 hover:bg-muted transition-colors"
-            onClick={onClose}
-            type="button"
-            aria-label="Close settings"
-          >
-            <X className="w-4 h-4" />
-          </button>
-
-          <div className="space-y-1 pr-10">
-            <h2 className="text-xl md:text-2xl font-semibold">Settings</h2>
-            <p className="text-sm text-muted-foreground">
-              Personalize Expressly for your learner.
-            </p>
+          <div className="flex shrink-0 items-center justify-between gap-4 border-b border-border/70 bg-background px-6 py-4 md:px-8">
+            <div className="min-w-0">
+              <h2 id="settings-title" className="text-xl font-semibold md:text-2xl">Settings</h2>
+              <p className="truncate text-sm text-muted-foreground">
+                Personalize Expressly for your learner.
+              </p>
+            </div>
+            <button
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border/60 hover:bg-muted transition-colors"
+              onClick={onClose}
+              type="button"
+              aria-label="Close settings"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.3fr)]">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 md:p-8">
+            <div className="grid gap-6 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.3fr)]">
             {/* Left column: Profile / Theme */}
             <div className="rounded-2xl border border-border/80 bg-muted/40 p-5 flex flex-col gap-5">
               {/* Profile */}
@@ -172,13 +197,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                 <p className="text-[11px] text-muted-foreground">
                   Choose which character appears on applicable communication cards.
                 </p>
-              </div>
-
-              <div className="flex justify-end">
-                <Button type="button" onClick={handleSave} disabled={!hasChanges}>
-                  <Save className="w-4 h-4 mr-2" />
-                  Save
-                </Button>
               </div>
 
               {/* Theme */}
@@ -306,6 +324,22 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                   </span>
                 </button>
               </div>
+            </div>
+            </div>
+          </div>
+
+          <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border/70 bg-background px-6 py-4 md:px-8">
+            <p className="hidden text-xs text-muted-foreground sm:block">
+              Press Escape or click outside to close.
+            </p>
+            <div className="ml-auto flex items-center gap-2">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Close
+              </Button>
+              <Button type="button" onClick={handleSave} disabled={!hasChanges}>
+                <Save className="mr-2 h-4 w-4" />
+                Save changes
+              </Button>
             </div>
           </div>
         </div>
