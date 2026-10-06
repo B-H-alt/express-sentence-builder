@@ -28,13 +28,6 @@ const Navbar = () => {
             </Link>
 
             <Link
-              to="/demo"
-              className="font-semibold text-white/90 hover:text-white transition-colors"
-            >
-              Demo
-            </Link>
-
-            <Link
               to="/pecs-app"
               className="
                 inline-flex items-center
@@ -81,14 +74,6 @@ const Navbar = () => {
                 onClick={() => setOpen(false)}
               >
                 About Us
-              </Link>
-
-              <Link
-                to="/demo"
-                className="font-semibold text-white/90 hover:text-white"
-                onClick={() => setOpen(false)}
-              >
-                Demo
               </Link>
 
               <Link
