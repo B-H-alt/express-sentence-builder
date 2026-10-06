@@ -206,7 +206,7 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose, card 
       <div className="fixed inset-0 z-[70] flex items-center justify-center px-4">
         <form
           onSubmit={handleSubmit}
-          className="relative w-full max-w-md rounded-3xl bg-background border border-border/70 shadow-2xl p-6 space-y-4"
+          className="relative w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto rounded-3xl bg-background border border-border/70 shadow-2xl p-6 space-y-4"
           onClick={(e) => e.stopPropagation()}
         >
           <button
@@ -400,7 +400,7 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose, card 
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-2 pt-2">
+          <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
             {isEditing && !isConfirmingDelete ? (
               <Button
                 type="button"
@@ -412,8 +412,8 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose, card 
                 Delete
               </Button>
             ) : isEditing ? (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">Delete this card?</span>
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <span className="w-full text-xs text-muted-foreground sm:w-auto">Delete this card?</span>
                 <Button
                   type="button"
                   variant="ghost"
@@ -434,21 +434,21 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose, card 
             ) : (
               <span />
             )}
-            <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              className="rounded-xl"
-              onClick={() => {
-                resetState();
-                onClose();
-              }}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" className="rounded-xl" disabled={!text.trim()}>
-              {isEditing ? "Save changes" : "Save card"}
-            </Button>
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                className="rounded-xl"
+                onClick={() => {
+                  resetState();
+                  onClose();
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" className="rounded-xl" disabled={!text.trim()}>
+                {isEditing ? "Save changes" : "Save card"}
+              </Button>
             </div>
           </div>
         </form>

@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCardStore } from "@/store/cardStore";
 import { PecsCard } from "./PecsCard";
 import { Card } from "@/pages/PecsApp";
 import { AddCardModal } from "./AddCardModal";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface CardGridProps {
   selectedCategory: string;
@@ -24,8 +25,9 @@ const categoryLabels: Record<string, string> = {
 };
 
 export const CardGrid = ({ selectedCategory, showWord }: CardGridProps) => {
-  const { favorites, addToSentence, toggleFavorite, incrementUsage, getFilteredCards } = useCardStore();
+  const { favorites, addToSentence, toggleFavorite, incrementUsage, getFilteredCards, cardsPerPage, currentLevel } = useCardStore();
   const [editingCard, setEditingCard] = useState<Card | null>(null);
+  const [page, setPage] = useState(1);
 
   const levelFilteredCards = getFilteredCards();
   
@@ -35,6 +37,18 @@ export const CardGrid = ({ selectedCategory, showWord }: CardGridProps) => {
     return card.category === selectedCategory;
   });
 
+  useEffect(() => {
+    setPage(1);
+  }, [selectedCategory, cardsPerPage, currentLevel]);
+
+  const pageSize = cardsPerPage === "all" ? Math.max(filteredCards.length, 1) : cardsPerPage;
+  const totalPages = Math.max(1, Math.ceil(filteredCards.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageStart = (currentPage - 1) * pageSize;
+  const visibleCards = cardsPerPage === "all"
+    ? filteredCards
+    : filteredCards.slice(pageStart, pageStart + pageSize);
+
   const handleCardClick = (card: Card) => {
     addToSentence(card);
     incrementUsage(card.id);
@@ -42,7 +56,7 @@ export const CardGrid = ({ selectedCategory, showWord }: CardGridProps) => {
 
   // Group cards by category when "all" is selected
   const cardsByCategory = selectedCategory === "all" 
-    ? filteredCards.reduce((acc, card) => {
+    ? visibleCards.reduce((acc, card) => {
         const category = card.category;
         if (!acc[category]) acc[category] = [];
         acc[category].push(card);
@@ -83,7 +97,7 @@ export const CardGrid = ({ selectedCategory, showWord }: CardGridProps) => {
         </div>
       ) : (
         <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-          {filteredCards.map((card) => (
+          {visibleCards.map((card) => (
             <PecsCard
               key={card.id}
               card={card}
@@ -94,6 +108,36 @@ export const CardGrid = ({ selectedCategory, showWord }: CardGridProps) => {
               isFavorite={favorites.includes(card.id)}
             />
           ))}
+        </div>
+      )}
+      {cardsPerPage !== "all" && filteredCards.length > 0 && (
+        <div className="mt-5 flex flex-col items-center justify-between gap-3 border-t border-border/70 pt-4 sm:flex-row">
+          <p className="text-xs text-muted-foreground">
+            Showing {pageStart + 1}–{Math.min(pageStart + pageSize, filteredCards.length)} of {filteredCards.length} cards
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPage((value) => Math.max(1, value - 1))}
+              disabled={currentPage === 1}
+              className="inline-flex h-9 items-center gap-1 rounded-xl border border-border bg-background px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </button>
+            <span className="min-w-16 text-center text-xs text-muted-foreground">
+              {currentPage} of {totalPages}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+              disabled={currentPage === totalPages}
+              className="inline-flex h-9 items-center gap-1 rounded-xl border border-border bg-background px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       )}
       <AddCardModal
