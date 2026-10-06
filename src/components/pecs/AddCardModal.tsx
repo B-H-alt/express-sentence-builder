@@ -1,18 +1,22 @@
 // src/components/pecs/AddCardModal.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useCardStore } from "@/store/cardStore";
-import { X, UploadCloud, Image as ImageIcon, Sparkles, Loader2 } from "lucide-react";
+import { X, UploadCloud, Image as ImageIcon, Sparkles, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { Card } from "@/pages/PecsApp";
 
 interface AddCardModalProps {
   open: boolean;
   onClose: () => void;
+  card?: Card | null;
 }
 
 type ImageMode = "upload" | "generate";
 
-export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose }) => {
+export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose, card }) => {
   const addCustomCard = useCardStore((s) => s.addCustomCard);
+  const updateCustomCard = useCardStore((s) => s.updateCustomCard);
+  const deleteCustomCard = useCardStore((s) => s.deleteCustomCard);
   const currentLevel = useCardStore((s) => s.currentLevel);
 
   const [text, setText] = useState("");
@@ -25,6 +29,21 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose }) => 
   const [genPrompt, setGenPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+
+  const isEditing = Boolean(card);
+
+  useEffect(() => {
+    if (!open) return;
+    setText(card?.text ?? "");
+    setCategory(card?.category ?? "people");
+    setImageUrl(card?.imageUrl ?? card?.image ?? "");
+    setImageMode("upload");
+    setGenPrompt("");
+    setGenError(null);
+    setIsDragging(false);
+    setIsConfirmingDelete(false);
+  }, [open, card]);
 
   // IMPORTANT: keep this AFTER hooks so hook order never changes
   if (!open) return null;
@@ -39,18 +58,29 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose }) => 
     setGenPrompt("");
     setIsGenerating(false);
     setGenError(null);
+    setIsConfirmingDelete(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!text.trim()) return;
 
-    addCustomCard({
+    const values = {
       text: text.trim(),
       category,
       imageUrl: imageUrl.trim() || undefined,
-    });
+    };
 
+    if (card) updateCustomCard(card.id, values);
+    else addCustomCard(values);
+
+    resetState();
+    onClose();
+  };
+
+  const handleDelete = () => {
+    if (!card) return;
+    deleteCustomCard(card.id);
     resetState();
     onClose();
   };
@@ -191,9 +221,11 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose }) => 
           </button>
 
           <div className="space-y-1 pr-6">
-            <h2 className="text-lg font-semibold">Add custom card</h2>
+            <h2 className="text-lg font-semibold">{isEditing ? "Edit custom card" : "Add custom card"}</h2>
             <p className="text-xs text-muted-foreground">
-              This card will be saved at Level {currentLevel} and will appear with the other cards.
+              {isEditing
+                ? "Update the card details or delete this custom card."
+                : `This card will be saved at Level ${currentLevel} and will appear with the other cards.`}
             </p>
           </div>
 
@@ -368,7 +400,41 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose }) => 
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex items-center justify-between gap-2 pt-2">
+            {isEditing && !isConfirmingDelete ? (
+              <Button
+                type="button"
+                variant="destructive"
+                className="rounded-xl"
+                onClick={() => setIsConfirmingDelete(true)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
+            ) : isEditing ? (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Delete this card?</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="rounded-xl"
+                  onClick={() => setIsConfirmingDelete(false)}
+                >
+                  Keep
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="rounded-xl"
+                  onClick={handleDelete}
+                >
+                  Delete card
+                </Button>
+              </div>
+            ) : (
+              <span />
+            )}
+            <div className="flex justify-end gap-2">
             <Button
               type="button"
               variant="ghost"
@@ -381,8 +447,9 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose }) => 
               Cancel
             </Button>
             <Button type="submit" className="rounded-xl" disabled={!text.trim()}>
-              Save card
+              {isEditing ? "Save changes" : "Save card"}
             </Button>
+            </div>
           </div>
         </form>
       </div>

@@ -1,5 +1,5 @@
 import { Card } from "@/pages/PecsApp";
-import { Star, X } from "lucide-react";
+import { Pencil, Star, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { girlCardImages } from "@/lib/girlCardImages";
 import { sharedCardImages } from "@/lib/sharedCardImages";
@@ -10,6 +10,7 @@ interface PecsCardProps {
   showWord: boolean;
   onClick?: () => void;
   onFavorite?: () => void;
+  onEdit?: () => void;
   onRemove?: () => void;
   isFavorite?: boolean;
   inSentence?: boolean;
@@ -20,6 +21,7 @@ export const PecsCard = ({
   showWord,
   onClick,
   onFavorite,
+  onEdit,
   onRemove,
   isFavorite,
   inSentence,
@@ -84,6 +86,21 @@ export const PecsCard = ({
           )}
         >
           <Star className={cn("w-4 h-4", isFavorite && "fill-current")} />
+        </button>
+      )}
+
+      {/* Edit button for custom cards */}
+      {!inSentence && onEdit && (
+        <button
+          type="button"
+          aria-label={`Edit ${card.text}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
+          className="absolute top-2 left-2 w-7 h-7 rounded-full flex items-center justify-center bg-muted/80 text-muted-foreground hover:bg-muted transition-all z-10"
+        >
+          <Pencil className="w-4 h-4" />
         </button>
       )}
 

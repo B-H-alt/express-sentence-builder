@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { useCardStore } from "@/store/cardStore";
 import { PecsCard } from "./PecsCard";
 import { Card } from "@/pages/PecsApp";
+import { AddCardModal } from "./AddCardModal";
 
 interface CardGridProps {
   selectedCategory: string;
@@ -23,6 +25,7 @@ const categoryLabels: Record<string, string> = {
 
 export const CardGrid = ({ selectedCategory, showWord }: CardGridProps) => {
   const { favorites, addToSentence, toggleFavorite, incrementUsage, getFilteredCards } = useCardStore();
+  const [editingCard, setEditingCard] = useState<Card | null>(null);
 
   const levelFilteredCards = getFilteredCards();
   
@@ -70,6 +73,7 @@ export const CardGrid = ({ selectedCategory, showWord }: CardGridProps) => {
                     showWord={showWord}
                     onClick={() => handleCardClick(card)}
                     onFavorite={() => toggleFavorite(card.id)}
+                    onEdit={card.id.startsWith("custom-") ? () => setEditingCard(card) : undefined}
                     isFavorite={favorites.includes(card.id)}
                   />
                 ))}
@@ -86,11 +90,17 @@ export const CardGrid = ({ selectedCategory, showWord }: CardGridProps) => {
               showWord={showWord}
               onClick={() => handleCardClick(card)}
               onFavorite={() => toggleFavorite(card.id)}
+              onEdit={card.id.startsWith("custom-") ? () => setEditingCard(card) : undefined}
               isFavorite={favorites.includes(card.id)}
             />
           ))}
         </div>
       )}
+      <AddCardModal
+        open={Boolean(editingCard)}
+        card={editingCard}
+        onClose={() => setEditingCard(null)}
+      />
     </div>
   );
 };
