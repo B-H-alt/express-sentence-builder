@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-labelledby="title">
+  <title id="title">He</title>
+  <rect width="240" height="240" rx="32" fill="#edf6ff"/>
+  <circle cx="120" cy="74" r="34" fill="#438bd4"/>
+  <path d="M65 190c5-48 27-72 55-72s50 24 55 72" fill="#438bd4"/>
+  <text x="120" y="222" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#174f87">HE</text>
+</svg>

@@ -98,6 +98,10 @@ import smallImg from "@/assets/pecs/small.jpg";
 import hotImg from "@/assets/pecs/hot.jpg";
 import coldImg from "@/assets/pecs/cold.jpg";
 import quietImg from "@/assets/pecs/quiet.jpg";
+import pronounIImg from "@/assets/pecs/pronoun-i.svg";
+import pronounYouImg from "@/assets/pecs/pronoun-you.svg";
+import pronounHeImg from "@/assets/pecs/pronoun-he.svg";
+import pronounSheImg from "@/assets/pecs/pronoun-she.svg";
 
 // Level 3 additional imports
 import grandmaImg from "@/assets/pecs/grandma.jpg";
@@ -323,6 +327,10 @@ const level2Cards: Card[] = [
   { id: "l2-2", text: "Sister", category: "people", usage: 0, level: 2, image: sisterImg },
   { id: "l2-3", text: "Friend", category: "people", usage: 0, level: 2, image: friendImg },
   { id: "l2-4", text: "Nurse", category: "people", usage: 0, level: 2, image: nurseImg },
+  { id: "pronoun-i", text: "I", category: "people", usage: 0, level: 2, image: pronounIImg },
+  { id: "pronoun-you", text: "You", category: "people", usage: 0, level: 2, image: pronounYouImg },
+  { id: "pronoun-he", text: "He", category: "people", usage: 0, level: 2, image: pronounHeImg },
+  { id: "pronoun-she", text: "She", category: "people", usage: 0, level: 2, image: pronounSheImg },
   { id: "l2-6", text: "Silly", category: "feelings", usage: 0, level: 2, image: sillyImg },
   { id: "l2-7", text: "Bored", category: "feelings", usage: 0, level: 2, image: boredImg },
   { id: "l2-8", text: "Apple", category: "food", usage: 0, level: 2, image: appleImg },

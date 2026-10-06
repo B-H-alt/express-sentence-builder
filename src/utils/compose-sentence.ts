@@ -26,6 +26,7 @@ const composeCommonPattern = (labels: string[]) => {
   }
 
   const selfSubjects = new Set(["me", "i"]);
+  const otherPronouns = new Set(["you", "he", "she"]);
   const linkingWords = new Set([
     "happy", "sad", "mad", "tired", "scared", "excited", "calm", "silly",
     "bored", "frustrated", "proud", "nervous", "surprised", "hot", "cold",
@@ -39,6 +40,33 @@ const composeCommonPattern = (labels: string[]) => {
     const secondLower = cleanLabels[1].toLocaleLowerCase();
     const rest = cleanLabels.slice(1).join(" ").toLocaleLowerCase();
     return finishSentence(linkingWords.has(secondLower) ? `I am ${rest}` : `I ${rest}`);
+  }
+
+  if (otherPronouns.has(firstLower) && cleanLabels.length > 1) {
+    const secondLower = cleanLabels[1].toLocaleLowerCase();
+    const rest = cleanLabels.slice(1).join(" ").toLocaleLowerCase();
+    if (linkingWords.has(secondLower)) {
+      return finishSentence(`${first} ${firstLower === "you" ? "are" : "is"} ${rest}`);
+    }
+
+    const thirdPersonActions: Record<string, string> = {
+      want: "wants",
+      need: "needs",
+      like: "likes",
+      feel: "feels",
+      go: "goes",
+      eat: "eats",
+      drink: "drinks",
+      play: "plays",
+      read: "reads",
+      help: "helps",
+    };
+    const action =
+      firstLower === "you" ? secondLower : thirdPersonActions[secondLower];
+    if (action) {
+      const tail = cleanLabels.slice(2).join(" ").toLocaleLowerCase();
+      return finishSentence(`${first} ${action}${tail ? ` ${tail}` : ""}`);
+    }
   }
 
   if (clearSelfActions.has(firstLower)) {
