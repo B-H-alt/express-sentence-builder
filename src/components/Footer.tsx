@@ -1,63 +1,23 @@
-const Footer = () => {
-  const socialLink = "https://www.linkedin.com/in/expressly-company-415b10390/";
+import { Link } from "react-router-dom";
 
-  return (
-    <footer className="bg-foreground text-background py-16">
-      <div className="container mx-auto px-6">
-        <div className="flex flex-col items-center space-y-8">
-          {/* Slogan */}
-          <div className="text-center mb-4">
-            <p className="font-inter font-light italic text-xl md:text-2xl text-white/90 tracking-wide">
-              Express Yourself
-            </p>
-          </div>
-
-          {/* Social Media */}
-          <div className="flex gap-6">
-            <a
-              href={socialLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-2xl hover:text-secondary transition-colors"
-            >
-              📘
-            </a>
-            <a
-              href={socialLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-2xl hover:text-secondary transition-colors"
-            >
-              🐦
-            </a>
-            <a
-              href={socialLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-2xl hover:text-secondary transition-colors"
-            >
-              📷
-            </a>
-            <a
-              href={socialLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-2xl hover:text-secondary transition-colors"
-            >
-              💼
-            </a>
-          </div>
-
-          {/* Copyright */}
-          <div className="text-center">
-            <p className="font-inter text-background/60 text-sm">
-              &copy; 2025 Expressly. All rights reserved.
-            </p>
-          </div>
+const Footer = () => (
+  <footer className="border-t border-border bg-muted/30">
+    <div className="mx-auto flex max-w-7xl flex-col gap-8 px-6 py-10 md:flex-row md:items-center md:justify-between md:px-10">
+      <div className="flex items-center gap-3">
+        <img src="/handmade-logo.png" alt="" className="h-9 w-9 rounded-lg object-contain" />
+        <div>
+          <p className="font-semibold">Expressly</p>
+          <p className="text-sm text-muted-foreground">Picture-based communication, made simpler.</p>
         </div>
       </div>
-    </footer>
-  );
-};
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-muted-foreground">
+        <Link to="/about" className="hover:text-foreground">About</Link>
+        <Link to="/pecs-app" className="hover:text-foreground">Open app</Link>
+        <a href="https://www.linkedin.com/in/expressly-company-415b10390/" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">LinkedIn</a>
+        <span>© 2026 Expressly</span>
+      </div>
+    </div>
+  </footer>
+);
 
 export default Footer;
