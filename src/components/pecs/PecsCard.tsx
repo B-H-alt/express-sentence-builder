@@ -1,6 +1,9 @@
 import { Card } from "@/pages/PecsApp";
 import { Star, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { girlCardImages } from "@/lib/girlCardImages";
+import { sharedCardImages } from "@/lib/sharedCardImages";
+import { useCardStore } from "@/store/cardStore";
 
 interface PecsCardProps {
   card: Card;
@@ -21,6 +24,13 @@ export const PecsCard = ({
   isFavorite,
   inSentence,
 }: PecsCardProps) => {
+  const characterGender = useCardStore((state) => state.characterGender);
+  const existingImage = card.image || card.imageUrl;
+  const genderImage =
+    characterGender === "girl" ? girlCardImages[card.id] : undefined;
+  const displayedImage =
+    sharedCardImages[card.id] || genderImage || existingImage;
+
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData("card", JSON.stringify(card));
   };
@@ -86,9 +96,9 @@ export const PecsCard = ({
             showWord ? "h-[68%] mb-1" : "h-full"
           )}
         >
-          {(card.image || card.imageUrl) ? (
+          {displayedImage ? (
             <img
-              src={card.image || card.imageUrl}
+              src={displayedImage}
               alt={card.text}
               className="max-w-full max-h-full object-contain rounded-lg"
               draggable={false}

@@ -200,7 +200,7 @@ interface CardStore {
   userName: string | null;
   userImage: string | null;
   characterGender: CharacterGender;
-setCharacterGender: (gender: CharacterGender) => void;
+  setCharacterGender: (gender: CharacterGender) => void;
   // Sentence actions
   addToSentence: (card: Card) => void;
   removeFromSentence: (index: number) => void;
