@@ -20,6 +20,7 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
   const [user, setUser] = useState<User | null>(null);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resetCooldown, setResetCooldown] = useState(0);
 
   useEffect(() => {
     if (!isCloudAccountConfigured) return;
@@ -47,6 +48,14 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
       unsubscribe?.();
     };
   }, []);
+
+  useEffect(() => {
+    if (resetCooldown <= 0) return;
+    const timer = window.setInterval(() => {
+      setResetCooldown((seconds) => Math.max(0, seconds - 1));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [resetCooldown]);
 
   const finishRequest = (nextMessage: string) => {
     setMessage(nextMessage);
@@ -132,6 +141,10 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
     event.preventDefault();
     const address = email.trim();
     if (!address) return;
+    if (resetCooldown > 0) {
+      setMessage(`Please wait ${resetCooldown} seconds before trying again.`);
+      return;
+    }
     setLoading(true);
     setMessage("");
     const supabase = await getSupabase();
@@ -139,9 +152,20 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
       finishRequest("Parent accounts are not configured yet.");
       return;
     }
-    await supabase.auth.resetPasswordForEmail(address, {
+    const { error } = await supabase.auth.resetPasswordForEmail(address, {
       redirectTo: `${window.location.origin}/pecs-app`,
     });
+    if (error) {
+      const isRateLimit = error.status === 429 || error.code === "over_email_send_rate_limit";
+      if (isRateLimit) {
+        setResetCooldown(60);
+        finishRequest("Too many reset emails were requested. Please wait a minute and try again.");
+        return;
+      }
+      finishRequest("We could not send the reset email. Please try again in a moment.");
+      return;
+    }
+    setResetCooldown(60);
     finishRequest("If an account exists for that email, a password reset link is on its way.");
   };
 
@@ -219,8 +243,12 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
               <FieldLabel>Email</FieldLabel>
               <EmailField email={email} setEmail={setEmail} />
             </div>
-            <Button className="w-full" type="submit" disabled={loading}>
-              {loading ? "Sending…" : "Send password reset link"}
+            <Button className="w-full" type="submit" disabled={loading || resetCooldown > 0}>
+              {loading
+                ? "Sending…"
+                : resetCooldown > 0
+                  ? `Try again in ${resetCooldown}s`
+                  : "Send password reset link"}
             </Button>
             <div className="text-center">
               <TextButton onClick={() => changeView("sign-in")}>Back to sign in</TextButton>
