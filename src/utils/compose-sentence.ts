@@ -1,6 +1,5 @@
 // src/utils/compose-sentence.ts
 import { getAccessToken } from "@/lib/supabase";
-import { composeSentenceLocally } from "@/utils/local-grammar";
 
 const compositionCache = new Map<string, string>();
 
@@ -16,12 +15,6 @@ export async function composeSentence(input: { tokens?: string[]; text?: string 
   const cacheKey = tokens.toLocaleLowerCase();
   const cached = compositionCache.get(cacheKey);
   if (cached !== undefined) return cached;
-
-  const commonResult = composeSentenceLocally(inputLabels);
-  if (commonResult) {
-    compositionCache.set(cacheKey, commonResult);
-    return commonResult;
-  }
 
   let timeout: number | undefined;
   try {
