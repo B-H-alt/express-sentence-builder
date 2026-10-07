@@ -1,5 +1,5 @@
 // src/pages/PecsApp.tsx
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SentenceBuilder } from "@/components/pecs/SentenceBuilder";
 import { CardGrid } from "@/components/pecs/CardGrid";
@@ -21,20 +21,19 @@ export interface Card {
 }
 
 const PecsApp = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>("home");
   const [showSettings, setShowSettings] = useState(false);
   const [showParentAccount, setShowParentAccount] = useState(false);
   const navigate = useNavigate();
 
-  const { currentLevel, showWords, setShowWords } = useCardStore();
+  const { currentLevel, showWords, setShowWords, lowStimulationMode } = useCardStore();
 
-  // ✅ pull onboarding state from the store
-  // Pick the one that exists in your store:
-  const hasCompletedOnboarding =
-    useCardStore((s: any) => s.hasCompletedOnboarding) ??
-    useCardStore((s: any) => s.onboardingComplete) ??
-    useCardStore((s: any) => s.didOnboard) ??
-    false;
+  useEffect(() => {
+    document.documentElement.classList.toggle("low-stimulation", lowStimulationMode);
+    return () => document.documentElement.classList.remove("low-stimulation");
+  }, [lowStimulationMode]);
+
+  const hasCompletedOnboarding = useCardStore((state) => state.onboardingComplete);
 
   // Measure fixed header height so content starts exactly below it
   const topBarRef = useRef<HTMLDivElement | null>(null);
@@ -71,7 +70,7 @@ const PecsApp = () => {
     t = window.setTimeout(update, 60);
 
     // 4) fonts finishing can change heights after first paint
-    const fonts = (document as any).fonts;
+    const fonts = document.fonts;
     if (fonts?.ready) {
       fonts.ready.then(update).catch(() => {});
     }
@@ -95,15 +94,15 @@ const PecsApp = () => {
   }
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden flex flex-col bg-[radial-gradient(160%_100%_at_50%_-10%,hsl(var(--background)/0.06)_0%,transparent_70%),radial-gradient(120%_80%_at_0%_100%,hsl(var(--accent)/0.10)_0%,transparent_70%),radial-gradient(120%_80%_at_100%_100%,hsl(var(--secondary)/0.10)_0%,transparent_70%),linear-gradient(180deg,hsl(var(--background))_0%,hsl(var(--background))_100%)]">
+    <div className={`relative min-h-screen w-full overflow-x-hidden flex flex-col ${lowStimulationMode ? "bg-background" : "bg-[radial-gradient(160%_100%_at_50%_-10%,hsl(var(--background)/0.06)_0%,transparent_70%),radial-gradient(120%_80%_at_0%_100%,hsl(var(--accent)/0.10)_0%,transparent_70%),radial-gradient(120%_80%_at_100%_100%,hsl(var(--secondary)/0.10)_0%,transparent_70%),linear-gradient(180deg,hsl(var(--background))_0%,hsl(var(--background))_100%)]"}`}>
       {/* FIXED STACK */}
       <div
         ref={topBarRef}
         className={[
           "fixed inset-x-0 top-0 z-50",
-          "bg-[hsl(var(--background))]/92 backdrop-blur-md",
+          lowStimulationMode ? "bg-background" : "bg-[hsl(var(--background))]/92 backdrop-blur-md",
           "border-b border-border/60",
-          "shadow-[0_10px_30px_-18px_rgba(0,0,0,0.55)]",
+          lowStimulationMode ? "shadow-none" : "shadow-[0_10px_30px_-18px_rgba(0,0,0,0.55)]",
         ].join(" ")}
       >
         {/* NAV (full width) */}
@@ -136,7 +135,11 @@ const PecsApp = () => {
       <main className="flex-1 pb-8" style={{ paddingTop: topBarH }}>
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="mt-4">
-            <CardGrid selectedCategory={selectedCategory} showWord={showWords} />
+            <CardGrid
+              selectedCategory={selectedCategory}
+              showWord={showWords}
+              onSelectCategory={setSelectedCategory}
+            />
           </div>
         </div>
       </main>

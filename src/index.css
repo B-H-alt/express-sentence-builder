@@ -125,6 +125,19 @@ All colors MUST be HSL.
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
+  .low-stimulation {
+    --gradient-subtle: linear-gradient(hsl(var(--background)), hsl(var(--background)));
+    --gradient-accent: linear-gradient(hsl(var(--primary)), hsl(var(--primary)));
+    --shadow-soft: 0 1px 3px hsl(210 20% 70% / 0.22);
+    --shadow-medium: 0 2px 8px hsl(210 20% 60% / 0.18);
+    --shadow-glow: none;
+  }
+
+  .dark.low-stimulation {
+    --shadow-soft: 0 1px 3px hsl(210 30% 2% / 0.35);
+    --shadow-medium: 0 2px 8px hsl(210 30% 2% / 0.35);
+  }
 }
 
 @layer utilities {
@@ -152,6 +165,31 @@ All colors MUST be HSL.
       transform: none;
       filter: none;
       transition: none;
+    }
+
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
+
+  .low-stimulation *,
+  .low-stimulation *::before,
+  .low-stimulation *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .low-stimulation [data-low-stimulation-switch],
+    .low-stimulation [data-low-stimulation-switch] * {
+      transition-duration: 200ms !important;
     }
   }
 }

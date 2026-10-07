@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useCardStore } from "@/store/cardStore";
 import { PecsCard } from "./PecsCard";
 import { Button } from "@/components/ui/button";
-import { Check, Loader2, MessageSquareText, Trash2, Volume2, Square, X } from "lucide-react";
+import { Check, Loader2, Trash2, Volume2, Square, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { composeSentence } from "@/utils/compose-sentence";
 import { getAccessToken } from "@/lib/supabase";
@@ -13,7 +13,15 @@ interface SentenceBuilderProps {
 }
 
 export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
-  const { sentence, removeFromSentence, clearSentence, completeSentence } = useCardStore();
+  const {
+    sentence,
+    removeFromSentence,
+    clearSentence,
+    completeSentence,
+    speechRate,
+    speechVolume,
+    lowStimulationMode,
+  } = useCardStore();
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -27,6 +35,7 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
   const getSentenceTokens = () => sentence.map((card) => card.text);
 
   useEffect(() => {
+    if (sentence.length === 0) return;
     setComposedText("");
     setComposedSource("");
     setShowComposed(false);
@@ -61,6 +70,9 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
     if (!audioRef.current) audioRef.current = new Audio();
     const url = URL.createObjectURL(blob);
     audioRef.current.src = url;
+    audioRef.current.playbackRate = speechRate;
+    audioRef.current.preservesPitch = true;
+    audioRef.current.volume = speechVolume;
     try {
       await audioRef.current.play();
     } finally {
@@ -72,6 +84,8 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
     return new Promise<void>((resolve) => {
       if (!("speechSynthesis" in window)) return resolve();
       const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = speechRate;
+      utterance.volume = speechVolume;
       utterance.onend = () => resolve();
       window.speechSynthesis.speak(utterance);
     });
@@ -107,19 +121,8 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
     setIsSpeaking(false);
   };
 
-  const handleSpeak = async () => {
-    if (!getSentenceText()) return;
-
+  const speakText = async (spoken: string) => {
     setIsSpeaking(true);
-    const spoken = await resolveSentence();
-    if (!spoken) {
-      setIsSpeaking(false);
-      return;
-    }
-
-    // Show what will actually be spoken
-    toast({ title: spoken });
-
     try {
       await speakWithElevenLabs(spoken);
     } catch (err: unknown) {
@@ -134,15 +137,17 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
     }
   };
 
-  const handleShowSentence = async () => {
-    const text = await resolveSentence();
-    if (text) setShowComposed(true);
-  };
-
-  const handleComplete = () => {
+  const saveCurrentSentence = () => {
     stopAudio();
     const completed = completeSentence();
-    if (!completed) return;
+    return Boolean(completed);
+  };
+
+  const handleFinish = async () => {
+    const text = await resolveSentence();
+    if (!text) return;
+    setShowComposed(true);
+    if (!saveCurrentSentence()) return;
 
     toast({
       title: "Sentence saved",
@@ -150,9 +155,21 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
     });
   };
 
+  const handleSpeak = async () => {
+    const spoken = await resolveSentence();
+    if (!spoken) return;
+    setShowComposed(true);
+    if (!saveCurrentSentence()) return;
+    await speakText(spoken);
+  };
+
   return (
     <div
-      className="relative overflow-hidden min-h-full max-h-full bg-gradient-subtle rounded-3xl border-2 border-dashed border-primary/30 p-4 flex flex-col overflow-hidden"
+      className={`relative overflow-hidden min-h-full max-h-full rounded-3xl border-2 p-4 flex flex-col overflow-hidden ${
+        lowStimulationMode
+          ? "bg-card border-border"
+          : "bg-gradient-subtle border-dashed border-primary/30"
+      }`}
       onDrop={(e) => {
         e.preventDefault();
         const cardData = e.dataTransfer.getData("card");
@@ -164,29 +181,20 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
       onDragOver={(e) => e.preventDefault()}
     >
       <div className="flex items-start justify-between gap-3 mb-2">
-        <h2 className="text-lg font-semibold bg-gradient-accent bg-clip-text text-transparent">
+        <h2 className={`text-lg font-semibold ${lowStimulationMode ? "text-foreground" : "bg-gradient-accent bg-clip-text text-transparent"}`}>
           My Sentence
         </h2>
         <div className="flex flex-wrap justify-end gap-2">
           {sentence.length > 0 && (
             <>
-              <Button size="sm" onClick={handleComplete} className="rounded-xl">
-                <Check className="w-4 h-4 mr-1" />
-                Done
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleShowSentence}
-                className="rounded-xl"
-                disabled={isComposing}
-              >
+              <Button size="sm" onClick={handleFinish} className="rounded-xl" disabled={isComposing}>
                 {isComposing ? (
                   <Loader2 className="w-4 h-4 mr-1 animate-spin" />
                 ) : (
-                  <MessageSquareText className="w-4 h-4 mr-1" />
+                  <Check className="w-4 h-4 mr-1" />
                 )}
-                Show sentence
+                <span className="hidden sm:inline">Finish sentence</span>
+                <span className="sm:hidden">Finish</span>
               </Button>
               {!isSpeaking ? (
                 <Button
@@ -196,7 +204,11 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
                   className="rounded-xl"
                   disabled={isComposing}
                 >
-                  <Volume2 className="w-4 h-4 mr-1" />
+                  {isComposing ? (
+                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                  ) : (
+                    <Volume2 className="w-4 h-4 mr-1" />
+                  )}
                   Speak
                 </Button>
               ) : (
@@ -206,16 +218,21 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
                 </Button>
               )}
               <Button
-                size="sm"
-                variant="outline"
+                size="icon"
+                variant="ghost"
                 onClick={() => {
                   stopAudio();
                   clearSentence();
+                  setComposedText("");
+                  setComposedSource("");
+                  setShowComposed(false);
+                  setUsedOriginalWords(false);
                 }}
-                className="rounded-xl"
+                className="h-9 w-9 rounded-xl text-muted-foreground hover:text-destructive"
+                aria-label="Clear sentence"
+                title="Clear sentence"
               >
-                <Trash2 className="w-4 h-4 mr-1" />
-                Clear
+                <Trash2 className="w-4 h-4" />
               </Button>
             </>
           )}

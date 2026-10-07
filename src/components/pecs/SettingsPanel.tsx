@@ -1,7 +1,7 @@
 // src/components/pecs/SettingsPanel.tsx
 import React, { useEffect, useRef, useState } from "react";
 import { useCardStore } from "@/store/cardStore";
-import { X, User, Sun, Moon, Plus, Layers, Upload, Trash2, Save } from "lucide-react";
+import { X, User, Sun, Moon, Plus, Layers, Upload, Trash2, Save, Leaf, Volume2 } from "lucide-react";
 import { AddCardModal } from "@/components/pecs/AddCardModal";
 import { Button } from "@/components/ui/button";
 import type { CardDisplayAmount, CharacterGender, VocabularyLevel } from "@/store/cardStore";
@@ -19,7 +19,18 @@ const levelOptions: { level: VocabularyLevel; label: string; subtitle: string }[
 ];
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) => {
-  const { currentLevel, setLevel, cardsPerPage, setCardsPerPage } = useCardStore();
+  const {
+    currentLevel,
+    setLevel,
+    cardsPerPage,
+    setCardsPerPage,
+    lowStimulationMode,
+    setLowStimulationMode,
+    speechRate,
+    setSpeechRate,
+    speechVolume,
+    setSpeechVolume,
+  } = useCardStore();
   const { theme, setTheme } = useTheme();
   const currentTheme = theme === "dark" ? "dark" : "light";
 
@@ -299,6 +310,92 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div className="rounded-2xl border border-border/80 bg-muted/30 p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex min-w-0 gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <Leaf className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <h3 className="text-sm font-semibold">Low stimulation</h3>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                        Calmer colors, less movement, lighter shadows, and fewer cards at once.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    data-low-stimulation-switch
+                    aria-checked={lowStimulationMode}
+                    onClick={() => setLowStimulationMode(!lowStimulationMode)}
+                    className={`relative mt-1 h-7 w-12 shrink-0 rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                      lowStimulationMode
+                        ? "border-primary bg-primary"
+                        : "border-border bg-muted"
+                    }`}
+                  >
+                    <span
+                      className={`absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out ${
+                        lowStimulationMode ? "translate-x-5" : "translate-x-0"
+                      }`}
+                    />
+                    <span className="sr-only">Low stimulation mode</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-border/80 bg-muted/30 p-4 flex flex-col gap-4">
+                <div className="flex items-center gap-2">
+                  <Volume2 className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <h3 className="text-sm font-semibold">Voice</h3>
+                    <p className="text-xs text-muted-foreground">Choose a comfortable speaking pace and volume.</p>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="mb-2 text-xs font-medium text-muted-foreground">Speaking pace</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: "Calm", value: 0.75 },
+                      { label: "Natural", value: 1 },
+                      { label: "Quick", value: 1.25 },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        aria-pressed={speechRate === option.value}
+                        onClick={() => setSpeechRate(option.value)}
+                        className={`h-10 rounded-xl border text-sm font-medium transition-colors ${
+                          speechRate === option.value
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-background text-foreground hover:bg-muted"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <label className="block">
+                  <span className="flex items-center justify-between text-xs font-medium text-muted-foreground">
+                    <span>Volume</span>
+                    <span>{Math.round(speechVolume * 100)}%</span>
+                  </span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={speechVolume}
+                    onChange={(event) => setSpeechVolume(Number(event.target.value))}
+                    className="mt-2 w-full accent-primary"
+                  />
+                </label>
               </div>
 
               <div className="rounded-2xl border border-border/80 bg-muted/30 p-4 flex flex-col justify-between gap-3">

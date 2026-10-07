@@ -30,6 +30,7 @@ export const PecsCard = ({
   displaySize = "compact",
 }: PecsCardProps) => {
   const characterGender = useCardStore((state) => state.characterGender);
+  const lowStimulationMode = useCardStore((state) => state.lowStimulationMode);
   const existingImage = card.image || card.imageUrl;
   const genderImage =
     characterGender === "girl"
@@ -52,10 +53,12 @@ export const PecsCard = ({
   return (
     <div
       className={cn(
-        "relative group aspect-square rounded-2xl border-2 transition-all duration-200 cursor-pointer select-none",
+        "relative group aspect-square rounded-2xl border-2 cursor-pointer select-none",
         "bg-card-base hover:bg-card-hover active:bg-card-selected",
-        "border-border hover:border-primary/50 active:scale-95",
-        "shadow-sm hover:shadow-md",
+        "border-border hover:border-primary/50",
+        lowStimulationMode
+          ? "shadow-none"
+          : "transition-all duration-200 active:scale-95 shadow-sm hover:shadow-md",
         inSentence ? "w-[100px] h-[100px]" : "w-full"
       )}
       draggable={!inSentence}

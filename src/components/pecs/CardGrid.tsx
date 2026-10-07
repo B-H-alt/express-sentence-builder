@@ -4,10 +4,12 @@ import { PecsCard } from "./PecsCard";
 import { Card } from "@/pages/PecsApp";
 import { AddCardModal } from "./AddCardModal";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CategoryHome } from "./CategoryHome";
 
 interface CardGridProps {
   selectedCategory: string;
   showWord: boolean;
+  onSelectCategory: (category: string) => void;
 }
 
 const categoryLabels: Record<string, string> = {
@@ -24,8 +26,8 @@ const categoryLabels: Record<string, string> = {
   time: "Time"
 };
 
-export const CardGrid = ({ selectedCategory, showWord }: CardGridProps) => {
-  const { favorites, addToSentence, toggleFavorite, incrementUsage, getFilteredCards, cardsPerPage, currentLevel } = useCardStore();
+export const CardGrid = ({ selectedCategory, showWord, onSelectCategory }: CardGridProps) => {
+  const { favorites, addToSentence, toggleFavorite, incrementUsage, getFilteredCards, cardsPerPage, currentLevel, lowStimulationMode } = useCardStore();
   const [editingCard, setEditingCard] = useState<Card | null>(null);
   const [page, setPage] = useState(1);
 
@@ -65,6 +67,14 @@ export const CardGrid = ({ selectedCategory, showWord }: CardGridProps) => {
     incrementUsage(card.id);
   };
 
+  if (selectedCategory === "home") {
+    return (
+      <div className="relative h-full overflow-y-auto rounded-3xl border border-border bg-background p-4 shadow-soft">
+        <CategoryHome showWord={showWord} onSelectCategory={onSelectCategory} />
+      </div>
+    );
+  }
+
   // Group cards by category when "all" is selected
   const cardsByCategory = selectedCategory === "all" 
     ? visibleCards.reduce((acc, card) => {
@@ -76,12 +86,12 @@ export const CardGrid = ({ selectedCategory, showWord }: CardGridProps) => {
     : null;
 
   return (
-    <div className="relative overflow-hidden h-full overflow-y-auto p-4 bg-gradient-subtle rounded-3xl border border-border shadow-soft">
+    <div className={`relative overflow-hidden h-full overflow-y-auto p-4 rounded-3xl border border-border ${lowStimulationMode ? "bg-background shadow-none" : "bg-gradient-subtle shadow-soft"}`}>
       <div
         aria-hidden
-        className="pointer-events-none absolute -z-10 right-[-20%] top-[-20%] h-[60%] w-[60%]
+        className={`pointer-events-none absolute -z-10 right-[-20%] top-[-20%] h-[60%] w-[60%]
                   bg-[radial-gradient(60%_60%_at_50%_50%,hsl(var(--accent)/0.18),transparent_70%)]
-                  blur-3xl"
+                  blur-3xl ${lowStimulationMode ? "hidden" : ""}`}
       ></div>
       {selectedCategory === "all" && cardsByCategory ? (
         <div className="space-y-6">

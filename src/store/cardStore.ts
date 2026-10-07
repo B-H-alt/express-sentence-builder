@@ -207,6 +207,10 @@ interface CardStore {
   currentLevel: VocabularyLevel;
   cardsPerPage: CardDisplayAmount;
   showWords: boolean;
+  lowStimulationMode: boolean;
+  speechRate: number;
+  speechVolume: number;
+  recentCardIds: string[];
   customCards: Card[];
   progressEntries: ProgressEntry[];
 
@@ -231,6 +235,9 @@ interface CardStore {
   setLevel: (level: VocabularyLevel) => void;
   setCardsPerPage: (amount: CardDisplayAmount) => void;
   setShowWords: (showWords: boolean) => void;
+  setLowStimulationMode: (enabled: boolean) => void;
+  setSpeechRate: (rate: number) => void;
+  setSpeechVolume: (volume: number) => void;
 
   // Card filtering
   getFilteredCards: () => Card[];
@@ -492,6 +499,10 @@ export const useCardStore = create<CardStore>()(
       currentLevel: 1,
       cardsPerPage: "all",
       showWords: true,
+      lowStimulationMode: false,
+      speechRate: 1,
+      speechVolume: 1,
+      recentCardIds: [],
       customCards: [],
       progressEntries: [],
 
@@ -560,12 +571,21 @@ export const useCardStore = create<CardStore>()(
           customCards: state.customCards.map((card) =>
             card.id === cardId ? { ...card, usage: card.usage + 1 } : card
           ),
+          recentCardIds: [cardId, ...state.recentCardIds.filter((id) => id !== cardId)].slice(0, 12),
         })),
 
       // --- LEVEL CONTROL ---
       setLevel: (level) => set({ currentLevel: level }),
       setCardsPerPage: (amount) => set({ cardsPerPage: amount }),
       setShowWords: (showWords) => set({ showWords }),
+      setLowStimulationMode: (enabled) =>
+        set((state) => ({
+          lowStimulationMode: enabled,
+          cardsPerPage:
+            enabled && state.cardsPerPage === "all" ? 8 : state.cardsPerPage,
+        })),
+      setSpeechRate: (rate) => set({ speechRate: Math.min(1.25, Math.max(0.75, rate)) }),
+      setSpeechVolume: (volume) => set({ speechVolume: Math.min(1, Math.max(0, volume)) }),
 
       // --- CARD FILTERING ---
       getFilteredCards: () => {
@@ -682,6 +702,10 @@ export const useCardStore = create<CardStore>()(
         currentLevel: state.currentLevel,
         cardsPerPage: state.cardsPerPage,
         showWords: state.showWords,
+        lowStimulationMode: state.lowStimulationMode,
+        speechRate: state.speechRate,
+        speechVolume: state.speechVolume,
+        recentCardIds: state.recentCardIds,
         customCards: state.customCards,
         progressEntries: state.progressEntries,
 
@@ -691,12 +715,12 @@ export const useCardStore = create<CardStore>()(
         characterGender: state.characterGender,
       }),
 
-      migrate: (persistedState: any, _version: number) => {
+      migrate: (persistedState: unknown, _version: number) => {
         // Ensure cards always refresh from allCards, and also fix old user cards
-        const prev = persistedState ?? {};
+        const prev = (persistedState ?? {}) as Partial<CardStore>;
 
         const fixedCustomCards = Array.isArray(prev.customCards)
-          ? prev.customCards.map((c: any) => {
+          ? prev.customCards.map((c: Card) => {
               // if older versions used "user-<timestamp>", normalize to stable id once
               if (typeof c?.id === "string" && c.id.startsWith("user-")) {
                 return { ...c, id: USER_CARD_ID };
@@ -712,6 +736,13 @@ export const useCardStore = create<CardStore>()(
             ? prev.cardsPerPage
             : "all",
           showWords: typeof prev.showWords === "boolean" ? prev.showWords : true,
+          lowStimulationMode:
+            typeof prev.lowStimulationMode === "boolean" ? prev.lowStimulationMode : false,
+          speechRate:
+            typeof prev.speechRate === "number" ? Math.min(1.25, Math.max(0.75, prev.speechRate)) : 1,
+          speechVolume:
+            typeof prev.speechVolume === "number" ? Math.min(1, Math.max(0, prev.speechVolume)) : 1,
+          recentCardIds: Array.isArray(prev.recentCardIds) ? prev.recentCardIds.slice(0, 12) : [],
           customCards: dedupeCardsById(fixedCustomCards),
           progressEntries: Array.isArray(prev.progressEntries) ? prev.progressEntries : [],
         };
