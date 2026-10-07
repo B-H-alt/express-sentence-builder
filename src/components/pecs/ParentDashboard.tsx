@@ -96,7 +96,7 @@ export const ParentDashboard = () => {
   const handlePin = async (event: FormEvent) => {
     event.preventDefault();
     if (!/^\d{4,6}$/.test(pin)) {
-      setError("Use a 4–6 digit PIN.");
+      setError("Use a 4 to 6 digit PIN.");
       return;
     }
     if (!storedPin && pin !== confirmPin) {

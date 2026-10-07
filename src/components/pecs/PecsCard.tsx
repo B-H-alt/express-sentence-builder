@@ -15,6 +15,7 @@ interface PecsCardProps {
   onRemove?: () => void;
   isFavorite?: boolean;
   inSentence?: boolean;
+  displaySize?: "compact" | "medium" | "large";
 }
 
 export const PecsCard = ({
@@ -26,6 +27,7 @@ export const PecsCard = ({
   onRemove,
   isFavorite,
   inSentence,
+  displaySize = "compact",
 }: PecsCardProps) => {
   const characterGender = useCardStore((state) => state.characterGender);
   const existingImage = card.image || card.imageUrl;
@@ -108,7 +110,12 @@ export const PecsCard = ({
       )}
 
       {/* Card content */}
-      <div className="w-full h-full flex flex-col items-center justify-between p-3">
+      <div
+        className={cn(
+          "w-full h-full flex flex-col items-center justify-between",
+          displaySize === "large" ? "p-4 md:p-5" : "p-3"
+        )}
+      >
         {/* Image area: fixed proportion so the label always has room */}
         <div
           className={cn(
@@ -133,7 +140,14 @@ export const PecsCard = ({
         {/* Label area: reserve vertical space for up to two lines */}
         {showWord && (
           <span
-            className="text-sm font-semibold text-foreground text-center line-clamp-2 mt-1 min-h-[2.5rem]"
+            className={cn(
+              "font-semibold text-foreground text-center line-clamp-2 mt-1",
+              displaySize === "large"
+                ? "text-base md:text-lg min-h-[3rem]"
+                : displaySize === "medium"
+                  ? "text-sm md:text-base min-h-[2.75rem]"
+                  : "text-sm min-h-[2.5rem]"
+            )}
           >
             {card.text}
           </span>

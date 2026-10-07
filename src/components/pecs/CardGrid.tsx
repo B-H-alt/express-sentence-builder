@@ -49,6 +49,17 @@ export const CardGrid = ({ selectedCategory, showWord }: CardGridProps) => {
     ? filteredCards
     : filteredCards.slice(pageStart, pageStart + pageSize);
 
+  const gridColumns =
+    cardsPerPage === 4
+      ? "grid-cols-2 md:grid-cols-4"
+      : cardsPerPage === 8
+        ? "grid-cols-2 sm:grid-cols-4"
+        : cardsPerPage === 12
+          ? "grid-cols-3 md:grid-cols-4 xl:grid-cols-6"
+          : "grid-cols-4 md:grid-cols-6 lg:grid-cols-8";
+  const cardDisplaySize =
+    cardsPerPage === 4 ? "large" : cardsPerPage === 8 ? "medium" : "compact";
+
   const handleCardClick = (card: Card) => {
     addToSentence(card);
     incrementUsage(card.id);
@@ -79,7 +90,7 @@ export const CardGrid = ({ selectedCategory, showWord }: CardGridProps) => {
               <h3 className="text-lg font-semibold text-foreground mb-3 px-1">
                 {categoryLabels[category] || category}
               </h3>
-              <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+              <div className={`grid ${gridColumns} gap-3`}>
                 {cards.map((card) => (
                   <PecsCard
                     key={card.id}
@@ -89,6 +100,7 @@ export const CardGrid = ({ selectedCategory, showWord }: CardGridProps) => {
                     onFavorite={() => toggleFavorite(card.id)}
                     onEdit={card.id.startsWith("custom-") ? () => setEditingCard(card) : undefined}
                     isFavorite={favorites.includes(card.id)}
+                    displaySize={cardDisplaySize}
                   />
                 ))}
               </div>
@@ -96,7 +108,7 @@ export const CardGrid = ({ selectedCategory, showWord }: CardGridProps) => {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+        <div className={`grid ${gridColumns} gap-3`}>
           {visibleCards.map((card) => (
             <PecsCard
               key={card.id}
@@ -106,6 +118,7 @@ export const CardGrid = ({ selectedCategory, showWord }: CardGridProps) => {
               onFavorite={() => toggleFavorite(card.id)}
               onEdit={card.id.startsWith("custom-") ? () => setEditingCard(card) : undefined}
               isFavorite={favorites.includes(card.id)}
+              displaySize={cardDisplaySize}
             />
           ))}
         </div>
@@ -113,7 +126,7 @@ export const CardGrid = ({ selectedCategory, showWord }: CardGridProps) => {
       {cardsPerPage !== "all" && filteredCards.length > 0 && (
         <div className="mt-5 flex flex-col items-center justify-between gap-3 border-t border-border/70 pt-4 sm:flex-row">
           <p className="text-xs text-muted-foreground">
-            Showing {pageStart + 1}–{Math.min(pageStart + pageSize, filteredCards.length)} of {filteredCards.length} cards
+            Showing {pageStart + 1} to {Math.min(pageStart + pageSize, filteredCards.length)} of {filteredCards.length} cards
           </p>
           <div className="flex items-center gap-2">
             <button

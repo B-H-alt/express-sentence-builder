@@ -36,11 +36,11 @@ export const AppHeader = ({
   const getLevelLabel = (level: VocabularyLevel) => {
     switch (level) {
       case 1:
-        return "Level 1 – Beginner";
+        return "Level 1 (Beginner)";
       case 2:
-        return "Level 2 – Intermediate";
+        return "Level 2 (Intermediate)";
       case 3:
-        return "Level 3 – Advanced";
+        return "Level 3 (Advanced)";
     }
   };
 

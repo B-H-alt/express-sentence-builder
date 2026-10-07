@@ -13,9 +13,9 @@ interface SettingsPanelProps {
 }
 
 const levelOptions: { level: VocabularyLevel; label: string; subtitle: string }[] = [
-  { level: 1, label: "Level 1 – Beginner", subtitle: "Smaller starter set (about 30 cards)" },
-  { level: 2, label: "Level 2 – Intermediate", subtitle: "Expanded vocabulary (about 75 cards)" },
-  { level: 3, label: "Level 3 – Advanced", subtitle: "Full set (about 150 cards)" },
+  { level: 1, label: "Level 1 (Beginner)", subtitle: "Smaller starter set (about 30 cards)" },
+  { level: 2, label: "Level 2 (Intermediate)", subtitle: "Expanded vocabulary (about 75 cards)" },
+  { level: 3, label: "Level 3 (Advanced)", subtitle: "Full set (about 150 cards)" },
 ];
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) => {
@@ -279,7 +279,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                 <div>
                   <h3 className="text-sm font-semibold">Cards shown at a time</h3>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Show fewer cards to reduce visual overload. Page buttons appear when needed.
+                    Fewer cards appear larger and are easier to focus on. Page buttons appear when needed.
                   </p>
                 </div>
                 <div className="grid grid-cols-4 gap-2">
