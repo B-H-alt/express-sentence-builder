@@ -14,7 +14,13 @@ import { ParentDashboard } from "./components/pecs/ParentDashboard";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="expressly-theme">
+  <ThemeProvider
+    attribute="class"
+    defaultTheme="light"
+    enableSystem={false}
+    storageKey="expressly-theme"
+    themes={["light", "warm", "sage", "lavender", "rose", "dark"]}
+  >
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />

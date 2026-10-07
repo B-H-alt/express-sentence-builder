@@ -1,7 +1,7 @@
 // src/components/pecs/SettingsPanel.tsx
 import React, { useEffect, useRef, useState } from "react";
 import { useCardStore } from "@/store/cardStore";
-import { X, User, Sun, Moon, Plus, Layers, Upload, Trash2, Save, Leaf, Volume2 } from "lucide-react";
+import { X, User, Plus, Layers, Upload, Trash2, Save, Leaf, Volume2, Palette, MessagesSquare } from "lucide-react";
 import { AddCardModal } from "@/components/pecs/AddCardModal";
 import { Button } from "@/components/ui/button";
 import type { CardDisplayAmount, CharacterGender, VocabularyLevel } from "@/store/cardStore";
@@ -32,7 +32,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
     setSpeechVolume,
   } = useCardStore();
   const { theme, setTheme } = useTheme();
-  const currentTheme = theme === "dark" ? "dark" : "light";
+  const currentTheme = ["warm", "sage", "lavender", "rose", "dark"].includes(theme ?? "")
+    ? theme
+    : "light";
 
   const userName = useCardStore((s) => s.userName);
   const userImage = useCardStore((s) => s.userImage);
@@ -41,6 +43,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
   const setCharacterGender = useCardStore((s) => s.setCharacterGender);
 
   const [showAddCard, setShowAddCard] = useState(false);
+  const [activeSection, setActiveSection] = useState<"profile" | "display" | "cards">("profile");
 
   const [draftName, setDraftName] = useState("Me");
   const [draftImage, setDraftImage] = useState<string | null>(null);
@@ -50,6 +53,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
 
   useEffect(() => {
     if (!open) return;
+    setActiveSection("profile");
     setDraftName(userName?.trim() || "Me");
     setDraftImage(userImage ?? null);
     setDraftGender(characterGender);
@@ -135,11 +139,43 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 md:p-8">
-            <div className="grid gap-6 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.3fr)]">
+            <div
+              role="tablist"
+              aria-label="Settings sections"
+              className="mb-6 grid grid-cols-3 gap-1 rounded-2xl border border-border/70 bg-muted/40 p-1.5"
+            >
+              {[
+                { id: "profile", label: "Profile", icon: User },
+                { id: "display", label: "Display", icon: Palette },
+                { id: "cards", label: "Cards & voice", icon: MessagesSquare },
+              ].map((section) => {
+                const Icon = section.icon;
+                const selected = activeSection === section.id;
+                return (
+                  <button
+                    key={section.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={selected}
+                    onClick={() => setActiveSection(section.id as "profile" | "display" | "cards")}
+                    className={`flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 text-sm font-medium transition-colors ${
+                      selected
+                        ? "bg-background text-foreground shadow-sm ring-1 ring-border/60"
+                        : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{section.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className={`grid gap-6 ${activeSection === "display" ? "md:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]" : "mx-auto max-w-2xl"}`}>
             {/* Left column: Profile / Theme */}
-            <div className="rounded-2xl border border-border/80 bg-muted/40 p-5 flex flex-col gap-5">
+            <div className={`rounded-2xl border border-border/80 bg-muted/40 p-5 flex flex-col gap-5 ${activeSection === "cards" ? "hidden" : ""}`}>
               {/* Profile */}
-              <div className="flex flex-col items-center gap-3">
+              {activeSection === "profile" && <div className="flex flex-col items-center gap-3">
                 <div className="w-24 h-24 rounded-full bg-background shadow-inner border border-border/60 flex items-center justify-center overflow-hidden">
                   {draftImage ? (
                     <img src={draftImage} alt="Profile" className="h-full w-full object-cover" />
@@ -172,10 +208,10 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                     Remove
                   </Button>
                 </div>
-              </div>
+              </div>}
 
               {/* Username */}
-              <div className="space-y-2">
+              {activeSection === "profile" && <div className="space-y-2">
                 <label className="text-xs font-medium text-muted-foreground">Username</label>
                 <input
                   className="w-full rounded-xl border border-border bg-background/70 px-3 py-2 text-sm text-foreground"
@@ -183,12 +219,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                   onChange={(e) => setDraftName(e.target.value)}
                   placeholder="Me"
                 />
-              </div>
+              </div>}
 
               {/* Card character */}
-              <div className="space-y-2">
+              {activeSection === "profile" && <div className="space-y-2">
                 <label className="text-xs font-medium text-muted-foreground">Card character</label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   {(["girl", "boy"] as CharacterGender[]).map((gender) => (
                     <button
                       key={gender}
@@ -208,48 +244,126 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                 <p className="text-[11px] text-muted-foreground">
                   Choose which character appears on applicable communication cards.
                 </p>
-              </div>
+              </div>}
 
               {/* Theme */}
-              <div className="space-y-2 mt-auto">
+              {activeSection === "display" && <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-muted-foreground">Theme</span>
-                  <span className="text-[11px] text-muted-foreground">Choose your display</span>
+                  <div>
+                    <h3 className="text-sm font-semibold">Color theme</h3>
+                    <p className="mt-1 text-xs text-muted-foreground">Choose the colors that feel most comfortable.</p>
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid gap-2 sm:grid-cols-3">
                   <button
                     type="button"
                     aria-pressed={currentTheme === "light"}
                     onClick={() => setTheme("light")}
-                    className={`h-10 rounded-xl border text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
+                    className={`min-h-20 rounded-xl border p-3 text-sm font-medium flex flex-col items-start justify-between gap-2 transition-colors ${
                       currentTheme === "light"
                         ? "border-primary bg-primary text-primary-foreground"
                         : "border-border bg-background/70 text-foreground hover:bg-muted"
                     }`}
                   >
-                    <Sun className="w-4 h-4" />
-                    Light
+                    <span className="flex gap-1.5" aria-hidden="true">
+                      <span className="h-4 w-4 rounded-full bg-[#17358a]" />
+                      <span className="h-4 w-4 rounded-full bg-[#19b9c3]" />
+                      <span className="h-4 w-4 rounded-full bg-white ring-1 ring-black/10" />
+                    </span>
+                    Expressly Blue
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={currentTheme === "warm"}
+                    onClick={() => setTheme("warm")}
+                    className={`min-h-20 rounded-xl border p-3 text-sm font-medium flex flex-col items-start justify-between gap-2 transition-colors ${
+                      currentTheme === "warm"
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-background/70 text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <span className="flex gap-1.5" aria-hidden="true">
+                      <span className="h-4 w-4 rounded-full bg-[#8b4d2b]" />
+                      <span className="h-4 w-4 rounded-full bg-[#4e7e6b]" />
+                      <span className="h-4 w-4 rounded-full bg-[#f5ead4] ring-1 ring-black/10" />
+                    </span>
+                    Warm
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={currentTheme === "sage"}
+                    onClick={() => setTheme("sage")}
+                    className={`min-h-20 rounded-xl border p-3 text-sm font-medium flex flex-col items-start justify-between gap-2 transition-colors ${
+                      currentTheme === "sage"
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-background/70 text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <span className="flex gap-1.5" aria-hidden="true">
+                      <span className="h-4 w-4 rounded-full bg-[#496b51]" />
+                      <span className="h-4 w-4 rounded-full bg-[#b28b59]" />
+                      <span className="h-4 w-4 rounded-full bg-[#eef3eb] ring-1 ring-black/10" />
+                    </span>
+                    Sage
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={currentTheme === "lavender"}
+                    onClick={() => setTheme("lavender")}
+                    className={`min-h-20 rounded-xl border p-3 text-sm font-medium flex flex-col items-start justify-between gap-2 transition-colors ${
+                      currentTheme === "lavender"
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-background/70 text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <span className="flex gap-1.5" aria-hidden="true">
+                      <span className="h-4 w-4 rounded-full bg-[#68578f]" />
+                      <span className="h-4 w-4 rounded-full bg-[#a96f94]" />
+                      <span className="h-4 w-4 rounded-full bg-[#f3eff8] ring-1 ring-black/10" />
+                    </span>
+                    Lavender
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={currentTheme === "rose"}
+                    onClick={() => setTheme("rose")}
+                    className={`min-h-20 rounded-xl border p-3 text-sm font-medium flex flex-col items-start justify-between gap-2 transition-colors ${
+                      currentTheme === "rose"
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-background/70 text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <span className="flex gap-1.5" aria-hidden="true">
+                      <span className="h-4 w-4 rounded-full bg-[#8b4b61]" />
+                      <span className="h-4 w-4 rounded-full bg-[#bd7d64]" />
+                      <span className="h-4 w-4 rounded-full bg-[#f8eeee] ring-1 ring-black/10" />
+                    </span>
+                    Rose
                   </button>
                   <button
                     type="button"
                     aria-pressed={currentTheme === "dark"}
                     onClick={() => setTheme("dark")}
-                    className={`h-10 rounded-xl border text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
+                    className={`min-h-20 rounded-xl border p-3 text-sm font-medium flex flex-col items-start justify-between gap-2 transition-colors ${
                       currentTheme === "dark"
                         ? "border-primary bg-primary text-primary-foreground"
                         : "border-border bg-background/70 text-foreground hover:bg-muted"
                     }`}
                   >
-                    <Moon className="w-4 h-4" />
+                    <span className="flex gap-1.5" aria-hidden="true">
+                      <span className="h-4 w-4 rounded-full bg-[#111820]" />
+                      <span className="h-4 w-4 rounded-full bg-[#5799e8]" />
+                      <span className="h-4 w-4 rounded-full bg-[#26313d] ring-1 ring-white/20" />
+                    </span>
                     Dark
                   </button>
                 </div>
-              </div>
+              </div>}
             </div>
 
             {/* Right column: Level + Add Card */}
-            <div className="flex flex-col gap-4">
-              <div className="rounded-2xl border border-border/80 bg-muted/30 p-4 flex flex-col gap-3">
+            <div className={`flex flex-col gap-4 ${activeSection === "profile" ? "hidden" : ""}`}>
+              {activeSection === "display" && <div className="rounded-2xl border border-border/80 bg-muted/30 p-4 flex flex-col gap-3">
                 <div className="flex items-center gap-2 mb-1">
                   <Layers className="w-4 h-4 text-muted-foreground" />
                   <h3 className="text-sm font-semibold">Vocabulary level</h3>
@@ -284,9 +398,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                     </button>
                   ))}
                 </div>
-              </div>
+              </div>}
 
-              <div className="rounded-2xl border border-border/80 bg-muted/30 p-4 flex flex-col gap-3">
+              {activeSection === "display" && <div className="rounded-2xl border border-border/80 bg-muted/30 p-4 flex flex-col gap-3">
                 <div>
                   <h3 className="text-sm font-semibold">Cards shown at a time</h3>
                   <p className="mt-1 text-xs text-muted-foreground">
@@ -310,9 +424,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                     </button>
                   ))}
                 </div>
-              </div>
+              </div>}
 
-              <div className="rounded-2xl border border-border/80 bg-muted/30 p-4">
+              {activeSection === "display" && <div className="rounded-2xl border border-border/80 bg-muted/30 p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex min-w-0 gap-3">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -345,9 +459,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                     <span className="sr-only">Low stimulation mode</span>
                   </button>
                 </div>
-              </div>
+              </div>}
 
-              <div className="rounded-2xl border border-border/80 bg-muted/30 p-4 flex flex-col gap-4">
+              {activeSection === "cards" && <div className="rounded-2xl border border-border/80 bg-muted/30 p-4 flex flex-col gap-4">
                 <div className="flex items-center gap-2">
                   <Volume2 className="h-4 w-4 text-muted-foreground" />
                   <div>
@@ -396,9 +510,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                     className="mt-2 w-full accent-primary"
                   />
                 </label>
-              </div>
+              </div>}
 
-              <div className="rounded-2xl border border-border/80 bg-muted/30 p-4 flex flex-col justify-between gap-3">
+              {activeSection === "cards" && <div className="rounded-2xl border border-border/80 bg-muted/30 p-4 flex flex-col justify-between gap-3">
                 <div className="flex items-center justify-between gap-2">
                   <div>
                     <h3 className="text-sm font-semibold">Add a custom card</h3>
@@ -420,23 +534,27 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                     Tap to add a new card (label, category, image URL)
                   </span>
                 </button>
-              </div>
+              </div>}
             </div>
             </div>
           </div>
 
           <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border/70 bg-background px-6 py-4 md:px-8">
             <p className="hidden text-xs text-muted-foreground sm:block">
-              Theme, level, and card display save automatically.
+              {activeSection === "profile"
+                ? "Save after changing the learner profile."
+                : "Changes in this section save automatically."}
             </p>
             <div className="ml-auto flex items-center gap-2">
               <Button type="button" variant="outline" onClick={onClose}>
                 Close
               </Button>
-              <Button type="button" onClick={handleSave} disabled={!hasChanges}>
-                <Save className="mr-2 h-4 w-4" />
-                Save profile
-              </Button>
+              {activeSection === "profile" && (
+                <Button type="button" onClick={handleSave} disabled={!hasChanges}>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save profile
+                </Button>
+              )}
             </div>
           </div>
         </div>
