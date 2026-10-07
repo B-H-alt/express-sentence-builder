@@ -402,25 +402,33 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
 
               {activeSection === "display" && <div className="rounded-2xl border border-border/80 bg-muted/30 p-4 flex flex-col gap-3">
                 <div>
-                  <h3 className="text-sm font-semibold">Cards shown at a time</h3>
+                  <h3 className="text-sm font-semibold">Card size</h3>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Fewer cards appear larger and are easier to focus on. Page buttons appear when needed.
+                    Larger cards show fewer choices at once. Page buttons appear when needed.
                   </p>
                 </div>
                 <div className="grid grid-cols-4 gap-2">
-                  {([4, 8, 12, "all"] as CardDisplayAmount[]).map((amount) => (
+                  {([
+                    { amount: 4, label: "Large", count: "4" },
+                    { amount: 8, label: "Medium", count: "8" },
+                    { amount: 12, label: "Small", count: "12" },
+                    { amount: "all", label: "Compact", count: "All" },
+                  ] as { amount: CardDisplayAmount; label: string; count: string }[]).map(({ amount, label, count }) => (
                     <button
                       key={amount}
                       type="button"
                       aria-pressed={cardsPerPage === amount}
                       onClick={() => setCardsPerPage(amount)}
-                      className={`h-10 min-w-0 rounded-xl border text-sm font-medium capitalize transition-colors ${
+                      className={`min-h-14 min-w-0 rounded-xl border px-1 text-sm font-medium transition-colors ${
                         cardsPerPage === amount
                           ? "border-primary bg-primary text-primary-foreground"
                           : "border-border bg-background/70 text-foreground hover:bg-muted"
                       }`}
                     >
-                      {amount}
+                      <span className="block">{label}</span>
+                      <span className={`block text-[10px] ${cardsPerPage === amount ? "text-primary-foreground/75" : "text-muted-foreground"}`}>
+                        {count} cards
+                      </span>
                     </button>
                   ))}
                 </div>

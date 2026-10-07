@@ -6,6 +6,7 @@ import {
   Home,
   MapPin,
   MessageCircle,
+  MessagesSquare,
   PersonStanding,
   Shapes,
   Smile,
@@ -16,6 +17,9 @@ import {
 } from "lucide-react";
 import { useCardStore } from "@/store/cardStore";
 import { PecsCard } from "./PecsCard";
+import { boyCardImages } from "@/lib/boyCardImages";
+import { girlCardImages } from "@/lib/girlCardImages";
+import { sharedCardImages } from "@/lib/sharedCardImages";
 
 interface CategoryHomeProps {
   showWord: boolean;
@@ -46,6 +50,7 @@ export const CategoryHome = ({ showWord, onSelectCategory }: CategoryHomeProps) 
     incrementUsage,
     toggleFavorite,
     lowStimulationMode,
+    characterGender,
   } = useCardStore();
 
   const availableCards = getFilteredCards();
@@ -58,9 +63,13 @@ export const CategoryHome = ({ showWord, onSelectCategory }: CategoryHomeProps) 
   const recentCards = recentCardIds
     .map((id) => cardsById.get(id))
     .filter((card): card is NonNullable<typeof card> => Boolean(card));
-  const quickCards = [...favoriteCards, ...recentCards]
+  const personalQuickCards = [...favoriteCards, ...recentCards]
     .filter((card, index, cards) => cards.findIndex((item) => item.id === card.id) === index)
     .slice(0, 8);
+  const essentialLabels = ["Yes", "No", "Help", "Stop", "Please", "Thank you", "Bathroom", "I need help"];
+  const essentialCards = essentialLabels
+    .map((label) => availableCards.find((card) => card.text === label))
+    .filter((card): card is NonNullable<typeof card> => Boolean(card));
 
   const handleCardClick = (card: (typeof availableCards)[number]) => {
     addToSentence(card);
@@ -69,6 +78,46 @@ export const CategoryHome = ({ showWord, onSelectCategory }: CategoryHomeProps) 
 
   return (
     <div className="space-y-6">
+      <section className="rounded-3xl border border-primary/20 bg-primary/[0.04] p-5 sm:p-6">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <MessagesSquare className="h-5 w-5" />
+          </span>
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">Quick talk</h2>
+            <p className="text-sm text-muted-foreground">Essential words for fast communication.</p>
+          </div>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+          {essentialCards.map((card) => (
+            <button
+              key={card.id}
+              type="button"
+              onClick={() => handleCardClick(card)}
+              className="aspect-square rounded-2xl border-2 border-border bg-card p-3 text-foreground shadow-sm transition-colors hover:border-primary/50 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={card.text}
+            >
+              <span className={`flex w-full items-center justify-center ${showWord ? "h-[68%]" : "h-full"}`}>
+                <img
+                  src={
+                    sharedCardImages[card.id] ||
+                    (characterGender === "girl" ? girlCardImages[card.id] : boyCardImages[card.id]) ||
+                    card.image ||
+                    card.imageUrl
+                  }
+                  alt=""
+                  className="max-h-full max-w-full rounded-lg object-contain"
+                  draggable={false}
+                />
+              </span>
+              {showWord && (
+                <span className="mt-1 block text-center text-sm font-semibold leading-tight">{card.text}</span>
+              )}
+            </button>
+          ))}
+        </div>
+      </section>
+
       <section
         className={`rounded-3xl border p-5 sm:p-6 ${
           lowStimulationMode
@@ -78,7 +127,7 @@ export const CategoryHome = ({ showWord, onSelectCategory }: CategoryHomeProps) 
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-primary">Start here</p>
+            <p className="text-sm font-medium text-primary">Find more words</p>
             <h2 className="mt-1 text-2xl font-semibold text-foreground">What do you want to say?</h2>
             <p className="mt-1 text-sm text-muted-foreground">Choose a group to find the right card.</p>
           </div>
@@ -112,7 +161,7 @@ export const CategoryHome = ({ showWord, onSelectCategory }: CategoryHomeProps) 
         </div>
       </section>
 
-      {quickCards.length > 0 && (
+      {personalQuickCards.length > 0 && (
         <section className="rounded-3xl border border-border bg-card p-5 sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -129,7 +178,7 @@ export const CategoryHome = ({ showWord, onSelectCategory }: CategoryHomeProps) 
             </button>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
-            {quickCards.map((card) => (
+            {personalQuickCards.map((card) => (
               <PecsCard
                 key={card.id}
                 card={card}

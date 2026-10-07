@@ -3,7 +3,7 @@ import { useCardStore } from "@/store/cardStore";
 import { PecsCard } from "./PecsCard";
 import { Card } from "@/pages/PecsApp";
 import { AddCardModal } from "./AddCardModal";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { CategoryHome } from "./CategoryHome";
 
 interface CardGridProps {
@@ -67,6 +67,13 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory }: CardG
     incrementUsage(card.id);
   };
 
+  const selectedCategoryLabel =
+    selectedCategory === "favorites"
+      ? "Favorites"
+      : selectedCategory === "all"
+        ? "All cards"
+        : categoryLabels[selectedCategory] || selectedCategory;
+
   if (selectedCategory === "home") {
     return (
       <div className="relative h-full overflow-y-auto rounded-3xl border border-border bg-background p-4 shadow-soft">
@@ -93,6 +100,18 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory }: CardG
                   bg-[radial-gradient(60%_60%_at_50%_50%,hsl(var(--accent)/0.18),transparent_70%)]
                   blur-3xl ${lowStimulationMode ? "hidden" : ""}`}
       ></div>
+      <div className="relative z-10 mb-4 flex items-center gap-3 border-b border-border/70 pb-3">
+        <button
+          type="button"
+          onClick={() => onSelectCategory("home")}
+          aria-label="Back to Home"
+          className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border border-border bg-background px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Home
+        </button>
+        <h2 className="truncate text-lg font-semibold text-foreground">{selectedCategoryLabel}</h2>
+      </div>
       {selectedCategory === "all" && cardsByCategory ? (
         <div className="space-y-6">
           {Object.entries(cardsByCategory).map(([category, cards]) => (
