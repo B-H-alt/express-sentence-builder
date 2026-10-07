@@ -122,7 +122,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return;
   }
 
-  const prompt = `Write the short, natural sentence an AAC user most likely means. Add only small grammar words. Keep the meaning, person, negative, and question. Use everyday spoken English. Return only the sentence.\nCards: ${JSON.stringify(tokens)}`;
+  const prompt = `Turn these ordered AAC cards into one short, natural sentence. A person followed by an action describes what that person is doing. Use "I" for the learner's wants, needs, actions, and feelings. Only make a question when a card is a question. Preserve negatives. Add only needed grammar words and never invent details. Everyday English; sentence only.\nExamples: ["Dad","Go outside"] = Dad is going outside. ["I","Want","Water"] = I want water. ["Where?","Mom"] = Where is Mom?\nCards: ${JSON.stringify(tokens)}`;
 
   try {
     const ai = new GoogleGenAI({ apiKey });
