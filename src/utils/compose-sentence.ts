@@ -3,7 +3,7 @@ import { getAccessToken } from "@/lib/supabase";
 
 const compositionCache = new Map<string, string>();
 
-// Compose a sentence from input tokens or text using Gemini 2.5 Flash
+// Compose a sentence from input tokens or text using the server-side Gemini model
 export async function composeSentence(input: { tokens?: string[]; text?: string }): Promise<string> {
   const inputLabels = input.tokens?.length
     ? input.tokens
@@ -22,7 +22,7 @@ export async function composeSentence(input: { tokens?: string[]; text?: string 
     if (!accessToken) return "";
 
     const controller = new AbortController();
-    timeout = window.setTimeout(() => controller.abort(), 5_000);
+    timeout = window.setTimeout(() => controller.abort(), 12_000);
     const response = await fetch("/api/compose", {
       method: "POST",
       headers: {

@@ -132,7 +132,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       config: {
         thinkingConfig: { thinkingBudget: 0 },
         temperature: 0.1,
-        maxOutputTokens: 40,
+        maxOutputTokens: 128,
       },
     });
 
