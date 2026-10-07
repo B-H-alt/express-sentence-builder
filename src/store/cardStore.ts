@@ -213,6 +213,7 @@ interface CardStore {
   recentCardIds: string[];
   customCards: Card[];
   progressEntries: ProgressEntry[];
+  hiddenCategories: string[];
 
   // NEW — Onboarding fields
   onboardingComplete: boolean;
@@ -226,6 +227,7 @@ interface CardStore {
   clearSentence: () => void;
   completeSentence: () => ProgressEntry | null;
   clearProgress: () => void;
+  recordQuickPhrase: (text: string) => void;
 
   // Favorites & usage
   toggleFavorite: (cardId: string) => void;
@@ -238,6 +240,7 @@ interface CardStore {
   setLowStimulationMode: (enabled: boolean) => void;
   setSpeechRate: (rate: number) => void;
   setSpeechVolume: (volume: number) => void;
+  toggleCategoryVisibility: (category: string) => void;
 
   // Card filtering
   getFilteredCards: () => Card[];
@@ -505,6 +508,7 @@ export const useCardStore = create<CardStore>()(
       recentCardIds: [],
       customCards: [],
       progressEntries: [],
+      hiddenCategories: [],
 
       // --- NEW ONBOARDING FIELDS ---
       onboardingComplete: false,
@@ -554,6 +558,21 @@ export const useCardStore = create<CardStore>()(
 
       clearProgress: () => set({ progressEntries: [] }),
 
+      recordQuickPhrase: (text) => {
+        const cleanText = text.trim();
+        if (!cleanText) return;
+        const entry: ProgressEntry = {
+          id: `progress-${Date.now()}`,
+          completedAt: new Date().toISOString(),
+          cardLabels: [cleanText],
+          sentenceText: cleanText,
+          wordCount: cleanText.split(/\s+/).filter(Boolean).length,
+        };
+        set((state) => ({
+          progressEntries: [entry, ...state.progressEntries].slice(0, 500),
+        }));
+      },
+
       // --- FAVORITES ---
       toggleFavorite: (cardId) =>
         set((state) => ({
@@ -586,6 +605,12 @@ export const useCardStore = create<CardStore>()(
         })),
       setSpeechRate: (rate) => set({ speechRate: Math.min(1.25, Math.max(0.75, rate)) }),
       setSpeechVolume: (volume) => set({ speechVolume: Math.min(1, Math.max(0, volume)) }),
+      toggleCategoryVisibility: (category) =>
+        set((state) => ({
+          hiddenCategories: state.hiddenCategories.includes(category)
+            ? state.hiddenCategories.filter((item) => item !== category)
+            : [...state.hiddenCategories, category],
+        })),
 
       // --- CARD FILTERING ---
       getFilteredCards: () => {
@@ -694,7 +719,7 @@ export const useCardStore = create<CardStore>()(
     // --- PERSIST CONFIG ---
     {
       name: "pecs-storage",
-      version: 12,
+      version: 13,
 
       partialize: (state) => ({
         sentence: state.sentence,
@@ -708,6 +733,7 @@ export const useCardStore = create<CardStore>()(
         recentCardIds: state.recentCardIds,
         customCards: state.customCards,
         progressEntries: state.progressEntries,
+        hiddenCategories: state.hiddenCategories,
 
         onboardingComplete: state.onboardingComplete,
         userName: state.userName,
@@ -745,6 +771,7 @@ export const useCardStore = create<CardStore>()(
           recentCardIds: Array.isArray(prev.recentCardIds) ? prev.recentCardIds.slice(0, 12) : [],
           customCards: dedupeCardsById(fixedCustomCards),
           progressEntries: Array.isArray(prev.progressEntries) ? prev.progressEntries : [],
+          hiddenCategories: Array.isArray(prev.hiddenCategories) ? prev.hiddenCategories : [],
         };
       },
     }

@@ -11,6 +11,8 @@ import {
   Trash2,
   TrendingUp,
   Type,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -59,6 +61,8 @@ export const ParentDashboard = () => {
   const entries = useCardStore((state) => state.progressEntries);
   const clearProgress = useCardStore((state) => state.clearProgress);
   const savedName = useCardStore((state) => state.userName?.trim() || "");
+  const hiddenCategories = useCardStore((state) => state.hiddenCategories);
+  const toggleCategoryVisibility = useCardStore((state) => state.toggleCategoryVisibility);
   const userName = !savedName || savedName.toLocaleLowerCase() === "me" ? "Your learner" : savedName;
   const [storedPin, setStoredPin] = useState<StoredPin | null>(() => readStoredPin());
   const [unlocked, setUnlocked] = useState(false);
@@ -269,6 +273,46 @@ export const ParentDashboard = () => {
           <Metric label="Average sentence length" value={insights.averageLength ? insights.averageLength.toFixed(1) : "0"} icon={BarChart3} />
           <Metric label="Different words used" value={insights.uniqueWords} icon={Type} />
           <Metric label="New words this week" value={insights.newWords.length} icon={TrendingUp} />
+        </section>
+
+        <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+          <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-start">
+            <div>
+              <h2 className="font-semibold">Categories shown to the learner</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Hide groups that are not useful right now. Their cards stay safe and can be shown again anytime.
+              </p>
+            </div>
+            <span className="shrink-0 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+              Parent controlled
+            </span>
+          </div>
+          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            {[
+              ["people", "People"], ["body", "Body"], ["feelings", "Feelings"],
+              ["actions", "Actions"], ["responses", "Responses"], ["activities", "Activities"],
+              ["objects", "Objects"], ["places", "Places"], ["social", "Social"],
+              ["food", "Food"], ["descriptive", "Describing"], ["time", "Time"],
+            ].map(([id, label]) => {
+              const visible = !hiddenCategories.includes(id);
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  aria-pressed={visible}
+                  onClick={() => toggleCategoryVisibility(id)}
+                  className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 text-left text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    visible
+                      ? "border-primary/35 bg-primary/5 text-foreground"
+                      : "border-border bg-muted/50 text-muted-foreground"
+                  }`}
+                >
+                  {visible ? <Eye className="h-4 w-4 text-primary" /> : <EyeOff className="h-4 w-4" />}
+                  {label}
+                </button>
+              );
+            })}
+          </div>
         </section>
 
         <section className="grid gap-6 lg:grid-cols-2">

@@ -47,7 +47,7 @@ export const AppHeader = ({
   const profileInitial = userName.charAt(0).toUpperCase();
 
   return (
-    <header className="relative overflow-hidden bg-gradient-subtle border-b border-border px-6 py-4">
+    <header className="relative overflow-hidden border-b border-border bg-gradient-subtle px-4 py-2.5 sm:px-6">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 -top-24 h-48 bg-[radial-gradient(40%_60%_at_20%_0%,hsl(var(--accent)/0.22),transparent_60%),radial-gradient(40%_60%_at_80%_0%,hsl(var(--primary)/0.22),transparent_60%)] blur-2xl"
@@ -60,7 +60,7 @@ export const AppHeader = ({
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent sm:text-2xl">
               Expressly PECS
             </h1>
             <p className="text-sm text-muted-foreground">

@@ -51,6 +51,7 @@ export const CategoryHome = ({ showWord, onSelectCategory }: CategoryHomeProps) 
     toggleFavorite,
     lowStimulationMode,
     characterGender,
+    hiddenCategories,
   } = useCardStore();
 
   const availableCards = getFilteredCards();
@@ -138,7 +139,7 @@ export const CategoryHome = ({ showWord, onSelectCategory }: CategoryHomeProps) 
 
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {categoryDetails
-            .filter((category) => availableCategories.has(category.id))
+            .filter((category) => availableCategories.has(category.id) && !hiddenCategories.includes(category.id))
             .map((category) => {
               const Icon = category.icon;
               return (

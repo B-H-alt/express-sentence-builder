@@ -10,6 +10,7 @@ interface CardGridProps {
   selectedCategory: string;
   showWord: boolean;
   onSelectCategory: (category: string) => void;
+  searchQuery: string;
 }
 
 const categoryLabels: Record<string, string> = {
@@ -27,14 +28,16 @@ const categoryLabels: Record<string, string> = {
   time: "Time"
 };
 
-export const CardGrid = ({ selectedCategory, showWord, onSelectCategory }: CardGridProps) => {
+export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQuery }: CardGridProps) => {
   const { favorites, addToSentence, toggleFavorite, incrementUsage, getFilteredCards, cardsPerPage, currentLevel, lowStimulationMode } = useCardStore();
   const [editingCard, setEditingCard] = useState<Card | null>(null);
   const [page, setPage] = useState(1);
 
   const levelFilteredCards = getFilteredCards();
   
+  const normalizedSearch = searchQuery.trim().toLocaleLowerCase();
   const filteredCards = levelFilteredCards.filter(card => {
+    if (normalizedSearch) return card.text.toLocaleLowerCase().includes(normalizedSearch);
     if (selectedCategory === "all") return true;
     if (selectedCategory === "favorites") return favorites.includes(card.id);
     return card.category === selectedCategory;
@@ -42,7 +45,7 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory }: CardG
 
   useEffect(() => {
     setPage(1);
-  }, [selectedCategory, cardsPerPage, currentLevel]);
+  }, [selectedCategory, cardsPerPage, currentLevel, normalizedSearch]);
 
   const pageSize = cardsPerPage === "all" ? Math.max(filteredCards.length, 1) : cardsPerPage;
   const totalPages = Math.max(1, Math.ceil(filteredCards.length / pageSize));
@@ -69,13 +72,15 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory }: CardG
   };
 
   const selectedCategoryLabel =
-    selectedCategory === "favorites"
+    normalizedSearch
+      ? `Results for “${searchQuery.trim()}”`
+      : selectedCategory === "favorites"
       ? "Favorites"
       : selectedCategory === "all"
         ? "All cards"
         : categoryLabels[selectedCategory] || selectedCategory;
 
-  if (selectedCategory === "home") {
+  if (selectedCategory === "home" && !normalizedSearch) {
     return (
       <div className="relative h-full overflow-y-auto rounded-3xl border border-border bg-background p-4 shadow-soft">
         <CategoryHome showWord={showWord} onSelectCategory={onSelectCategory} />
@@ -84,7 +89,7 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory }: CardG
   }
 
   // Group cards by category when "all" is selected
-  const cardsByCategory = selectedCategory === "all" 
+  const cardsByCategory = selectedCategory === "all" && !normalizedSearch
     ? visibleCards.reduce((acc, card) => {
         const category = card.category;
         if (!acc[category]) acc[category] = [];
@@ -113,7 +118,12 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory }: CardG
         </button>
         <h2 className="truncate text-lg font-semibold text-foreground">{selectedCategoryLabel}</h2>
       </div>
-      {selectedCategory === "all" && cardsByCategory ? (
+      {filteredCards.length === 0 ? (
+        <div className="flex min-h-52 flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-background/60 px-6 text-center">
+          <h3 className="font-semibold text-foreground">No matching cards</h3>
+          <p className="mt-1 text-sm text-muted-foreground">Try another word or choose a category.</p>
+        </div>
+      ) : selectedCategory === "all" && !normalizedSearch && cardsByCategory ? (
         <div className="space-y-6">
           {Object.entries(cardsByCategory).map(([category, cards]) => (
             <div key={category}>

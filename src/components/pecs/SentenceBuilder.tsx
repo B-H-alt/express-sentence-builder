@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useCardStore } from "@/store/cardStore";
 import { PecsCard } from "./PecsCard";
 import { Button } from "@/components/ui/button";
-import { Check, Loader2, Trash2, Volume2, Square, X } from "lucide-react";
+import { Check, Loader2, Trash2, Volume2, Square, X, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { composeSentence } from "@/utils/compose-sentence";
 import { getAccessToken } from "@/lib/supabase";
@@ -21,6 +21,9 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
     speechRate,
     speechVolume,
     lowStimulationMode,
+    cards,
+    addToSentence,
+    incrementUsage,
   } = useCardStore();
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -143,6 +146,14 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
     return Boolean(completed);
   };
 
+  const addStarter = (label: "I want" | "I need" | "I feel") => {
+    const sourceLabel = label === "I want" ? "Want" : label === "I need" ? "Need" : "Feel";
+    const source = cards.find((card) => card.text === sourceLabel);
+    if (!source) return;
+    addToSentence({ ...source, text: label });
+    incrementUsage(source.id);
+  };
+
   const handleFinish = async () => {
     const text = await resolveSentence();
     if (!text) return;
@@ -165,7 +176,7 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
 
   return (
     <div
-      className={`relative overflow-hidden min-h-full max-h-full rounded-3xl border-2 p-4 flex flex-col overflow-hidden ${
+      className={`relative flex max-h-full min-h-0 flex-col overflow-hidden rounded-2xl border-2 p-3 ${
         lowStimulationMode
           ? "bg-card border-border"
           : "bg-gradient-subtle border-dashed border-primary/30"
@@ -180,7 +191,7 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
       }}
       onDragOver={(e) => e.preventDefault()}
     >
-      <div className="flex items-start justify-between gap-3 mb-2">
+      <div className="mb-1 flex items-start justify-between gap-3">
         <h2 className={`text-lg font-semibold ${lowStimulationMode ? "text-foreground" : "bg-gradient-accent bg-clip-text text-transparent"}`}>
           My Sentence
         </h2>
@@ -264,9 +275,27 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
           </button>
         </div>
       )}
+      {sentence.length === 0 && (
+        <div className="mb-1.5 flex flex-wrap items-center gap-2" aria-label="Sentence starters">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+            Start with
+          </span>
+          {(["I want", "I need", "I feel"] as const).map((label) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => addStarter(label)}
+              className="min-h-9 rounded-xl border border-border bg-background px-3 text-sm font-semibold text-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="flex-1 flex flex-wrap items-start gap-3 overflow-y-auto pb-2">
         {sentence.length === 0 ? (
-          <p className="text-muted-foreground text-center w-full py-8">
+          <p className="w-full py-2 text-center text-sm text-muted-foreground">
             Tap or drag cards here to build your sentence
           </p>
         ) : (

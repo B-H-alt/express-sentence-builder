@@ -9,6 +9,7 @@ import { useCardStore } from "@/store/cardStore";
 import { SettingsPanel } from "@/components/pecs/SettingsPanel";
 import { ParentAccountDialog } from "@/components/pecs/ParentAccountDialog";
 import Onboarding from "@/components/pecs/Onboarding";
+import { SpeakNowBar } from "@/components/pecs/SpeakNowBar";
 
 export interface Card {
   id: string;
@@ -24,6 +25,7 @@ const PecsApp = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("home");
   const [showSettings, setShowSettings] = useState(false);
   const [showParentAccount, setShowParentAccount] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
   const { currentLevel, showWords, setShowWords, lowStimulationMode } = useCardStore();
@@ -118,15 +120,19 @@ const PecsApp = () => {
         </div>
 
         {/* Builder + Tabs (contained) */}
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-3 flex flex-col gap-4">
-          <div className="min-h-[140px] max-h-[400px]">
+        <div className="flex w-full flex-col gap-2 px-4 py-2 sm:px-6 lg:px-8">
+          <div className="max-h-[280px]">
             <SentenceBuilder showWord={showWords} />
           </div>
+
+          <SpeakNowBar />
 
           <CategoryTabs
             selectedCategory={selectedCategory}
             onSelectCategory={setSelectedCategory}
             currentLevel={currentLevel}
+            searchQuery={searchQuery}
+            onSearchQueryChange={setSearchQuery}
           />
         </div>
       </div>
@@ -138,7 +144,11 @@ const PecsApp = () => {
             <CardGrid
               selectedCategory={selectedCategory}
               showWord={showWords}
-              onSelectCategory={setSelectedCategory}
+              onSelectCategory={(category) => {
+                setSearchQuery("");
+                setSelectedCategory(category);
+              }}
+              searchQuery={searchQuery}
             />
           </div>
         </div>
