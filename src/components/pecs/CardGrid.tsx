@@ -14,6 +14,7 @@ interface CardGridProps {
 
 const categoryLabels: Record<string, string> = {
   people: "People",
+  body: "Body",
   feelings: "Feelings",
   actions: "Needs & Actions",
   responses: "Responses",
