@@ -16,6 +16,7 @@ const Navbar = () => {
           <a href="#how-it-works" className="text-sm font-medium text-muted-foreground hover:text-foreground">How it works</a>
           <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground">Features</a>
           <Link to="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground">About</Link>
+          <Link to="/pecs-app?account=sign-in" className="text-sm font-medium text-muted-foreground hover:text-foreground">Sign in</Link>
           <Link to="/pecs-app" className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">Open app</Link>
         </div>
         <button type="button" aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen((value) => !value)} className="rounded-xl border border-border p-2 md:hidden">
@@ -28,6 +29,7 @@ const Navbar = () => {
             <a href="#how-it-works" onClick={() => setOpen(false)} className="font-medium">How it works</a>
             <a href="#features" onClick={() => setOpen(false)} className="font-medium">Features</a>
             <Link to="/about" onClick={() => setOpen(false)} className="font-medium">About</Link>
+            <Link to="/pecs-app?account=sign-in" onClick={() => setOpen(false)} className="font-medium">Sign in</Link>
             <Link to="/pecs-app" onClick={() => setOpen(false)} className="mt-1 rounded-full bg-primary px-5 py-3 text-center font-semibold text-primary-foreground">Open app</Link>
           </div>
         </div>

@@ -72,8 +72,12 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
   const handlePasswordSubmit = async (event: FormEvent) => {
     event.preventDefault();
     const address = email.trim();
-    if (!address || password.length < 8) {
-      setMessage("Use a valid email and a password with at least 8 characters.");
+    if (!address || !password) {
+      setMessage("Enter your email and password.");
+      return;
+    }
+    if (view === "sign-up" && password.length < 8) {
+      setMessage("Use a password with at least 8 characters.");
       return;
     }
     if (view === "sign-up" && password !== confirmPassword) {
@@ -213,9 +217,23 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
           <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <ShieldCheck className="h-5 w-5" />
           </div>
-          <DialogTitle>Parent account</DialogTitle>
+          <DialogTitle>
+            {user && view !== "reset"
+              ? "Your account"
+              : view === "sign-up"
+                ? "Create your account"
+                : view === "forgot"
+                  ? "Reset your password"
+                  : view === "reset"
+                    ? "Choose a new password"
+                    : "Sign in to Expressly"}
+          </DialogTitle>
           <DialogDescription>
-            Keep learner settings and progress private and available across devices.
+            {view === "sign-up"
+              ? "Save learner settings and progress across devices."
+              : view === "forgot" || view === "reset"
+                ? "We’ll help you get back into your account."
+                : "Access saved learner settings and progress."}
           </DialogDescription>
         </DialogHeader>
 
@@ -269,22 +287,6 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
           </form>
         ) : (
           <form className="space-y-4" onSubmit={handlePasswordSubmit}>
-            <div className="grid grid-cols-2 gap-1 rounded-xl bg-muted p-1" aria-label="Parent account options">
-              <button
-                type="button"
-                onClick={() => changeView("sign-in")}
-                className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${view === "sign-in" ? "bg-background shadow-sm" : "text-muted-foreground"}`}
-              >
-                Sign in
-              </button>
-              <button
-                type="button"
-                onClick={() => changeView("sign-up")}
-                className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${view === "sign-up" ? "bg-background shadow-sm" : "text-muted-foreground"}`}
-              >
-                Create account
-              </button>
-            </div>
             <div className="space-y-2">
               <FieldLabel>Email</FieldLabel>
               <EmailField email={email} setEmail={setEmail} />
@@ -313,6 +315,16 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
             )}
             <p className="text-xs leading-relaxed text-muted-foreground">
               This account belongs to the parent or caregiver. The learner does not need an email.
+            </p>
+            <p className="text-center text-sm text-muted-foreground">
+              {view === "sign-up" ? "Already have an account? " : "Don’t have an account? "}
+              <button
+                type="button"
+                onClick={() => changeView(view === "sign-up" ? "sign-in" : "sign-up")}
+                className="font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {view === "sign-up" ? "Sign in" : "Sign up"}
+              </button>
             </p>
           </form>
         )}
@@ -362,10 +374,10 @@ const PasswordFields = ({ password, confirmPassword, setPassword, setConfirmPass
           type="password"
           autoComplete={includeConfirmation ? "new-password" : "current-password"}
           required
-          minLength={8}
+          minLength={includeConfirmation ? 8 : undefined}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          placeholder="At least 8 characters"
+          placeholder={includeConfirmation ? "At least 8 characters" : "Password"}
           className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-sm outline-none ring-offset-background focus:ring-2 focus:ring-ring"
         />
       </div>

@@ -1,6 +1,6 @@
 // src/pages/PecsApp.tsx
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { SentenceBuilder } from "@/components/pecs/SentenceBuilder";
 import { CardGrid } from "@/components/pecs/CardGrid";
 import { CategoryTabs } from "@/components/pecs/CategoryTabs";
@@ -24,7 +24,9 @@ export interface Card {
 const PecsApp = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("home");
   const [showSettings, setShowSettings] = useState(false);
-  const [showParentAccount, setShowParentAccount] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const accountRequested = searchParams.get("account") === "sign-in";
+  const [showParentAccount, setShowParentAccount] = useState(accountRequested);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
@@ -34,6 +36,19 @@ const PecsApp = () => {
     document.documentElement.classList.toggle("low-stimulation", lowStimulationMode);
     return () => document.documentElement.classList.remove("low-stimulation");
   }, [lowStimulationMode]);
+
+  useEffect(() => {
+    if (accountRequested) setShowParentAccount(true);
+  }, [accountRequested]);
+
+  const handleParentAccountChange = (open: boolean) => {
+    setShowParentAccount(open);
+    if (!open && accountRequested) {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete("account");
+      setSearchParams(nextParams, { replace: true });
+    }
+  };
 
   const hasCompletedOnboarding = useCardStore((state) => state.onboardingComplete);
 
@@ -92,7 +107,15 @@ const PecsApp = () => {
 
   // ✅ SHOW ONBOARDING FIRST
   if (!hasCompletedOnboarding) {
-    return <Onboarding />;
+    return (
+      <>
+        <Onboarding />
+        <ParentAccountDialog
+          open={showParentAccount}
+          onOpenChange={handleParentAccountChange}
+        />
+      </>
+    );
   }
 
   return (
@@ -160,7 +183,7 @@ const PecsApp = () => {
       />
       <ParentAccountDialog
         open={showParentAccount}
-        onOpenChange={setShowParentAccount}
+        onOpenChange={handleParentAccountChange}
       />
     </div>
   );

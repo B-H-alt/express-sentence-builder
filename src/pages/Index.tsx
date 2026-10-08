@@ -49,7 +49,7 @@ const Index = () => {
       <section className="overflow-hidden border-b border-border/70 pt-28 md:pt-36">
         <div className="mx-auto grid max-w-7xl items-center gap-14 px-6 pb-20 md:px-10 lg:grid-cols-[0.85fr_1.15fr] lg:pb-28">
           <div className="max-w-xl" data-reveal>
-            <p className="mb-5 text-sm font-semibold uppercase tracking-[0.18em] text-secondary">Picture-based communication</p>
+            <p className="mb-5 text-sm font-semibold uppercase tracking-[0.18em] text-secondary">Picture based communication</p>
             <h1 className="text-5xl font-semibold leading-[1.04] tracking-[-0.045em] md:text-7xl">Say what you mean, one picture at a time.</h1>
             <p className="mt-7 max-w-lg text-lg leading-8 text-muted-foreground md:text-xl">Expressly helps visual communicators choose pictures, build a message, and share it clearly.</p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
