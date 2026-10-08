@@ -33,6 +33,7 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
   const [composedSource, setComposedSource] = useState("");
   const [showComposed, setShowComposed] = useState(false);
   const [usedOriginalWords, setUsedOriginalWords] = useState(false);
+  const [showStarters, setShowStarters] = useState(false);
 
   const getSentenceText = () => sentence.map((card) => card.text).join(" ").trim();
   const getSentenceTokens = () => sentence.map((card) => card.text);
@@ -152,6 +153,7 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
     if (!source) return;
     addToSentence({ ...source, text: label });
     incrementUsage(source.id);
+    setShowStarters(false);
   };
 
   const handleFinish = async () => {
@@ -277,11 +279,16 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
       )}
       {sentence.length === 0 && (
         <div className="mb-1.5 flex flex-wrap items-center gap-2" aria-label="Sentence starters">
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+          <button
+            type="button"
+            onClick={() => setShowStarters((open) => !open)}
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-xl px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-expanded={showStarters}
+          >
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-            Start with
-          </span>
-          {(["I want", "I need", "I feel"] as const).map((label) => (
+            Start sentence
+          </button>
+          {showStarters && (["I want", "I need", "I feel"] as const).map((label) => (
             <button
               key={label}
               type="button"
