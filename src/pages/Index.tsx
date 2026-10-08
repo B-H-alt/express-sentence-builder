@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect } from "react";
-import { ArrowRight, Layers3, MessageSquareText, SlidersHorizontal } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -11,9 +11,9 @@ const steps = [
 ];
 
 const features = [
-  { icon: Layers3, title: "Grows with the learner", text: "Move between three vocabulary levels without changing how the app works." },
-  { icon: SlidersHorizontal, title: "Easy to personalize", text: "Add custom cards, choose the number of cards shown, and adjust the display." },
-  { icon: MessageSquareText, title: "Made for real moments", text: "Keep useful words and phrases together for home, school, therapy, and daily life." },
+  { title: "Start with the right amount", text: "Choose a smaller vocabulary or show the full card set. The board works the same either way." },
+  { title: "Use familiar words and pictures", text: "Add names, photos, foods, places, or routines the learner recognizes." },
+  { title: "Adjust it without rebuilding it", text: "Change card size, text, colors, and voice in Settings whenever needs change." },
 ];
 
 const Index = () => {
@@ -98,14 +98,16 @@ const Index = () => {
         <div className="mx-auto max-w-7xl px-6 py-24 md:px-10 md:py-32">
           <div className="grid gap-14 lg:grid-cols-[0.8fr_1.2fr]">
             <div className="max-w-md" data-reveal>
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-secondary">Built to adapt</p>
-              <h2 className="mt-4 text-4xl font-semibold tracking-[-0.035em] md:text-5xl">The same simple experience, shaped around the learner.</h2>
+              <h2 className="text-4xl font-semibold tracking-[-0.035em] md:text-5xl">Set up the board for the person using it.</h2>
+              <p className="mt-5 leading-7 text-primary-foreground/70">
+                A parent, teacher, or therapist can make changes in Settings. The communication screen stays simple.
+              </p>
             </div>
             <div className="divide-y divide-primary-foreground/15 border-y border-primary-foreground/15">
-              {features.map(({ icon: Icon, title, text }) => (
-                <div key={title} className="grid gap-4 py-7 sm:grid-cols-[48px_1fr]" data-reveal>
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-foreground/10"><Icon className="h-5 w-5" /></div>
-                  <div><h3 className="text-xl font-semibold">{title}</h3><p className="mt-2 max-w-xl leading-7 text-primary-foreground/70">{text}</p></div>
+              {features.map(({ title, text }) => (
+                <div key={title} className="py-7" data-reveal>
+                  <h3 className="text-xl font-semibold">{title}</h3>
+                  <p className="mt-2 max-w-xl leading-7 text-primary-foreground/70">{text}</p>
                 </div>
               ))}
             </div>

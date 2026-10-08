@@ -10,6 +10,7 @@ import { SettingsPanel } from "@/components/pecs/SettingsPanel";
 import { ParentAccountDialog } from "@/components/pecs/ParentAccountDialog";
 import Onboarding from "@/components/pecs/Onboarding";
 import { SpeakNowBar } from "@/components/pecs/SpeakNowBar";
+import { FeedbackDialog } from "@/components/pecs/FeedbackDialog";
 
 export interface Card {
   id: string;
@@ -24,6 +25,7 @@ export interface Card {
 const PecsApp = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("home");
   const [showSettings, setShowSettings] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const accountRequested = searchParams.get("account") === "sign-in";
   const [showParentAccount, setShowParentAccount] = useState(accountRequested);
@@ -146,6 +148,7 @@ const PecsApp = () => {
             onOpenSettings={() => setShowSettings(true)}
             onOpenParentDashboard={() => navigate("/parent")}
             onOpenParentAccount={() => setShowParentAccount(true)}
+            onOpenFeedback={() => setShowFeedback(true)}
           />
         </div>
 
@@ -191,6 +194,10 @@ const PecsApp = () => {
       <ParentAccountDialog
         open={showParentAccount}
         onOpenChange={handleParentAccountChange}
+      />
+      <FeedbackDialog
+        open={showFeedback}
+        onOpenChange={setShowFeedback}
       />
     </div>
   );
