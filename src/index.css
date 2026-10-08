@@ -267,6 +267,75 @@ All colors MUST be HSL.
     --shadow-glow: 0 0 36px hsl(355 35% 76% / 0.3);
   }
 
+  .warm-dark,
+  .sage-dark,
+  .lavender-dark,
+  .rose-dark {
+    color-scheme: dark;
+    --background: 220 12% 9%;
+    --foreground: 210 18% 94%;
+    --card: 220 12% 12%;
+    --card-foreground: 210 18% 94%;
+    --popover: 220 12% 12%;
+    --popover-foreground: 210 18% 94%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 220 14% 18%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-light: 220 14% 17%;
+    --muted: 220 10% 16%;
+    --muted-foreground: 215 12% 69%;
+    --accent-foreground: 0 0% 100%;
+    --accent-light: 220 13% 18%;
+    --destructive: 0 62.8% 50%;
+    --destructive-foreground: 210 20% 95%;
+    --border: 220 10% 23%;
+    --input: 220 10% 16%;
+    --gradient-subtle: linear-gradient(180deg, hsl(220 14% 13%), hsl(220 12% 9%));
+    --shadow-soft: 0 4px 20px -4px hsl(220 30% 3% / 0.7);
+    --shadow-medium: 0 8px 30px -8px hsl(220 30% 2% / 0.75);
+    --shadow-glow: 0 0 36px hsl(var(--primary) / 0.18);
+  }
+
+  .warm-dark {
+    --background: 24 16% 9%;
+    --card: 25 16% 12%;
+    --popover: 25 16% 12%;
+    --primary: 24 48% 56%;
+    --secondary: 163 28% 48%;
+    --accent: 35 60% 52%;
+    --ring: 24 48% 56%;
+  }
+
+  .sage-dark {
+    --background: 135 12% 9%;
+    --card: 135 12% 12%;
+    --popover: 135 12% 12%;
+    --primary: 135 30% 54%;
+    --secondary: 34 34% 55%;
+    --accent: 153 30% 50%;
+    --ring: 135 30% 54%;
+  }
+
+  .lavender-dark {
+    --background: 260 14% 10%;
+    --card: 260 14% 13%;
+    --popover: 260 14% 13%;
+    --primary: 259 42% 65%;
+    --secondary: 321 34% 62%;
+    --accent: 278 34% 62%;
+    --ring: 259 42% 65%;
+  }
+
+  .rose-dark {
+    --background: 345 14% 10%;
+    --card: 345 14% 13%;
+    --popover: 345 14% 13%;
+    --primary: 344 42% 62%;
+    --secondary: 18 40% 58%;
+    --accent: 4 38% 60%;
+    --ring: 344 42% 62%;
+  }
+
   .low-stimulation {
     --gradient-subtle: linear-gradient(hsl(var(--background)), hsl(var(--background)));
     --gradient-accent: linear-gradient(hsl(var(--primary)), hsl(var(--primary)));

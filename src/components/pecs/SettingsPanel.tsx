@@ -1,7 +1,7 @@
 // src/components/pecs/SettingsPanel.tsx
 import React, { useEffect, useRef, useState } from "react";
 import { useCardStore } from "@/store/cardStore";
-import { X, User, Plus, Layers, Upload, Trash2, Save, Leaf, Volume2, Palette, MessagesSquare } from "lucide-react";
+import { X, User, Plus, Layers, Upload, Trash2, Save, Leaf, Volume2, Palette, MessagesSquare, Moon, Sun } from "lucide-react";
 import { AddCardModal } from "@/components/pecs/AddCardModal";
 import { Button } from "@/components/ui/button";
 import type { CardDisplayAmount, CharacterGender, VocabularyLevel } from "@/store/cardStore";
@@ -32,9 +32,18 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
     setSpeechVolume,
   } = useCardStore();
   const { theme, setTheme } = useTheme();
-  const currentTheme = ["warm", "sage", "lavender", "rose", "dark"].includes(theme ?? "")
-    ? theme
-    : "light";
+  const activeTheme = theme ?? "light";
+  const darkAppearance = activeTheme === "dark" || activeTheme.endsWith("-dark");
+  const currentPalette = activeTheme === "light" || activeTheme === "dark"
+    ? "blue"
+    : activeTheme.replace(/-dark$/, "");
+  const setAppearance = (palette: string, dark: boolean) => {
+    if (palette === "blue") {
+      setTheme(dark ? "dark" : "light");
+      return;
+    }
+    setTheme(dark ? `${palette}-dark` : palette);
+  };
 
   const userName = useCardStore((s) => s.userName);
   const userImage = useCardStore((s) => s.userImage);
@@ -254,13 +263,59 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                     <p className="mt-1 text-xs text-muted-foreground">Choose the colors that feel most comfortable.</p>
                   </div>
                 </div>
+                <div className="flex items-center justify-between rounded-xl border border-border bg-background/70 p-3">
+                  <div>
+                    <h4 className="text-sm font-medium">Appearance</h4>
+                    <p className="mt-0.5 text-xs text-muted-foreground">Use any color theme in light or dark mode.</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAppearance(currentPalette, false)}
+                      className={`inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-xs font-medium transition-colors hover:bg-muted ${
+                        darkAppearance ? "text-muted-foreground" : "text-primary"
+                      }`}
+                      aria-label="Use light mode"
+                    >
+                      <Sun className="h-4 w-4" aria-hidden="true" />
+                      <span className="hidden sm:inline">Light</span>
+                    </button>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-label="Dark mode"
+                      aria-checked={darkAppearance}
+                      onClick={() => setAppearance(currentPalette, !darkAppearance)}
+                      className={`relative h-7 w-12 shrink-0 rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                        darkAppearance ? "border-primary bg-primary" : "border-border bg-muted"
+                      }`}
+                    >
+                      <span
+                        className={`absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out ${
+                          darkAppearance ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAppearance(currentPalette, true)}
+                      className={`inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-xs font-medium transition-colors hover:bg-muted ${
+                        darkAppearance ? "text-primary" : "text-muted-foreground"
+                      }`}
+                      aria-label="Use dark mode"
+                    >
+                      <Moon className="h-4 w-4" aria-hidden="true" />
+                      <span className="hidden sm:inline">Dark</span>
+                    </button>
+                  </div>
+                </div>
                 <div className="grid gap-2 sm:grid-cols-3">
                   <button
                     type="button"
-                    aria-pressed={currentTheme === "light"}
-                    onClick={() => setTheme("light")}
+                    aria-pressed={currentPalette === "blue"}
+                    onClick={() => setAppearance("blue", darkAppearance)}
                     className={`min-h-20 rounded-xl border p-3 text-sm font-medium flex flex-col items-start justify-between gap-2 transition-colors ${
-                      currentTheme === "light"
+                      currentPalette === "blue"
                         ? "border-primary bg-primary text-primary-foreground"
                         : "border-border bg-background/70 text-foreground hover:bg-muted"
                     }`}
@@ -274,10 +329,10 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                   </button>
                   <button
                     type="button"
-                    aria-pressed={currentTheme === "warm"}
-                    onClick={() => setTheme("warm")}
+                    aria-pressed={currentPalette === "warm"}
+                    onClick={() => setAppearance("warm", darkAppearance)}
                     className={`min-h-20 rounded-xl border p-3 text-sm font-medium flex flex-col items-start justify-between gap-2 transition-colors ${
-                      currentTheme === "warm"
+                      currentPalette === "warm"
                         ? "border-primary bg-primary text-primary-foreground"
                         : "border-border bg-background/70 text-foreground hover:bg-muted"
                     }`}
@@ -291,10 +346,10 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                   </button>
                   <button
                     type="button"
-                    aria-pressed={currentTheme === "sage"}
-                    onClick={() => setTheme("sage")}
+                    aria-pressed={currentPalette === "sage"}
+                    onClick={() => setAppearance("sage", darkAppearance)}
                     className={`min-h-20 rounded-xl border p-3 text-sm font-medium flex flex-col items-start justify-between gap-2 transition-colors ${
-                      currentTheme === "sage"
+                      currentPalette === "sage"
                         ? "border-primary bg-primary text-primary-foreground"
                         : "border-border bg-background/70 text-foreground hover:bg-muted"
                     }`}
@@ -308,10 +363,10 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                   </button>
                   <button
                     type="button"
-                    aria-pressed={currentTheme === "lavender"}
-                    onClick={() => setTheme("lavender")}
+                    aria-pressed={currentPalette === "lavender"}
+                    onClick={() => setAppearance("lavender", darkAppearance)}
                     className={`min-h-20 rounded-xl border p-3 text-sm font-medium flex flex-col items-start justify-between gap-2 transition-colors ${
-                      currentTheme === "lavender"
+                      currentPalette === "lavender"
                         ? "border-primary bg-primary text-primary-foreground"
                         : "border-border bg-background/70 text-foreground hover:bg-muted"
                     }`}
@@ -325,10 +380,10 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                   </button>
                   <button
                     type="button"
-                    aria-pressed={currentTheme === "rose"}
-                    onClick={() => setTheme("rose")}
+                    aria-pressed={currentPalette === "rose"}
+                    onClick={() => setAppearance("rose", darkAppearance)}
                     className={`min-h-20 rounded-xl border p-3 text-sm font-medium flex flex-col items-start justify-between gap-2 transition-colors ${
-                      currentTheme === "rose"
+                      currentPalette === "rose"
                         ? "border-primary bg-primary text-primary-foreground"
                         : "border-border bg-background/70 text-foreground hover:bg-muted"
                     }`}
@@ -339,23 +394,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                       <span className="h-4 w-4 rounded-full bg-[#f8eeee] ring-1 ring-black/10" />
                     </span>
                     Rose
-                  </button>
-                  <button
-                    type="button"
-                    aria-pressed={currentTheme === "dark"}
-                    onClick={() => setTheme("dark")}
-                    className={`min-h-20 rounded-xl border p-3 text-sm font-medium flex flex-col items-start justify-between gap-2 transition-colors ${
-                      currentTheme === "dark"
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border bg-background/70 text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    <span className="flex gap-1.5" aria-hidden="true">
-                      <span className="h-4 w-4 rounded-full bg-[#111820]" />
-                      <span className="h-4 w-4 rounded-full bg-[#5799e8]" />
-                      <span className="h-4 w-4 rounded-full bg-[#26313d] ring-1 ring-white/20" />
-                    </span>
-                    Dark
                   </button>
                 </div>
               </div>}
@@ -441,7 +479,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                       <Leaf className="h-4 w-4" />
                     </span>
                     <div>
-                      <h3 className="text-sm font-semibold">Low stimulation</h3>
+                      <h3 className="text-sm font-semibold">Calm mode</h3>
                       <p className="mt-1 text-xs leading-5 text-muted-foreground">
                         Calmer colors, less movement, lighter shadows, and fewer cards at once.
                       </p>
@@ -464,7 +502,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                         lowStimulationMode ? "translate-x-5" : "translate-x-0"
                       }`}
                     />
-                    <span className="sr-only">Low stimulation mode</span>
+                    <span className="sr-only">Calm mode</span>
                   </button>
                 </div>
               </div>}

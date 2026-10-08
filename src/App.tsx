@@ -19,7 +19,7 @@ const App = () => (
     defaultTheme="light"
     enableSystem={false}
     storageKey="expressly-theme"
-    themes={["light", "warm", "sage", "lavender", "rose", "dark"]}
+    themes={["light", "dark", "warm", "warm-dark", "sage", "sage-dark", "lavender", "lavender-dark", "rose", "rose-dark"]}
   >
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
