@@ -6,6 +6,7 @@ import { AddCardModal } from "./AddCardModal";
 import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { CategoryHome } from "./CategoryHome";
 import { getCardVariations } from "@/lib/cardVariations";
+import { appText, translateCardLabel, translateCategory } from "@/lib/language";
 
 interface CardGridProps {
   selectedCategory: string;
@@ -31,6 +32,9 @@ const categoryLabels: Record<string, string> = {
 
 export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQuery }: CardGridProps) => {
   const { favorites, addToSentence, toggleFavorite, incrementUsage, getFilteredCards, cardsPerPage, currentLevel, lowStimulationMode } = useCardStore();
+  const language = useCardStore((state) => state.language);
+  const characterGender = useCardStore((state) => state.characterGender);
+  const copy = appText[language];
   const [editingCard, setEditingCard] = useState<Card | null>(null);
   const [page, setPage] = useState(1);
 
@@ -39,7 +43,7 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
   const normalizedSearch = searchQuery.trim().toLocaleLowerCase();
   const filteredCards = levelFilteredCards.filter(card => {
     if (normalizedSearch) {
-      return [card.text, ...getCardVariations(card.text)]
+      return [card.text, translateCardLabel(card.text, language, characterGender), ...getCardVariations(card.text, language)]
         .some((label) => label.toLocaleLowerCase().includes(normalizedSearch));
     }
     if (selectedCategory === "all") return true;
@@ -71,7 +75,7 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
     cardsPerPage === 4 ? "large" : cardsPerPage === 8 ? "medium" : "compact";
 
   const handleCardClick = (card: Card) => {
-    addToSentence(card);
+    addToSentence({ ...card, text: translateCardLabel(card.text, language, characterGender) });
     incrementUsage(card.id);
   };
 
@@ -82,12 +86,12 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
 
   const selectedCategoryLabel =
     normalizedSearch
-      ? `Results for “${searchQuery.trim()}”`
+      ? language === "es" ? `Resultados para “${searchQuery.trim()}”` : `Results for “${searchQuery.trim()}”`
       : selectedCategory === "favorites"
-      ? "Favorites"
+      ? copy.favorites
       : selectedCategory === "all"
-        ? "All cards"
-        : categoryLabels[selectedCategory] || selectedCategory;
+        ? translateCategory("all", language)
+        : language === "es" ? translateCategory(selectedCategory, language) : categoryLabels[selectedCategory] || selectedCategory;
 
   if (selectedCategory === "home" && !normalizedSearch) {
     return (
@@ -119,25 +123,25 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
         <button
           type="button"
           onClick={() => onSelectCategory("home")}
-          aria-label="Back to Home"
+          aria-label={language === "es" ? "Volver al inicio" : "Back to Home"}
           className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border border-border bg-background px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <ArrowLeft className="h-4 w-4" />
-          Home
+          {copy.home}
         </button>
         <h2 className="truncate text-lg font-semibold text-foreground">{selectedCategoryLabel}</h2>
       </div>
       {filteredCards.length === 0 ? (
         <div className="flex min-h-52 flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-background/60 px-6 text-center">
-          <h3 className="font-semibold text-foreground">No matching cards</h3>
-          <p className="mt-1 text-sm text-muted-foreground">Try another word or choose a category.</p>
+          <h3 className="font-semibold text-foreground">{language === "es" ? "No hay tarjetas" : "No matching cards"}</h3>
+          <p className="mt-1 text-sm text-muted-foreground">{language === "es" ? "Prueba otra palabra o elige una categoría." : "Try another word or choose a category."}</p>
         </div>
       ) : selectedCategory === "all" && !normalizedSearch && cardsByCategory ? (
         <div className="space-y-6">
           {Object.entries(cardsByCategory).map(([category, cards]) => (
             <div key={category}>
               <h3 className="text-lg font-semibold text-foreground mb-3 px-1">
-                {categoryLabels[category] || category}
+                {language === "es" ? translateCategory(category, language) : categoryLabels[category] || category}
               </h3>
               <div className={`grid ${gridColumns} gap-3`}>
                 {cards.map((card) => (
@@ -150,7 +154,7 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
                     onEdit={card.id.startsWith("custom-") ? () => setEditingCard(card) : undefined}
                     isFavorite={favorites.includes(card.id)}
                     displaySize={cardDisplaySize}
-                    variations={getCardVariations(card.text)}
+                    variations={getCardVariations(card.text, language)}
                     onSelectVariation={(label) => handleVariationClick(card, label)}
                   />
                 ))}
@@ -170,7 +174,7 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
               onEdit={card.id.startsWith("custom-") ? () => setEditingCard(card) : undefined}
               isFavorite={favorites.includes(card.id)}
               displaySize={cardDisplaySize}
-              variations={getCardVariations(card.text)}
+              variations={getCardVariations(card.text, language)}
               onSelectVariation={(label) => handleVariationClick(card, label)}
             />
           ))}

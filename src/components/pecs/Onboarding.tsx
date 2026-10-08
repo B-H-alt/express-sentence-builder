@@ -1,10 +1,11 @@
 // src/components/pecs/Onboarding.tsx
 import { useRef, useState } from "react";
-import { useCardStore, type CharacterGender } from "@/store/cardStore";
+import { useCardStore, type AppLanguage, type CharacterGender } from "@/store/cardStore";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ArrowRight, Leaf, Upload, UserRound, X } from "lucide-react";
 import { useTheme } from "next-themes";
+import { languageNames } from "@/lib/language";
 
 type OnboardingPalette = "blue" | "warm" | "sage";
 
@@ -13,6 +14,7 @@ export default function Onboarding() {
   const saveCharacterGender = useCardStore((s) => s.setCharacterGender);
   const saveShowWords = useCardStore((s) => s.setShowWords);
   const saveCalmMode = useCardStore((s) => s.setLowStimulationMode);
+  const saveLanguage = useCardStore((s) => s.setLanguage);
   const { setTheme } = useTheme();
 
   const [name, setName] = useState("");
@@ -22,6 +24,7 @@ export default function Onboarding() {
   const [palette, setPalette] = useState<OnboardingPalette>("blue");
   const [showWords, setShowWords] = useState(true);
   const [calmMode, setCalmMode] = useState(false);
+  const [language, setLanguage] = useState<AppLanguage>("en");
 
   const fileRef = useRef<HTMLInputElement | null>(null);
 
@@ -40,12 +43,14 @@ export default function Onboarding() {
     saveCharacterGender(gender);
     saveShowWords(showWords);
     saveCalmMode(calmMode);
+    saveLanguage(language);
     setTheme(palette);
     completeOnboarding(name.trim() || "Me", image ?? undefined);
   };
 
   const handleSkip = () => {
     saveCharacterGender(gender);
+    saveLanguage(language);
     completeOnboarding(name.trim() || "Me", image ?? undefined);
   };
 
@@ -99,6 +104,31 @@ export default function Onboarding() {
               </div>
 
               {step === "profile" ? <>
+              <div className="mb-5">
+                <label className="mb-2 block text-sm font-inter font-semibold text-foreground">
+                  Language
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {(["en", "es"] as AppLanguage[]).map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setLanguage(option)}
+                      aria-pressed={language === option}
+                      className={`h-11 rounded-xl border text-sm font-inter font-semibold transition-colors ${
+                        language === option
+                          ? "border-secondary bg-secondary text-white"
+                          : "border-border bg-white text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      {languageNames[option]}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  This changes card words and spoken sentences. You can change it later in Settings.
+                </p>
+              </div>
               <div className="flex items-center gap-4 mb-6">
                 <div className="relative h-16 w-16 rounded-2xl overflow-hidden bg-gray-100 border border-border flex items-center justify-center">
                   {image ? (

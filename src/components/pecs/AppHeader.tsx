@@ -36,15 +36,16 @@ export const AppHeader = ({
 }: AppHeaderProps) => {
   const userName = useCardStore((state) => state.userName?.trim() || "Me");
   const userImage = useCardStore((state) => state.userImage);
+  const language = useCardStore((state) => state.language);
 
   const getLevelLabel = (level: VocabularyLevel) => {
     switch (level) {
       case 1:
-        return "Level 1 (Beginner)";
+        return language === "es" ? "Nivel 1 (Principiante)" : "Level 1 (Beginner)";
       case 2:
-        return "Level 2 (Intermediate)";
+        return language === "es" ? "Nivel 2 (Intermedio)" : "Level 2 (Intermediate)";
       case 3:
-        return "Level 3 (Advanced)";
+        return language === "es" ? "Nivel 3 (Avanzado)" : "Level 3 (Advanced)";
     }
   };
 
@@ -90,7 +91,7 @@ export const AppHeader = ({
               }`}
             >
               <Image className="h-4 w-4" />
-              <span>Pictures</span>
+              <span>{language === "es" ? "Imágenes" : "Pictures"}</span>
             </button>
             <button
               type="button"
@@ -103,8 +104,8 @@ export const AppHeader = ({
               }`}
             >
               <Type className="h-4 w-4" />
-              <span className="sm:hidden">+ Words</span>
-              <span className="hidden sm:inline">Pictures + words</span>
+              <span className="sm:hidden">+ {language === "es" ? "Palabras" : "Words"}</span>
+              <span className="hidden sm:inline">{language === "es" ? "Imágenes + palabras" : "Pictures + words"}</span>
             </button>
           </div>
 

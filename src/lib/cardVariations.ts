@@ -1,3 +1,5 @@
+import type { AppLanguage } from "@/store/cardStore";
+
 const variationsByLabel: Record<string, string[]> = {
   mom: ["Mom", "Mother", "Mama"],
   dad: ["Dad", "Father", "Papa"],
@@ -13,6 +15,20 @@ const variationsByLabel: Record<string, string[]> = {
   help: ["Help", "Help me"],
 };
 
-export const getCardVariations = (label: string) =>
-  variationsByLabel[label.trim().toLocaleLowerCase()] ?? [];
+const spanishVariationsByLabel: Record<string, string[]> = {
+  mom: ["Mamá", "Madre", "Mami"],
+  dad: ["Papá", "Padre", "Papi"],
+  mad: ["Enojado", "Molesto"],
+  tired: ["Cansado", "Soñoliento"],
+  scared: ["Asustado", "Con miedo"],
+  friend: ["Amigo", "Compañero"],
+  bathroom: ["Baño", "Servicio", "Inodoro"],
+  hi: ["Hola", "Buenas"],
+  bye: ["Adiós", "Hasta luego"],
+  "all done": ["Terminé", "Acabé"],
+  food: ["Comida", "Alimento"],
+  help: ["Ayuda", "Ayúdame"],
+};
 
+export const getCardVariations = (label: string, language: AppLanguage = "en") =>
+  (language === "es" ? spanishVariationsByLabel : variationsByLabel)[label.trim().toLocaleLowerCase()] ?? [];

@@ -7,6 +7,7 @@ import { BookOpen, Check, Loader2, Trash2, Volume2, Square, X } from "lucide-rea
 import { useToast } from "@/hooks/use-toast";
 import { composeSentence, type SentenceTense } from "@/utils/compose-sentence";
 import { getAccessToken } from "@/lib/supabase";
+import { appText, translateCardLabel } from "@/lib/language";
 
 interface SentenceBuilderProps {
   showWord: boolean;
@@ -25,7 +26,10 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
     cards,
     addToSentence,
     incrementUsage,
+    language,
+    characterGender,
   } = useCardStore();
+  const copy = appText[language];
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -37,8 +41,8 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
   const [showStarters, setShowStarters] = useState(false);
   const [tense, setTense] = useState<SentenceTense>("present");
 
-  const getSentenceText = () => sentence.map((card) => card.text).join(" ").trim();
-  const getSentenceTokens = () => sentence.map((card) => card.text);
+  const getSentenceText = () => sentence.map((card) => translateCardLabel(card.text, language, characterGender)).join(" ").trim();
+  const getSentenceTokens = () => sentence.map((card) => translateCardLabel(card.text, language, characterGender));
 
   useEffect(() => {
     if (sentence.length === 0) return;
@@ -46,17 +50,17 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
     setComposedSource("");
     setShowComposed(false);
     setUsedOriginalWords(false);
-  }, [sentence, tense]);
+  }, [sentence, tense, language]);
 
   const resolveSentence = async () => {
     const raw = getSentenceText();
     if (!raw) return "";
-    const sourceKey = `${tense}:${raw}`;
+    const sourceKey = `${language}:${tense}:${raw}`;
     if (composedSource === sourceKey && composedText) return composedText;
 
     setIsComposing(true);
     try {
-      const improved = await composeSentence({ tokens: getSentenceTokens(), tense });
+      const improved = await composeSentence({ tokens: getSentenceTokens(), tense, language });
       const finalText = improved?.trim() || raw;
       setUsedOriginalWords(!improved?.trim());
       setComposedText(finalText);
@@ -91,6 +95,7 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
     return new Promise<void>((resolve) => {
       if (!("speechSynthesis" in window)) return resolve();
       const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = language === "es" ? "es-US" : "en-US";
       utterance.rate = speechRate;
       utterance.volume = speechVolume;
       utterance.onend = () => resolve();
@@ -154,7 +159,10 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
     const sourceLabel = label === "I want" ? "Want" : label === "I need" ? "Need" : "Feel";
     const source = cards.find((card) => card.text === sourceLabel);
     if (!source) return;
-    addToSentence({ ...source, text: label });
+    const translatedStarter = language === "es"
+      ? label === "I want" ? "Yo quiero" : label === "I need" ? "Yo necesito" : "Yo me siento"
+      : label;
+    addToSentence({ ...source, text: translatedStarter });
     incrementUsage(source.id);
     setShowStarters(false);
   };
@@ -166,8 +174,8 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
     if (!saveCurrentSentence()) return;
 
     toast({
-      title: "Sentence saved",
-      description: "A fresh sentence is ready to build.",
+      title: language === "es" ? "Frase guardada" : "Sentence saved",
+      description: language === "es" ? "Puedes empezar una frase nueva." : "A fresh sentence is ready to build.",
     });
   };
 
@@ -199,7 +207,7 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
       <div className="mb-1 flex items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <h2 className={`text-lg font-semibold ${lowStimulationMode ? "text-foreground" : "bg-gradient-accent bg-clip-text text-transparent"}`}>
-            My Sentence
+            {copy.mySentence}
           </h2>
           <button
             type="button"
@@ -207,22 +215,22 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
             className="inline-flex min-h-8 items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <BookOpen className="h-4 w-4" />
-            <span className="hidden sm:inline">How to use Expressly</span>
-            <span className="sm:hidden">How it works</span>
+            <span className="hidden sm:inline">{copy.howToUse}</span>
+            <span className="sm:hidden">{copy.howItWorks}</span>
           </button>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
           <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-            <span className="hidden sm:inline">Tense</span>
+            <span className="hidden sm:inline">{copy.tense}</span>
             <select
               aria-label="Sentence tense"
               value={tense}
               onChange={(event) => setTense(event.target.value as SentenceTense)}
               className="h-9 rounded-xl border border-border bg-background px-2 text-sm font-semibold text-foreground outline-none focus:ring-2 focus:ring-ring"
             >
-              <option value="past">Past</option>
-              <option value="present">Present</option>
-              <option value="future">Future</option>
+              <option value="past">{copy.past}</option>
+              <option value="present">{copy.present}</option>
+              <option value="future">{copy.future}</option>
             </select>
           </label>
           {sentence.length > 0 && (
@@ -233,8 +241,8 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
                 ) : (
                   <Check className="w-4 h-4 mr-1" />
                 )}
-                <span className="hidden sm:inline">Finish sentence</span>
-                <span className="sm:hidden">Finish</span>
+                <span className="hidden sm:inline">{copy.finish}</span>
+                <span className="sm:hidden">{copy.finishShort}</span>
               </Button>
               {!isSpeaking ? (
                 <Button
@@ -249,12 +257,12 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
                   ) : (
                     <Volume2 className="w-4 h-4 mr-1" />
                   )}
-                  Speak
+                  {copy.speak}
                 </Button>
               ) : (
                 <Button size="sm" variant="secondary" onClick={stopAudio} className="rounded-xl">
                   <Square className="w-4 h-4 mr-1" />
-                  Stop
+                  {copy.stop}
                 </Button>
               )}
               <Button
@@ -285,12 +293,12 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
         >
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
-              {usedOriginalWords ? "Original cards" : "Sentence"}
+              {usedOriginalWords ? copy.originalCards : copy.sentence}
             </p>
             <p className="mt-1 text-lg font-semibold leading-7">{composedText}</p>
             {usedOriginalWords && (
               <p className="mt-1 text-sm text-muted-foreground">
-                Grammar correction is temporarily unavailable for this combination.
+                {copy.grammarUnavailable}
               </p>
             )}
           </div>
@@ -312,7 +320,7 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
             className="inline-flex min-h-9 items-center rounded-xl px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-expanded={showStarters}
           >
-            Start sentence
+            {copy.startSentence}
           </button>
           {showStarters && (["I want", "I need", "I feel"] as const).map((label) => (
             <button
@@ -321,7 +329,7 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
               onClick={() => addStarter(label)}
               className="min-h-9 rounded-xl border border-border bg-background px-3 text-sm font-semibold text-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              {label}
+              {language === "es" ? (label === "I want" ? "Yo quiero" : label === "I need" ? "Yo necesito" : "Yo me siento") : label}
             </button>
           ))}
         </div>
@@ -329,7 +337,7 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
       <div className="flex-1 flex flex-wrap items-start gap-3 overflow-y-auto pb-2">
         {sentence.length === 0 ? (
           <p className="w-full py-2 text-center text-sm text-muted-foreground">
-            Tap or drag cards here to build your sentence
+            {copy.sentenceHint}
           </p>
         ) : (
           sentence.map((c, i) => (

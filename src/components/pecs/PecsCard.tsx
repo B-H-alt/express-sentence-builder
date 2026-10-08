@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { translateCardLabel } from "@/lib/language";
 
 interface PecsCardProps {
   card: Card;
@@ -41,6 +42,8 @@ export const PecsCard = ({
 }: PecsCardProps) => {
   const characterGender = useCardStore((state) => state.characterGender);
   const lowStimulationMode = useCardStore((state) => state.lowStimulationMode);
+  const language = useCardStore((state) => state.language);
+  const displayedLabel = translateCardLabel(card.text, language, characterGender);
   const existingImage = card.image || card.imageUrl;
   const genderImage =
     characterGender === "girl"
@@ -50,7 +53,7 @@ export const PecsCard = ({
     sharedCardImages[card.id] || genderImage || existingImage;
 
   const handleDragStart = (e: React.DragEvent) => {
-    e.dataTransfer.setData("card", JSON.stringify(card));
+    e.dataTransfer.setData("card", JSON.stringify({ ...card, text: displayedLabel }));
   };
 
   const handleLongPress = (e: React.TouchEvent | React.MouseEvent) => {
@@ -165,13 +168,13 @@ export const PecsCard = ({
           {displayedImage ? (
             <img
               src={displayedImage}
-              alt={card.text}
+              alt={displayedLabel}
               className="max-w-full max-h-full object-contain rounded-lg"
               draggable={false}
             />
           ) : (
             <div className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl bg-gradient-to-br from-primary/20 to-secondary/20">
-              {card.text.charAt(0).toUpperCase()}
+              {displayedLabel.charAt(0).toUpperCase()}
             </div>
           )}
         </div>
@@ -188,7 +191,7 @@ export const PecsCard = ({
                   : "text-sm min-h-[2.5rem]"
             )}
           >
-            {card.text}
+            {displayedLabel}
           </span>
         )}
       </div>

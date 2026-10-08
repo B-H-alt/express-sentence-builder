@@ -17,6 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useCardStore } from "@/store/cardStore";
 import type { LucideIcon } from "lucide-react";
+import { appText, translateCategory } from "@/lib/language";
 
 interface CategoryTabsProps {
   selectedCategory: string;
@@ -69,6 +70,8 @@ export const CategoryTabs = ({
 }: CategoryTabsProps) => {
   const lowStimulationMode = useCardStore((state) => state.lowStimulationMode);
   const hiddenCategories = useCardStore((state) => state.hiddenCategories);
+  const language = useCardStore((state) => state.language);
+  const copy = appText[language];
   // Clamp level to 1–3
   const levelKey = Math.max(1, Math.min(3, currentLevel)) as 1 | 2 | 3;
 
@@ -88,8 +91,8 @@ export const CategoryTabs = ({
           type="search"
           value={searchQuery}
           onChange={(event) => onSearchQueryChange(event.target.value)}
-          placeholder="Find a card"
-          aria-label="Find a communication card"
+          placeholder={copy.search}
+          aria-label={copy.search}
           className="h-10 w-full rounded-xl border border-border bg-background pl-9 pr-9 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
         />
         {searchQuery && (
@@ -132,7 +135,7 @@ export const CategoryTabs = ({
                 category.id === "body" ? "w-7 h-7" : "w-5 h-5"
               }
             />
-            {category.label}
+            {language === "es" ? translateCategory(category.id, language) : category.label}
           </Button>
         );
       })}

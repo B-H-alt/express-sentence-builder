@@ -15,6 +15,7 @@ interface ApiResponse {
 interface ComposeBody {
   tokens?: unknown;
   tense?: unknown;
+  language?: unknown;
 }
 
 const WINDOW_MS = 60_000;
@@ -85,6 +86,11 @@ const parseTense = (body: unknown) => {
   return tense.tense === "past" || tense.tense === "future" ? tense.tense : "present";
 };
 
+const parseLanguage = (body: unknown) => {
+  const candidate = (body ?? {}) as ComposeBody;
+  return candidate.language === "es" ? "es" : "en";
+};
+
 export default async function handler(req: ApiRequest, res: ApiResponse) {
   res.setHeader("Cache-Control", "no-store");
 
@@ -117,6 +123,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return;
   }
   const tense = parseTense(req.body);
+  const language = parseLanguage(req.body);
 
   // Temporary fallback keeps the existing Vercel setting working while the
   // secret is renamed. The browser no longer reads either value.
@@ -129,7 +136,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return;
   }
 
-  const prompt = `Turn these ordered AAC cards into one short, natural ${tense}-tense sentence. A person followed by an action describes what that person is doing. Use "I" for the learner's wants, needs, actions, and feelings. Only make a question when a card is a question. Preserve negatives. Add only needed grammar words and never invent details. Everyday English; sentence only.\nExamples: ["Dad","Go outside"] in present = Dad is going outside. ["I","Want","Water"] in past = I wanted water. ["Where?","Mom"] in future = Where will Mom be?\nCards: ${JSON.stringify(tokens)}`;
+  const prompt = language === "es"
+    ? `Convierte estas tarjetas AAC ordenadas en una sola frase corta y natural en tiempo ${tense === "past" ? "pasado" : tense === "future" ? "futuro" : "presente"}. Una persona seguida de una acción describe lo que hace esa persona. Usa "yo" para los deseos, necesidades, acciones y sentimientos del usuario. Solo crea una pregunta cuando una tarjeta sea una pregunta. Conserva las negaciones. Añade únicamente las palabras gramaticales necesarias y no inventes detalles. Español cotidiano; devuelve solo la frase.\nTarjetas: ${JSON.stringify(tokens)}`
+    : `Turn these ordered AAC cards into one short, natural ${tense}-tense sentence. A person followed by an action describes what that person is doing. Use "I" for the learner's wants, needs, actions, and feelings. Only make a question when a card is a question. Preserve negatives. Add only needed grammar words and never invent details. Everyday English; sentence only.\nExamples: ["Dad","Go outside"] in present = Dad is going outside. ["I","Want","Water"] in past = I wanted water. ["Where?","Mom"] in future = Where will Mom be?\nCards: ${JSON.stringify(tokens)}`;
 
   try {
     const ai = new GoogleGenAI({ apiKey });

@@ -4,8 +4,9 @@ import { useCardStore } from "@/store/cardStore";
 import { X, User, Plus, Layers, Upload, Trash2, Save, Leaf, Volume2, Palette, MessagesSquare, Moon, Sun } from "lucide-react";
 import { AddCardModal } from "@/components/pecs/AddCardModal";
 import { Button } from "@/components/ui/button";
-import type { CardDisplayAmount, CharacterGender, TextSize, VocabularyLevel } from "@/store/cardStore";
+import type { AppLanguage, CardDisplayAmount, CharacterGender, TextSize, VocabularyLevel } from "@/store/cardStore";
 import { useTheme } from "next-themes";
+import { languageNames } from "@/lib/language";
 
 interface SettingsPanelProps {
   open: boolean;
@@ -52,6 +53,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
   const updateUserProfile = useCardStore((s) => s.updateUserProfile);
   const characterGender = useCardStore((s) => s.characterGender);
   const setCharacterGender = useCardStore((s) => s.setCharacterGender);
+  const language = useCardStore((s) => s.language);
+  const setLanguage = useCardStore((s) => s.setLanguage);
 
   const [showAddCard, setShowAddCard] = useState(false);
   const [activeSection, setActiveSection] = useState<"profile" | "display" | "cards">("profile");
@@ -59,6 +62,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
   const [draftName, setDraftName] = useState("Me");
   const [draftImage, setDraftImage] = useState<string | null>(null);
   const [draftGender, setDraftGender] = useState<CharacterGender>("girl");
+  const [draftLanguage, setDraftLanguage] = useState<AppLanguage>("en");
 
   const fileRef = useRef<HTMLInputElement | null>(null);
 
@@ -68,7 +72,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
     setDraftName(userName?.trim() || "Me");
     setDraftImage(userImage ?? null);
     setDraftGender(characterGender);
-  }, [open, userName, userImage, characterGender]);
+    setDraftLanguage(language);
+  }, [open, userName, userImage, characterGender, language]);
 
   useEffect(() => {
     if (!open) return;
@@ -92,7 +97,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
   const hasChanges =
     (draftName.trim() || "Me") !== (userName?.trim() || "Me") ||
     (draftImage ?? null) !== (userImage ?? null) ||
-    draftGender !== characterGender;
+    draftGender !== characterGender ||
+    draftLanguage !== language;
 
   const handlePickImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -106,6 +112,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
   const handleSave = () => {
     updateUserProfile(draftName.trim() || "Me", draftImage);
     setCharacterGender(draftGender);
+    setLanguage(draftLanguage);
     onClose();
   };
 
@@ -254,6 +261,30 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                 </div>
                 <p className="text-[11px] text-muted-foreground">
                   Choose which character appears on applicable communication cards.
+                </p>
+              </div>}
+
+              {activeSection === "profile" && <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Language</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(["en", "es"] as AppLanguage[]).map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      aria-pressed={draftLanguage === option}
+                      onClick={() => setDraftLanguage(option)}
+                      className={`h-10 rounded-xl border text-sm font-medium transition-colors ${
+                        draftLanguage === option
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-background/70 text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      {languageNames[option]}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Changes communication card words and spoken sentences.
                 </p>
               </div>}
 

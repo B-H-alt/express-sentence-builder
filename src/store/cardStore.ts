@@ -188,6 +188,7 @@ export type VocabularyLevel = 1 | 2 | 3;
 export type CharacterGender = "girl" | "boy";
 export type CardDisplayAmount = 4 | 8 | 12 | "all";
 export type TextSize = "small" | "default" | "large";
+export type AppLanguage = "en" | "es";
 export interface ProgressEntry {
   id: string;
   completedAt: string;
@@ -210,6 +211,7 @@ interface CardStore {
   showWords: boolean;
   lowStimulationMode: boolean;
   textSize: TextSize;
+  language: AppLanguage;
   speechRate: number;
   speechVolume: number;
   recentCardIds: string[];
@@ -241,6 +243,7 @@ interface CardStore {
   setShowWords: (showWords: boolean) => void;
   setLowStimulationMode: (enabled: boolean) => void;
   setTextSize: (size: TextSize) => void;
+  setLanguage: (language: AppLanguage) => void;
   setSpeechRate: (rate: number) => void;
   setSpeechVolume: (volume: number) => void;
   toggleCategoryVisibility: (category: string) => void;
@@ -507,6 +510,7 @@ export const useCardStore = create<CardStore>()(
       showWords: true,
       lowStimulationMode: false,
       textSize: "default",
+      language: "en",
       speechRate: 1,
       speechVolume: 1,
       recentCardIds: [],
@@ -608,6 +612,7 @@ export const useCardStore = create<CardStore>()(
             enabled && state.cardsPerPage === "all" ? 8 : state.cardsPerPage,
         })),
       setTextSize: (textSize) => set({ textSize }),
+      setLanguage: (language) => set({ language }),
       setSpeechRate: (rate) => set({ speechRate: Math.min(1.25, Math.max(0.75, rate)) }),
       setSpeechVolume: (volume) => set({ speechVolume: Math.min(1, Math.max(0, volume)) }),
       toggleCategoryVisibility: (category) =>
@@ -724,7 +729,7 @@ export const useCardStore = create<CardStore>()(
     // --- PERSIST CONFIG ---
     {
       name: "pecs-storage",
-      version: 14,
+      version: 15,
 
       partialize: (state) => ({
         sentence: state.sentence,
@@ -734,6 +739,7 @@ export const useCardStore = create<CardStore>()(
         showWords: state.showWords,
         lowStimulationMode: state.lowStimulationMode,
         textSize: state.textSize,
+        language: state.language,
         speechRate: state.speechRate,
         speechVolume: state.speechVolume,
         recentCardIds: state.recentCardIds,
@@ -773,6 +779,7 @@ export const useCardStore = create<CardStore>()(
           textSize: ["small", "default", "large"].includes(prev.textSize ?? "")
             ? prev.textSize
             : "default",
+          language: prev.language === "es" ? "es" : "en",
           speechRate:
             typeof prev.speechRate === "number" ? Math.min(1.25, Math.max(0.75, prev.speechRate)) : 1,
           speechVolume:
