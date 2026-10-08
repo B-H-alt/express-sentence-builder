@@ -4,7 +4,7 @@ import { useCardStore } from "@/store/cardStore";
 import { X, User, Plus, Layers, Upload, Trash2, Save, Leaf, Volume2, Palette, MessagesSquare, Moon, Sun } from "lucide-react";
 import { AddCardModal } from "@/components/pecs/AddCardModal";
 import { Button } from "@/components/ui/button";
-import type { CardDisplayAmount, CharacterGender, VocabularyLevel } from "@/store/cardStore";
+import type { CardDisplayAmount, CharacterGender, TextSize, VocabularyLevel } from "@/store/cardStore";
 import { useTheme } from "next-themes";
 
 interface SettingsPanelProps {
@@ -26,6 +26,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
     setCardsPerPage,
     lowStimulationMode,
     setLowStimulationMode,
+    textSize,
+    setTextSize,
     speechRate,
     setSpeechRate,
     speechVolume,
@@ -396,6 +398,70 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                     Rose
                   </button>
                 </div>
+                <div className="rounded-xl border border-border bg-background/70 p-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex min-w-0 gap-3">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        <Leaf className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <h3 className="text-sm font-semibold">Calm mode</h3>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                          Calmer colors, less movement, lighter shadows, and fewer cards at once.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      data-low-stimulation-switch
+                      aria-checked={lowStimulationMode}
+                      onClick={() => setLowStimulationMode(!lowStimulationMode)}
+                      className={`relative mt-1 h-7 w-12 shrink-0 rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                        lowStimulationMode
+                          ? "border-primary bg-primary"
+                          : "border-border bg-muted"
+                      }`}
+                    >
+                      <span
+                        className={`absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out ${
+                          lowStimulationMode ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                      <span className="sr-only">Calm mode</span>
+                    </button>
+                  </div>
+                </div>
+                <div className="rounded-xl border border-border bg-background/70 p-3">
+                  <div>
+                    <h3 className="text-sm font-semibold">Text size</h3>
+                    <p className="mt-1 text-xs text-muted-foreground">Make words throughout Expressly easier to read.</p>
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-2" aria-label="Text size">
+                    {([
+                      { value: "small", label: "Small", sample: "A" },
+                      { value: "default", label: "Default", sample: "A" },
+                      { value: "large", label: "Large", sample: "A" },
+                    ] as { value: TextSize; label: string; sample: string }[]).map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        aria-pressed={textSize === option.value}
+                        onClick={() => setTextSize(option.value)}
+                        className={`flex min-h-14 items-center justify-center gap-1.5 rounded-xl border px-2 font-medium transition-colors ${
+                          textSize === option.value
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-background text-foreground hover:bg-muted"
+                        }`}
+                      >
+                        <span className={option.value === "small" ? "text-xs" : option.value === "large" ? "text-xl" : "text-base"} aria-hidden="true">
+                          {option.sample}
+                        </span>
+                        <span className="text-xs">{option.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>}
             </div>
 
@@ -469,41 +535,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                       </span>
                     </button>
                   ))}
-                </div>
-              </div>}
-
-              {activeSection === "display" && <div className="rounded-2xl border border-border/80 bg-muted/30 p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex min-w-0 gap-3">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                      <Leaf className="h-4 w-4" />
-                    </span>
-                    <div>
-                      <h3 className="text-sm font-semibold">Calm mode</h3>
-                      <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                        Calmer colors, less movement, lighter shadows, and fewer cards at once.
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    role="switch"
-                    data-low-stimulation-switch
-                    aria-checked={lowStimulationMode}
-                    onClick={() => setLowStimulationMode(!lowStimulationMode)}
-                    className={`relative mt-1 h-7 w-12 shrink-0 rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-                      lowStimulationMode
-                        ? "border-primary bg-primary"
-                        : "border-border bg-muted"
-                    }`}
-                  >
-                    <span
-                      className={`absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out ${
-                        lowStimulationMode ? "translate-x-5" : "translate-x-0"
-                      }`}
-                    />
-                    <span className="sr-only">Calm mode</span>
-                  </button>
                 </div>
               </div>}
 

@@ -79,6 +79,14 @@ All colors MUST be HSL.
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
+  .text-size-small {
+    font-size: 15px;
+  }
+
+  .text-size-large {
+    font-size: 18px;
+  }
+
   .dark {
     color-scheme: dark;
     --background: 210 15% 8%;

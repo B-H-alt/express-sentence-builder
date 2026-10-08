@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useCardStore } from "@/store/cardStore";
 import { PecsCard } from "./PecsCard";
 import { Button } from "@/components/ui/button";
-import { Check, Loader2, Trash2, Volume2, Square, X, Sparkles } from "lucide-react";
+import { Check, Loader2, Trash2, Volume2, Square, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { composeSentence } from "@/utils/compose-sentence";
 import { getAccessToken } from "@/lib/supabase";
@@ -282,10 +282,9 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
           <button
             type="button"
             onClick={() => setShowStarters((open) => !open)}
-            className="inline-flex min-h-9 items-center gap-1.5 rounded-xl px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex min-h-9 items-center rounded-xl px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-expanded={showStarters}
           >
-            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
             Start sentence
           </button>
           {showStarters && (["I want", "I need", "I feel"] as const).map((label) => (

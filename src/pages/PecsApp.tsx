@@ -30,12 +30,19 @@ const PecsApp = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
-  const { currentLevel, showWords, setShowWords, lowStimulationMode } = useCardStore();
+  const { currentLevel, showWords, setShowWords, lowStimulationMode, textSize } = useCardStore();
 
   useEffect(() => {
     document.documentElement.classList.toggle("low-stimulation", lowStimulationMode);
     return () => document.documentElement.classList.remove("low-stimulation");
   }, [lowStimulationMode]);
+
+  useEffect(() => {
+    document.documentElement.classList.remove("text-size-small", "text-size-large");
+    if (textSize !== "default") {
+      document.documentElement.classList.add(`text-size-${textSize}`);
+    }
+  }, [textSize]);
 
   useEffect(() => {
     if (accountRequested) setShowParentAccount(true);
