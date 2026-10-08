@@ -11,6 +11,7 @@ import { ParentAccountDialog } from "@/components/pecs/ParentAccountDialog";
 import Onboarding from "@/components/pecs/Onboarding";
 import { SpeakNowBar } from "@/components/pecs/SpeakNowBar";
 import { FeedbackDialog } from "@/components/pecs/FeedbackDialog";
+import { AppGuideDialog } from "@/components/pecs/AppGuideDialog";
 
 export interface Card {
   id: string;
@@ -26,6 +27,7 @@ const PecsApp = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("home");
   const [showSettings, setShowSettings] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const accountRequested = searchParams.get("account") === "sign-in";
   const [showParentAccount, setShowParentAccount] = useState(accountRequested);
@@ -60,6 +62,18 @@ const PecsApp = () => {
   };
 
   const hasCompletedOnboarding = useCardStore((state) => state.onboardingComplete);
+
+  useEffect(() => {
+    if (!hasCompletedOnboarding) return;
+    if (window.localStorage.getItem("expressly-guide-seen") !== "true") {
+      setShowGuide(true);
+    }
+  }, [hasCompletedOnboarding]);
+
+  const handleGuideChange = (open: boolean) => {
+    setShowGuide(open);
+    if (!open) window.localStorage.setItem("expressly-guide-seen", "true");
+  };
 
   // Measure fixed header height so content starts exactly below it
   const topBarRef = useRef<HTMLDivElement | null>(null);
@@ -149,6 +163,7 @@ const PecsApp = () => {
             onOpenParentDashboard={() => navigate("/parent")}
             onOpenParentAccount={() => setShowParentAccount(true)}
             onOpenFeedback={() => setShowFeedback(true)}
+            onOpenGuide={() => setShowGuide(true)}
           />
         </div>
 
@@ -198,6 +213,10 @@ const PecsApp = () => {
       <FeedbackDialog
         open={showFeedback}
         onOpenChange={setShowFeedback}
+      />
+      <AppGuideDialog
+        open={showGuide}
+        onOpenChange={handleGuideChange}
       />
     </div>
   );

@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Settings, Image, Type, ArrowLeft, ChevronDown, LayoutDashboard, MessageSquareText, ShieldCheck } from "lucide-react";
+import { BookOpen, Settings, Image, Type, ArrowLeft, ChevronDown, LayoutDashboard, MessageSquareText, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCardStore, VocabularyLevel } from "@/store/cardStore";
 
@@ -21,6 +21,7 @@ interface AppHeaderProps {
   onOpenParentDashboard: () => void;
   onOpenParentAccount: () => void;
   onOpenFeedback: () => void;
+  onOpenGuide: () => void;
 }
 
 export const AppHeader = ({
@@ -31,6 +32,7 @@ export const AppHeader = ({
   onOpenParentDashboard,
   onOpenParentAccount,
   onOpenFeedback,
+  onOpenGuide,
 }: AppHeaderProps) => {
   const userName = useCardStore((state) => state.userName?.trim() || "Me");
   const userImage = useCardStore((state) => state.userImage);
@@ -161,6 +163,13 @@ export const AppHeader = ({
                 Parent account
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="cursor-pointer rounded-lg py-2.5"
+                onSelect={onOpenGuide}
+              >
+                <BookOpen className="mr-2 h-4 w-4" />
+                How to use Expressly
+              </DropdownMenuItem>
               <DropdownMenuItem
                 className="cursor-pointer rounded-lg py-2.5"
                 onSelect={onOpenFeedback}
