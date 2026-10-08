@@ -170,7 +170,7 @@ const PecsApp = () => {
         {/* Builder + Tabs (contained) */}
         <div className="flex w-full flex-col gap-2 px-4 py-2 sm:px-6 lg:px-8">
           <div className="max-h-[280px]">
-            <SentenceBuilder showWord={showWords} />
+            <SentenceBuilder showWord={showWords} onOpenGuide={() => setShowGuide(true)} />
           </div>
 
           <SpeakNowBar />

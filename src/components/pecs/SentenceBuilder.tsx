@@ -3,16 +3,17 @@ import { useEffect, useRef, useState } from "react";
 import { useCardStore } from "@/store/cardStore";
 import { PecsCard } from "./PecsCard";
 import { Button } from "@/components/ui/button";
-import { Check, Loader2, Trash2, Volume2, Square, X } from "lucide-react";
+import { BookOpen, Check, Loader2, Trash2, Volume2, Square, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { composeSentence } from "@/utils/compose-sentence";
 import { getAccessToken } from "@/lib/supabase";
 
 interface SentenceBuilderProps {
   showWord: boolean;
+  onOpenGuide: () => void;
 }
 
-export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
+export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps) => {
   const {
     sentence,
     removeFromSentence,
@@ -194,9 +195,20 @@ export const SentenceBuilder = ({ showWord }: SentenceBuilderProps) => {
       onDragOver={(e) => e.preventDefault()}
     >
       <div className="mb-1 flex items-start justify-between gap-3">
-        <h2 className={`text-lg font-semibold ${lowStimulationMode ? "text-foreground" : "bg-gradient-accent bg-clip-text text-transparent"}`}>
-          My Sentence
-        </h2>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <h2 className={`text-lg font-semibold ${lowStimulationMode ? "text-foreground" : "bg-gradient-accent bg-clip-text text-transparent"}`}>
+            My Sentence
+          </h2>
+          <button
+            type="button"
+            onClick={onOpenGuide}
+            className="inline-flex min-h-8 items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <BookOpen className="h-4 w-4" />
+            <span className="hidden sm:inline">How to use Expressly</span>
+            <span className="sm:hidden">How it works</span>
+          </button>
+        </div>
         <div className="flex flex-wrap justify-end gap-2">
           {sentence.length > 0 && (
             <>
