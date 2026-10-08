@@ -14,6 +14,7 @@ interface ApiResponse {
 
 interface ComposeBody {
   tokens?: unknown;
+  tense?: unknown;
 }
 
 const WINDOW_MS = 60_000;
@@ -79,6 +80,11 @@ const parseTokens = (body: unknown) => {
   return tokens;
 };
 
+const parseTense = (body: unknown) => {
+  const tense = (body ?? {}) as ComposeBody;
+  return tense.tense === "past" || tense.tense === "future" ? tense.tense : "present";
+};
+
 export default async function handler(req: ApiRequest, res: ApiResponse) {
   res.setHeader("Cache-Control", "no-store");
 
@@ -110,6 +116,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     res.status(400).json({ ok: false, error: "Invalid card labels." });
     return;
   }
+  const tense = parseTense(req.body);
 
   // Temporary fallback keeps the existing Vercel setting working while the
   // secret is renamed. The browser no longer reads either value.
@@ -122,7 +129,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return;
   }
 
-  const prompt = `Turn these ordered AAC cards into one short, natural sentence. A person followed by an action describes what that person is doing. Use "I" for the learner's wants, needs, actions, and feelings. Only make a question when a card is a question. Preserve negatives. Add only needed grammar words and never invent details. Everyday English; sentence only.\nExamples: ["Dad","Go outside"] = Dad is going outside. ["I","Want","Water"] = I want water. ["Where?","Mom"] = Where is Mom?\nCards: ${JSON.stringify(tokens)}`;
+  const prompt = `Turn these ordered AAC cards into one short, natural ${tense}-tense sentence. A person followed by an action describes what that person is doing. Use "I" for the learner's wants, needs, actions, and feelings. Only make a question when a card is a question. Preserve negatives. Add only needed grammar words and never invent details. Everyday English; sentence only.\nExamples: ["Dad","Go outside"] in present = Dad is going outside. ["I","Want","Water"] in past = I wanted water. ["Where?","Mom"] in future = Where will Mom be?\nCards: ${JSON.stringify(tokens)}`;
 
   try {
     const ai = new GoogleGenAI({ apiKey });

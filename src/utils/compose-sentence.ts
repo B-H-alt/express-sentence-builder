@@ -2,9 +2,10 @@
 import { getAccessToken } from "@/lib/supabase";
 
 const compositionCache = new Map<string, string>();
+export type SentenceTense = "past" | "present" | "future";
 
 // Compose a sentence from input tokens or text using the server-side Gemini model
-export async function composeSentence(input: { tokens?: string[]; text?: string }): Promise<string> {
+export async function composeSentence(input: { tokens?: string[]; text?: string; tense?: SentenceTense }): Promise<string> {
   const inputLabels = input.tokens?.length
     ? input.tokens
     : input.text?.trim().split(/\s+/).filter(Boolean) ?? [];
@@ -12,7 +13,8 @@ export async function composeSentence(input: { tokens?: string[]; text?: string 
 
   if (!tokens) return "";
 
-  const cacheKey = tokens.toLocaleLowerCase();
+  const tense = input.tense ?? "present";
+  const cacheKey = `${tense}:${tokens.toLocaleLowerCase()}`;
   const cached = compositionCache.get(cacheKey);
   if (cached !== undefined) return cached;
 
@@ -29,7 +31,7 @@ export async function composeSentence(input: { tokens?: string[]; text?: string 
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({ tokens: inputLabels }),
+      body: JSON.stringify({ tokens: inputLabels, tense }),
       signal: controller.signal,
     });
     if (!response.ok) return "";

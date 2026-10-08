@@ -5,6 +5,7 @@ import { Card } from "@/pages/PecsApp";
 import { AddCardModal } from "./AddCardModal";
 import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { CategoryHome } from "./CategoryHome";
+import { getCardVariations } from "@/lib/cardVariations";
 
 interface CardGridProps {
   selectedCategory: string;
@@ -37,7 +38,10 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
   
   const normalizedSearch = searchQuery.trim().toLocaleLowerCase();
   const filteredCards = levelFilteredCards.filter(card => {
-    if (normalizedSearch) return card.text.toLocaleLowerCase().includes(normalizedSearch);
+    if (normalizedSearch) {
+      return [card.text, ...getCardVariations(card.text)]
+        .some((label) => label.toLocaleLowerCase().includes(normalizedSearch));
+    }
     if (selectedCategory === "all") return true;
     if (selectedCategory === "favorites") return favorites.includes(card.id);
     return card.category === selectedCategory;
@@ -68,6 +72,11 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
 
   const handleCardClick = (card: Card) => {
     addToSentence(card);
+    incrementUsage(card.id);
+  };
+
+  const handleVariationClick = (card: Card, label: string) => {
+    addToSentence({ ...card, text: label });
     incrementUsage(card.id);
   };
 
@@ -141,6 +150,8 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
                     onEdit={card.id.startsWith("custom-") ? () => setEditingCard(card) : undefined}
                     isFavorite={favorites.includes(card.id)}
                     displaySize={cardDisplaySize}
+                    variations={getCardVariations(card.text)}
+                    onSelectVariation={(label) => handleVariationClick(card, label)}
                   />
                 ))}
               </div>
@@ -159,6 +170,8 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
               onEdit={card.id.startsWith("custom-") ? () => setEditingCard(card) : undefined}
               isFavorite={favorites.includes(card.id)}
               displaySize={cardDisplaySize}
+              variations={getCardVariations(card.text)}
+              onSelectVariation={(label) => handleVariationClick(card, label)}
             />
           ))}
         </div>

@@ -5,7 +5,7 @@ import { PecsCard } from "./PecsCard";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Check, Loader2, Trash2, Volume2, Square, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { composeSentence } from "@/utils/compose-sentence";
+import { composeSentence, type SentenceTense } from "@/utils/compose-sentence";
 import { getAccessToken } from "@/lib/supabase";
 
 interface SentenceBuilderProps {
@@ -35,6 +35,7 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
   const [showComposed, setShowComposed] = useState(false);
   const [usedOriginalWords, setUsedOriginalWords] = useState(false);
   const [showStarters, setShowStarters] = useState(false);
+  const [tense, setTense] = useState<SentenceTense>("present");
 
   const getSentenceText = () => sentence.map((card) => card.text).join(" ").trim();
   const getSentenceTokens = () => sentence.map((card) => card.text);
@@ -45,25 +46,26 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
     setComposedSource("");
     setShowComposed(false);
     setUsedOriginalWords(false);
-  }, [sentence]);
+  }, [sentence, tense]);
 
   const resolveSentence = async () => {
     const raw = getSentenceText();
     if (!raw) return "";
-    if (composedSource === raw && composedText) return composedText;
+    const sourceKey = `${tense}:${raw}`;
+    if (composedSource === sourceKey && composedText) return composedText;
 
     setIsComposing(true);
     try {
-      const improved = await composeSentence({ tokens: getSentenceTokens() });
+      const improved = await composeSentence({ tokens: getSentenceTokens(), tense });
       const finalText = improved?.trim() || raw;
       setUsedOriginalWords(!improved?.trim());
       setComposedText(finalText);
-      setComposedSource(raw);
+      setComposedSource(sourceKey);
       return finalText;
     } catch (error) {
       console.error("Failed to compose sentence:", error);
       setComposedText(raw);
-      setComposedSource(raw);
+      setComposedSource(sourceKey);
       setUsedOriginalWords(true);
       return raw;
     } finally {
@@ -209,7 +211,20 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
             <span className="sm:hidden">How it works</span>
           </button>
         </div>
-        <div className="flex flex-wrap justify-end gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+            <span className="hidden sm:inline">Tense</span>
+            <select
+              aria-label="Sentence tense"
+              value={tense}
+              onChange={(event) => setTense(event.target.value as SentenceTense)}
+              className="h-9 rounded-xl border border-border bg-background px-2 text-sm font-semibold text-foreground outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="past">Past</option>
+              <option value="present">Present</option>
+              <option value="future">Future</option>
+            </select>
+          </label>
           {sentence.length > 0 && (
             <>
               <Button size="sm" onClick={handleFinish} className="rounded-xl" disabled={isComposing}>

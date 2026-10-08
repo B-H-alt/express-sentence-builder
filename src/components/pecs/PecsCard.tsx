@@ -1,10 +1,16 @@
 import { Card } from "@/pages/PecsApp";
-import { Pencil, Star, X } from "lucide-react";
+import { ChevronDown, Pencil, Star, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { boyCardImages } from "@/lib/boyCardImages";
 import { girlCardImages } from "@/lib/girlCardImages";
 import { sharedCardImages } from "@/lib/sharedCardImages";
 import { useCardStore } from "@/store/cardStore";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface PecsCardProps {
   card: Card;
@@ -16,6 +22,8 @@ interface PecsCardProps {
   isFavorite?: boolean;
   inSentence?: boolean;
   displaySize?: "compact" | "medium" | "large";
+  variations?: string[];
+  onSelectVariation?: (label: string) => void;
 }
 
 export const PecsCard = ({
@@ -28,6 +36,8 @@ export const PecsCard = ({
   isFavorite,
   inSentence,
   displaySize = "compact",
+  variations = [],
+  onSelectVariation,
 }: PecsCardProps) => {
   const characterGender = useCardStore((state) => state.characterGender);
   const lowStimulationMode = useCardStore((state) => state.lowStimulationMode);
@@ -110,6 +120,32 @@ export const PecsCard = ({
         >
           <Pencil className="w-4 h-4" />
         </button>
+      )}
+
+      {!inSentence && !onEdit && variations.length > 1 && onSelectVariation && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label={`Choose another word for ${card.text}`}
+              onClick={(event) => event.stopPropagation()}
+              className="absolute left-2 top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-muted/90 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <ChevronDown className="h-4 w-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-36 rounded-xl p-1.5">
+            {variations.map((label) => (
+              <DropdownMenuItem
+                key={label}
+                className="cursor-pointer rounded-lg"
+                onSelect={() => onSelectVariation(label)}
+              >
+                {label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       )}
 
       {/* Card content */}

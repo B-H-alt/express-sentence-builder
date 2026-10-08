@@ -1,6 +1,7 @@
 import { Star } from "lucide-react";
 import { useCardStore } from "@/store/cardStore";
 import { PecsCard } from "./PecsCard";
+import { getCardVariations } from "@/lib/cardVariations";
 
 interface CategoryHomeProps {
   showWord: boolean;
@@ -33,6 +34,10 @@ export const CategoryHome = ({ showWord, onSelectCategory }: CategoryHomeProps) 
     addToSentence(card);
     incrementUsage(card.id);
   };
+  const handleVariationClick = (card: (typeof availableCards)[number], label: string) => {
+    addToSentence({ ...card, text: label });
+    incrementUsage(card.id);
+  };
 
   return (
     <div>
@@ -61,6 +66,8 @@ export const CategoryHome = ({ showWord, onSelectCategory }: CategoryHomeProps) 
                 onClick={() => handleCardClick(card)}
                 onFavorite={() => toggleFavorite(card.id)}
                 isFavorite={favorites.includes(card.id)}
+                variations={getCardVariations(card.text)}
+                onSelectVariation={(label) => handleVariationClick(card, label)}
               />
             ))}
             </div>
