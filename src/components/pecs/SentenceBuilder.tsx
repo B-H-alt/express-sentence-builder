@@ -189,6 +189,7 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
 
   return (
     <div
+      data-guide="sentence"
       className={`relative flex max-h-full min-h-0 flex-col overflow-hidden rounded-2xl border-2 p-3 ${
         lowStimulationMode
           ? "bg-card border-border"
@@ -219,7 +220,7 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
             <span className="sm:hidden">{copy.howItWorks}</span>
           </button>
         </div>
-        <div className="flex flex-wrap items-center justify-end gap-2">
+        <div data-guide="sentence-actions" className="flex flex-wrap items-center justify-end gap-2">
           <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
             <span className="hidden sm:inline">{copy.tense}</span>
             <select

@@ -35,6 +35,7 @@ const PecsApp = () => {
   const navigate = useNavigate();
 
   const { currentLevel, showWords, setShowWords, lowStimulationMode, textSize } = useCardStore();
+  const sentenceLength = useCardStore((state) => state.sentence.length);
 
   useEffect(() => {
     document.documentElement.classList.toggle("low-stimulation", lowStimulationMode);
@@ -66,11 +67,17 @@ const PecsApp = () => {
   useEffect(() => {
     if (!hasCompletedOnboarding) return;
     if (window.localStorage.getItem("expressly-guide-seen") !== "true") {
+      setSearchQuery("");
+      setSelectedCategory("actions");
       setShowGuide(true);
     }
   }, [hasCompletedOnboarding]);
 
   const handleGuideChange = (open: boolean) => {
+    if (open) {
+      setSearchQuery("");
+      setSelectedCategory("actions");
+    }
     setShowGuide(open);
     if (!open) window.localStorage.setItem("expressly-guide-seen", "true");
   };
@@ -163,14 +170,14 @@ const PecsApp = () => {
             onOpenParentDashboard={() => navigate("/parent")}
             onOpenParentAccount={() => setShowParentAccount(true)}
             onOpenFeedback={() => setShowFeedback(true)}
-            onOpenGuide={() => setShowGuide(true)}
+            onOpenGuide={() => handleGuideChange(true)}
           />
         </div>
 
         {/* Builder + Tabs (contained) */}
         <div className="flex w-full flex-col gap-2 px-4 py-2 sm:px-6 lg:px-8">
           <div className="max-h-[280px]">
-            <SentenceBuilder showWord={showWords} onOpenGuide={() => setShowGuide(true)} />
+            <SentenceBuilder showWord={showWords} onOpenGuide={() => handleGuideChange(true)} />
           </div>
 
           <SpeakNowBar />
@@ -216,6 +223,7 @@ const PecsApp = () => {
       />
       <AppGuideDialog
         open={showGuide}
+        sentenceLength={sentenceLength}
         onOpenChange={handleGuideChange}
       />
     </div>

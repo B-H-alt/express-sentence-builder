@@ -95,7 +95,7 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
 
   if (selectedCategory === "home" && !normalizedSearch) {
     return (
-      <div className="relative h-full overflow-y-auto rounded-3xl border border-border bg-background p-4 shadow-soft">
+      <div data-guide="card-area" className="relative h-full overflow-y-auto rounded-3xl border border-border bg-background p-4 shadow-soft">
         <CategoryHome showWord={showWord} onSelectCategory={onSelectCategory} />
       </div>
     );
@@ -112,7 +112,7 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
     : null;
 
   return (
-    <div className={`relative overflow-hidden h-full overflow-y-auto p-4 rounded-3xl border border-border ${lowStimulationMode ? "bg-background shadow-none" : "bg-gradient-subtle shadow-soft"}`}>
+    <div data-guide="card-area" className={`relative overflow-hidden h-full overflow-y-auto p-4 rounded-3xl border border-border ${lowStimulationMode ? "bg-background shadow-none" : "bg-gradient-subtle shadow-soft"}`}>
       <div
         aria-hidden
         className={`pointer-events-none absolute -z-10 right-[-20%] top-[-20%] h-[60%] w-[60%]
