@@ -92,6 +92,8 @@ export const authorizeFeature = async (
       status: isLimit ? 429 : 403,
       error: isBurstLimit
         ? "Too many requests. Please wait a moment and try again."
+        : decision.reason === "email_not_confirmed"
+          ? "Confirm your email before using this feature."
         : isLimit
           ? "This feature has reached its current usage limit."
         : "Your current plan does not include this feature.",

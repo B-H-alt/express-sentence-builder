@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getSupabase, isCloudAccountConfigured } from "@/lib/supabase";
 import { switchAccountStorage } from "@/lib/accountStorage";
+import { isCaptchaConfigured } from "@/lib/captcha";
+import { TurnstileCheck } from "./TurnstileCheck";
 
 interface ParentAccountDialogProps {
   open: boolean;
@@ -33,6 +35,8 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [resetCooldown, setResetCooldown] = useState(0);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaResetKey, setCaptchaResetKey] = useState(0);
 
   useEffect(() => {
     if (!isCloudAccountConfigured) return;
@@ -85,6 +89,13 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
     setPassword("");
     setConfirmPassword("");
     setMessage("");
+    setCaptchaToken("");
+    setCaptchaResetKey((value) => value + 1);
+  };
+
+  const resetCaptcha = () => {
+    setCaptchaToken("");
+    setCaptchaResetKey((value) => value + 1);
   };
 
   const handlePasswordSubmit = async (event: FormEvent) => {
@@ -115,8 +126,12 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
       const { data, error } = await supabase.auth.signUp({
         email: address,
         password,
-        options: { emailRedirectTo: `${window.location.origin}/pecs-app` },
+        options: {
+          emailRedirectTo: `${window.location.origin}/pecs-app`,
+          captchaToken: captchaToken || undefined,
+        },
       });
+      resetCaptcha();
       setPassword("");
       setConfirmPassword("");
       if (error) {
@@ -129,7 +144,12 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
       return;
     }
 
-    const { error } = await supabase.auth.signInWithPassword({ email: address, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email: address,
+      password,
+      options: { captchaToken: captchaToken || undefined },
+    });
+    resetCaptcha();
     setPassword("");
     finishRequest(error ? "The email or password is incorrect." : "Signed in securely.");
   };
@@ -152,8 +172,10 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
       options: {
         emailRedirectTo: `${window.location.origin}/pecs-app`,
         shouldCreateUser: false,
+        captchaToken: captchaToken || undefined,
       },
     });
+    resetCaptcha();
     finishRequest(error
       ? "We could not send the sign-in link. Check the email or create an account first."
       : "If an account exists for that email, a secure sign-in link is on its way.");
@@ -176,7 +198,9 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
     }
     const { error } = await supabase.auth.resetPasswordForEmail(address, {
       redirectTo: `${window.location.origin}/pecs-app`,
+      captchaToken: captchaToken || undefined,
     });
+    resetCaptcha();
     if (error) {
       const isRateLimit = error.status === 429 || error.code === "over_email_send_rate_limit";
       if (isRateLimit) {
@@ -279,7 +303,12 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
               <FieldLabel>Email</FieldLabel>
               <EmailField email={email} setEmail={setEmail} />
             </div>
-            <Button className="w-full" type="submit" disabled={loading || resetCooldown > 0}>
+            <TurnstileCheck onToken={setCaptchaToken} resetKey={captchaResetKey} />
+            <Button
+              className="w-full"
+              type="submit"
+              disabled={loading || resetCooldown > 0 || (isCaptchaConfigured && !captchaToken)}
+            >
               {loading
                 ? "Sending…"
                 : resetCooldown > 0
@@ -316,7 +345,12 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
               setConfirmPassword={setConfirmPassword}
               includeConfirmation={view === "sign-up"}
             />
-            <Button className="w-full" type="submit" disabled={loading}>
+            <TurnstileCheck onToken={setCaptchaToken} resetKey={captchaResetKey} />
+            <Button
+              className="w-full"
+              type="submit"
+              disabled={loading || (isCaptchaConfigured && !captchaToken)}
+            >
               {loading ? "Please wait…" : view === "sign-up" ? "Create parent account" : "Sign in"}
             </Button>
             {view === "sign-in" && (
@@ -325,7 +359,13 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
                 <div className="flex items-center gap-3 text-xs text-muted-foreground before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
                   or
                 </div>
-                <Button type="button" variant="outline" className="w-full" onClick={handleMagicLink} disabled={loading}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleMagicLink}
+                  disabled={loading || (isCaptchaConfigured && !captchaToken)}
+                >
                   <KeyRound className="mr-2 h-4 w-4" />
                   Email me a sign-in link
                 </Button>
