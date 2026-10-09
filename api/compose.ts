@@ -62,6 +62,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
   const access = await authorizeFeature(req, "grammar", 1);
   if (!access.ok) {
+    if (access.status === 429 && access.retryAfter) {
+      res.setHeader("Retry-After", String(access.retryAfter));
+    }
     res.status(access.status).json({ ok: false, error: access.error });
     return;
   }

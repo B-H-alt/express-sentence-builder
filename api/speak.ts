@@ -31,6 +31,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
   const access = await authorizeFeature(req, "voice", text.length);
   if (!access.ok) {
+    if (access.status === 429 && access.retryAfter) {
+      res.setHeader("Retry-After", String(access.retryAfter));
+    }
     res.status(access.status).json({ error: access.error });
     return;
   }

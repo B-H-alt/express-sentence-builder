@@ -15,6 +15,7 @@ export type ProtectedFeature = "grammar" | "voice" | "image_generation";
 type AccessDecision = {
   allowed?: boolean;
   reason?: string;
+  retry_after?: number;
   remaining?: number | null;
   plan?: string;
 };
@@ -84,13 +85,19 @@ export const authorizeFeature = async (
 
   const decision = (await response.json()) as AccessDecision;
   if (!decision.allowed) {
-    const isLimit = decision.reason === "limit_reached";
+    const isBurstLimit = decision.reason === "rate_limit_reached";
+    const isLimit = isBurstLimit || decision.reason === "limit_reached";
     return {
       ok: false as const,
       status: isLimit ? 429 : 403,
-      error: isLimit
-        ? "This feature has reached its current usage limit."
+      error: isBurstLimit
+        ? "Too many requests. Please wait a moment and try again."
+        : isLimit
+          ? "This feature has reached its current usage limit."
         : "Your current plan does not include this feature.",
+      retryAfter: isBurstLimit && Number.isFinite(decision.retry_after)
+        ? Math.max(1, Math.min(60, Math.ceil(decision.retry_after!)))
+        : undefined,
     };
   }
 
