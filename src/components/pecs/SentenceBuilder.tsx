@@ -38,6 +38,7 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
   const [composedSource, setComposedSource] = useState("");
   const [showComposed, setShowComposed] = useState(false);
   const [usedOriginalWords, setUsedOriginalWords] = useState(false);
+  const [compositionNotice, setCompositionNotice] = useState("");
   const [showStarters, setShowStarters] = useState(false);
   const [tense, setTense] = useState<SentenceTense>("present");
 
@@ -50,6 +51,7 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
     setComposedSource("");
     setShowComposed(false);
     setUsedOriginalWords(false);
+    setCompositionNotice("");
   }, [sentence, tense, language]);
 
   const resolveSentence = async () => {
@@ -60,9 +62,21 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
 
     setIsComposing(true);
     try {
-      const improved = await composeSentence({ tokens: getSentenceTokens(), tense, language });
-      const finalText = improved?.trim() || raw;
-      setUsedOriginalWords(!improved?.trim());
+      const result = await composeSentence({ tokens: getSentenceTokens(), tense, language });
+      const improved = result.sentence.trim();
+      const finalText = improved || raw;
+      setUsedOriginalWords(!improved);
+      setCompositionNotice(
+        result.issue === "sign_in_required"
+          ? copy.grammarSignIn
+          : result.issue === "email_not_confirmed"
+            ? copy.grammarConfirmEmail
+            : result.issue === "rate_limited"
+              ? copy.grammarRateLimit
+              : result.issue
+                ? copy.grammarUnavailable
+                : "",
+      );
       setComposedText(finalText);
       setComposedSource(sourceKey);
       return finalText;
@@ -71,6 +85,7 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
       setComposedText(raw);
       setComposedSource(sourceKey);
       setUsedOriginalWords(true);
+      setCompositionNotice(copy.grammarUnavailable);
       return raw;
     } finally {
       setIsComposing(false);
@@ -207,13 +222,10 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
     >
       <div className="mb-1 flex items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <h2 className={`text-lg font-semibold ${lowStimulationMode ? "text-foreground" : "bg-gradient-accent bg-clip-text text-transparent"}`}>
-            {copy.mySentence}
-          </h2>
           <button
             type="button"
             onClick={onOpenGuide}
-            className="inline-flex min-h-8 items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex min-h-8 items-center gap-1.5 rounded-lg px-2 text-base font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <BookOpen className="h-4 w-4" />
             <span className="hidden sm:inline">{copy.howToUse}</span>
@@ -276,6 +288,7 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
                   setComposedSource("");
                   setShowComposed(false);
                   setUsedOriginalWords(false);
+                  setCompositionNotice("");
                 }}
                 className="h-9 w-9 rounded-xl text-muted-foreground hover:text-destructive"
                 aria-label="Clear sentence"
@@ -299,7 +312,7 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
             <p className="mt-1 text-lg font-semibold leading-7">{composedText}</p>
             {usedOriginalWords && (
               <p className="mt-1 text-sm text-muted-foreground">
-                {copy.grammarUnavailable}
+                {compositionNotice || copy.grammarUnavailable}
               </p>
             )}
           </div>
