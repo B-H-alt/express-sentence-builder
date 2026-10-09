@@ -1,24 +1,61 @@
 import Replicate from "replicate";
+import { authorizeFeature, rejectUnlessPost, setPrivateApiHeaders } from "../_security.js";
 
 export const config = {
   api: {
-    bodyParser: { sizeLimit: "2mb" },
+    bodyParser: { sizeLimit: "32kb" },
   },
 };
 
+const MAX_PROMPT_LENGTH = 240;
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+
+interface ApiRequest {
+  method?: string;
+  body?: unknown;
+  headers: Record<string, string | string[] | undefined>;
+}
+
+interface ApiResponse {
+  status: (code: number) => ApiResponse;
+  json: (body: unknown) => void;
+  setHeader: (name: string, value: string) => void;
+}
+
+type ProviderError = {
+  status?: number;
+  message?: string;
+  response?: { status?: number; data?: unknown };
+  cause?: { status?: number };
+};
+
 async function urlToDataUrl(imageUrl: string): Promise<string> {
-  const res = await fetch(imageUrl);
+  const parsed = new URL(imageUrl);
+  const isReplicateDeliveryHost = parsed.hostname === "replicate.delivery" || parsed.hostname.endsWith(".replicate.delivery");
+  if (parsed.protocol !== "https:" || !isReplicateDeliveryHost) {
+    throw new Error("Invalid image source.");
+  }
+  const res = await fetch(parsed, {
+    redirect: "error",
+    signal: AbortSignal.timeout(15_000),
+  });
   if (!res.ok) throw new Error("Failed to download generated image.");
 
-  const contentType = res.headers.get("content-type") || "image/webp";
+  const contentType = res.headers.get("content-type")?.split(";")[0] || "";
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(contentType)) {
+    throw new Error("Generated file was not a supported image.");
+  }
+  const declaredLength = Number(res.headers.get("content-length") || 0);
+  if (declaredLength > MAX_IMAGE_BYTES) throw new Error("Generated image was too large.");
   const arrayBuffer = await res.arrayBuffer();
+  if (arrayBuffer.byteLength > MAX_IMAGE_BYTES) throw new Error("Generated image was too large.");
   const base64 = Buffer.from(arrayBuffer).toString("base64");
 
   return `data:${contentType};base64,${base64}`;
 }
 
 function isImageLikeUrl(value: string): boolean {
-  return /^https?:\/\//i.test(value) || value.startsWith("data:image/");
+  return /^https:\/\//i.test(value);
 }
 
 async function extractFirstImageUrl(value: unknown): Promise<string | null> {
@@ -101,86 +138,34 @@ Strict constraints:
 `.trim();
 }
 
-async function runReplicateHealthCheck(replicate: Replicate) {
-  const model = await replicate.models.get("black-forest-labs", "flux-1.1-pro");
-
-  return {
-    ok: true,
-    model: {
-      owner: (model as any)?.owner ?? "black-forest-labs",
-      name: (model as any)?.name ?? "flux-1.1-pro",
-    },
-  };
-}
-
-export default async function handler(req: any, res: any) {
-  const isHealth = Boolean(req?.query?.health);
+export default async function handler(req: ApiRequest, res: ApiResponse) {
+  setPrivateApiHeaders(res);
+  if (rejectUnlessPost(req, res)) return;
 
   try {
+    const { prompt, seed } = (req.body ?? {}) as { prompt?: string; seed?: number };
+    if (!prompt || typeof prompt !== "string" || !prompt.trim() || prompt.length > MAX_PROMPT_LENGTH) {
+      res.status(400).json({ ok: false, error: "Invalid prompt." });
+      return;
+    }
+
+    const access = await authorizeFeature(req, "image_generation", 1);
+    if (!access.ok) {
+      res.status(access.status).json({ ok: false, error: access.error });
+      return;
+    }
+
     const token = process.env.REPLICATE_API_TOKEN;
 
     if (!token) {
-      res.status(500).json({
+      res.status(503).json({
         ok: false,
-        error: "Missing REPLICATE_API_TOKEN",
-        hint:
-          "Set REPLICATE_API_TOKEN in your deployment environment variables (correct scope) and redeploy.",
-        method: req.method,
-        health: isHealth,
+        error: "Image generation is unavailable.",
       });
       return;
     }
 
     const replicate = new Replicate({ auth: token });
-
-    if (isHealth) {
-      try {
-        const health = await runReplicateHealthCheck(replicate);
-        res.status(200).json({
-          ok: true,
-          tokenPresent: true,
-          replicate: health,
-          method: req.method,
-        });
-      } catch (err: any) {
-        const status =
-          err?.status || err?.response?.status || err?.cause?.status || 500;
-
-        console.error("Replicate health check failed:", {
-          status,
-          message: err?.message,
-          details: err?.response?.data ?? err?.body ?? err,
-        });
-
-        res.status(status).json({
-          ok: false,
-          tokenPresent: true,
-          error: err?.message || "Health check failed",
-          status,
-          method: req.method,
-        });
-      }
-      return;
-    }
-
-    if (req.method !== "POST") {
-      res.status(405).json({
-        ok: false,
-        error: "Method Not Allowed",
-        allowed: ["POST"],
-        hint:
-          "To debug, visit /api/replicate/generate?health=1 (GET) or call it with POST if GET is blocked.",
-        method: req.method,
-      });
-      return;
-    }
-
-    const { prompt, seed } = req.body as { prompt?: string; seed?: number };
-
-    if (!prompt || typeof prompt !== "string") {
-      res.status(400).json({ ok: false, error: "Missing prompt." });
-      return;
-    }
 
     const pecsPrompt = buildPecsPrompt(prompt);
 
@@ -198,51 +183,32 @@ export default async function handler(req: any, res: any) {
 
     const url = await extractFirstImageUrl(output);
     if (!url) {
-      const outputType = Array.isArray(output) ? "array" : typeof output;
-      const outputKeys =
-        output && typeof output === "object" && !Array.isArray(output)
-          ? Object.keys(output as Record<string, unknown>).slice(0, 10)
-          : [];
-
-      res.status(500).json({
-        ok: false,
-        error: "Model did not return an image URL.",
-        debug: { outputType, outputKeys },
-      });
+      res.status(502).json({ ok: false, error: "Image generation failed." });
       return;
     }
 
-    const dataUrl = url.startsWith("data:image/") ? url : await urlToDataUrl(url);
+    const dataUrl = await urlToDataUrl(url);
     res.status(200).json({ ok: true, dataUrl });
-  } catch (err: any) {
-    const status = err?.status || err?.response?.status || err?.cause?.status || 500;
-    const upstreamMessage =
-      err?.response?.data?.detail ||
-      err?.response?.data?.title ||
-      err?.message ||
-      "Generation failed.";
+  } catch (error: unknown) {
+    const err = error && typeof error === "object" ? error as ProviderError : {};
+    const status = err.status || err.response?.status || err.cause?.status || 500;
 
     if (status === 401) {
-      res.status(401).json({
+      res.status(502).json({
         ok: false,
-        error: "Replicate authentication failed.",
-        hint: "Set a valid REPLICATE_API_TOKEN for the runtime and restart/redeploy.",
-        status,
-        upstream: upstreamMessage,
+        error: "Image generation failed.",
       });
       return;
     }
 
     console.error("Replicate generate failed:", {
       status,
-      message: err?.message,
-      details: err?.response?.data ?? err?.body ?? err,
+      message: typeof err?.message === "string" ? err.message.slice(0, 200) : "Unknown provider error",
     });
 
-    res.status(status).json({
+    res.status(status >= 400 && status < 500 ? status : 502).json({
       ok: false,
-      error: upstreamMessage,
-      status,
+      error: "Image generation failed.",
     });
   }
 }

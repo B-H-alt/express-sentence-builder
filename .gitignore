@@ -25,6 +25,7 @@ build/
 
 # Vite Cache
 .vite/
+.next/
 
 # ==========================
 # Logs

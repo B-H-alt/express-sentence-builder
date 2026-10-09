@@ -1,3 +1,5 @@
+import { authorizeFeature, rejectUnlessPost, setPrivateApiHeaders } from "./_security.js";
+
 interface ApiRequest {
   method?: string;
   body?: unknown;
@@ -11,63 +13,13 @@ interface ApiResponse {
   end: (body?: Buffer) => void;
 }
 
-const WINDOW_MS = 60_000;
-const MAX_REQUESTS_PER_WINDOW = 20;
-const requestsByUser = new Map<string, { count: number; resetAt: number }>();
-
-const getHeader = (req: ApiRequest, name: string) => {
-  const value = req.headers[name];
-  return Array.isArray(value) ? value[0] : value;
-};
-
-const authenticateParent = async (req: ApiRequest) => {
-  const supabaseUrl = process.env.SUPABASE_URL?.trim();
-  const publishableKey = process.env.SUPABASE_PUBLISHABLE_KEY?.trim();
-  const authorization = getHeader(req, "authorization")?.trim();
-  if (!supabaseUrl || !publishableKey || !authorization?.startsWith("Bearer ")) return null;
-
-  const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
-    headers: { apikey: publishableKey, Authorization: authorization },
-    signal: AbortSignal.timeout(4_000),
-  });
-  if (!response.ok) return null;
-  const user = (await response.json()) as { id?: unknown };
-  return typeof user.id === "string" && user.id ? user.id : null;
-};
-
-const isRateLimited = (userId: string) => {
-  const now = Date.now();
-  const current = requestsByUser.get(userId);
-  if (!current || current.resetAt <= now) {
-    requestsByUser.set(userId, { count: 1, resetAt: now + WINDOW_MS });
-    return false;
-  }
-  current.count += 1;
-  return current.count > MAX_REQUESTS_PER_WINDOW;
+export const config = {
+  api: { bodyParser: { sizeLimit: "8kb" } },
 };
 
 export default async function handler(req: ApiRequest, res: ApiResponse) {
-  res.setHeader("Cache-Control", "no-store");
-  if (req.method !== "POST") {
-    res.status(405).json({ error: "Method not allowed." });
-    return;
-  }
-
-  let userId: string | null = null;
-  try {
-    userId = await authenticateParent(req);
-  } catch {
-    res.status(503).json({ error: "Account verification is unavailable." });
-    return;
-  }
-  if (!userId) {
-    res.status(401).json({ error: "Sign in is required." });
-    return;
-  }
-  if (isRateLimited(userId)) {
-    res.status(429).json({ error: "Too many requests. Please wait a moment." });
-    return;
-  }
+  setPrivateApiHeaders(res);
+  if (rejectUnlessPost(req, res)) return;
 
   const text = typeof (req.body as { text?: unknown } | null)?.text === "string"
     ? (req.body as { text: string }).text.trim()
@@ -77,8 +29,14 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return;
   }
 
-  const apiKey = process.env.ELEVENLABS_API_KEY || process.env.VITE_ELEVENLABS_API_KEY;
-  const voiceId = process.env.ELEVENLABS_VOICE_ID || process.env.VITE_ELEVENLABS_VOICE_ID || "21m00Tcm4TlvDq8ikWAM";
+  const access = await authorizeFeature(req, "voice", text.length);
+  if (!access.ok) {
+    res.status(access.status).json({ error: access.error });
+    return;
+  }
+
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+  const voiceId = process.env.ELEVENLABS_VOICE_ID || "21m00Tcm4TlvDq8ikWAM";
   if (!apiKey) {
     res.status(503).json({ error: "Voice service is unavailable." });
     return;
@@ -104,7 +62,16 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       return;
     }
 
+    const declaredLength = Number(response.headers.get("content-length") || 0);
+    if (declaredLength > 5 * 1024 * 1024) {
+      res.status(502).json({ error: "Voice response was too large." });
+      return;
+    }
     const audio = Buffer.from(await response.arrayBuffer());
+    if (audio.byteLength > 5 * 1024 * 1024) {
+      res.status(502).json({ error: "Voice response was too large." });
+      return;
+    }
     res.setHeader("Content-Type", "audio/mpeg");
     res.setHeader("Content-Length", String(audio.length));
     res.status(200).end(audio);

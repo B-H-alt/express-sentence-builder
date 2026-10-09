@@ -4,6 +4,7 @@ import { Cloud, KeyRound, LockKeyhole, LogOut, Mail, ShieldCheck } from "lucide-
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getSupabase, isCloudAccountConfigured } from "@/lib/supabase";
+import { switchAccountStorage } from "@/lib/accountStorage";
 
 interface ParentAccountDialogProps {
   open: boolean;
@@ -11,6 +12,17 @@ interface ParentAccountDialogProps {
 }
 
 type AccountView = "sign-in" | "sign-up" | "forgot" | "reset";
+const MIN_PASSWORD_LENGTH = 12;
+const MAX_PASSWORD_LENGTH = 128;
+const PASSWORD_REQUIREMENTS = "Use at least 12 characters with uppercase, lowercase, a number, and a symbol.";
+
+const isStrongPassword = (password: string) =>
+  password.length >= MIN_PASSWORD_LENGTH &&
+  password.length <= MAX_PASSWORD_LENGTH &&
+  /[a-z]/.test(password) &&
+  /[A-Z]/.test(password) &&
+  /\d/.test(password) &&
+  /[^A-Za-z0-9]/.test(password);
 
 export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogProps) => {
   const [email, setEmail] = useState("");
@@ -30,11 +42,17 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
     getSupabase().then((supabase) => {
       if (!supabase || !mounted) return;
       supabase.auth.getUser().then(({ data }) => {
-        if (mounted) setUser(data.user ?? null);
+        if (!mounted) return;
+        setUser(data.user ?? null);
+        if (switchAccountStorage(data.user?.id ?? null)) window.location.reload();
       });
       const { data } = supabase.auth.onAuthStateChange((event, session) => {
         if (!mounted) return;
         setUser(session?.user ?? null);
+        if ((event === "SIGNED_IN" || event === "SIGNED_OUT") && switchAccountStorage(session?.user?.id ?? null)) {
+          window.location.reload();
+          return;
+        }
         if (event === "PASSWORD_RECOVERY") {
           setView("reset");
           setMessage("Choose a new password for your parent account.");
@@ -76,8 +94,8 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
       setMessage("Enter your email and password.");
       return;
     }
-    if (view === "sign-up" && password.length < 8) {
-      setMessage("Use a password with at least 8 characters.");
+    if (view === "sign-up" && !isStrongPassword(password)) {
+      setMessage(PASSWORD_REQUIREMENTS);
       return;
     }
     if (view === "sign-up" && password !== confirmPassword) {
@@ -102,7 +120,7 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
       setPassword("");
       setConfirmPassword("");
       if (error) {
-        finishRequest(error.message || "We could not create the account. Please try again.");
+        finishRequest("We could not create the account. Check your information or try again later.");
         return;
       }
       finishRequest(data.session
@@ -175,8 +193,8 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
 
   const handleResetPassword = async (event: FormEvent) => {
     event.preventDefault();
-    if (password.length < 8) {
-      setMessage("Use a password with at least 8 characters.");
+    if (!isStrongPassword(password)) {
+      setMessage(PASSWORD_REQUIREMENTS);
       return;
     }
     if (password !== confirmPassword) {
@@ -230,10 +248,10 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
           </DialogTitle>
           <DialogDescription>
             {view === "sign-up"
-              ? "Save learner settings and progress across devices."
+              ? "Create a secure parent account for protected Expressly features."
               : view === "forgot" || view === "reset"
                 ? "We’ll help you get back into your account."
-                : "Access saved learner settings and progress."}
+                : "Access protected parent and communication features."}
           </DialogDescription>
         </DialogHeader>
 
@@ -374,13 +392,19 @@ const PasswordFields = ({ password, confirmPassword, setPassword, setConfirmPass
           type="password"
           autoComplete={includeConfirmation ? "new-password" : "current-password"}
           required
-          minLength={includeConfirmation ? 8 : undefined}
+          minLength={includeConfirmation ? MIN_PASSWORD_LENGTH : undefined}
+          maxLength={MAX_PASSWORD_LENGTH}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          placeholder={includeConfirmation ? "At least 8 characters" : "Password"}
+          placeholder={includeConfirmation ? `At least ${MIN_PASSWORD_LENGTH} characters` : "Password"}
           className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-sm outline-none ring-offset-background focus:ring-2 focus:ring-ring"
         />
       </div>
+      {includeConfirmation && (
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          {PASSWORD_REQUIREMENTS}
+        </p>
+      )}
     </div>
     {includeConfirmation && (
       <div className="space-y-2">
@@ -391,7 +415,8 @@ const PasswordFields = ({ password, confirmPassword, setPassword, setConfirmPass
             type="password"
             autoComplete="new-password"
             required
-            minLength={8}
+            minLength={MIN_PASSWORD_LENGTH}
+            maxLength={MAX_PASSWORD_LENGTH}
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
             placeholder="Enter it again"

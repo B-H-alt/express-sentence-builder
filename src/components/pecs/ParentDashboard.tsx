@@ -21,15 +21,35 @@ import { useCardStore } from "@/store/cardStore";
 const PIN_STORAGE_KEY = "expressly-parent-pin-v1";
 const AUTO_LOCK_MS = 5 * 60 * 1000;
 
-type StoredPin = { salt: string; hash: string };
+type StoredPin = { salt: string; hash: string; version?: 1 | 2 };
 
 const bytesToBase64 = (bytes: Uint8Array) =>
   btoa(String.fromCharCode(...bytes));
 
-const hashPin = async (pin: string, salt: string) => {
-  const data = new TextEncoder().encode(`${salt}:${pin}`);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  return bytesToBase64(new Uint8Array(digest));
+const hashPin = async (pin: string, salt: string, version: 1 | 2 = 2) => {
+  if (version === 1) {
+    const data = new TextEncoder().encode(`${salt}:${pin}`);
+    const digest = await crypto.subtle.digest("SHA-256", data);
+    return bytesToBase64(new Uint8Array(digest));
+  }
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(pin),
+    "PBKDF2",
+    false,
+    ["deriveBits"],
+  );
+  const bits = await crypto.subtle.deriveBits(
+    {
+      name: "PBKDF2",
+      hash: "SHA-256",
+      salt: Uint8Array.from(atob(salt), (character) => character.charCodeAt(0)),
+      iterations: 210_000,
+    },
+    key,
+    256,
+  );
+  return bytesToBase64(new Uint8Array(bits));
 };
 
 const readStoredPin = (): StoredPin | null => {
@@ -112,7 +132,7 @@ export const ParentDashboard = () => {
     setError("");
     if (!storedPin) {
       const salt = bytesToBase64(crypto.getRandomValues(new Uint8Array(16)));
-      const next = { salt, hash: await hashPin(pin, salt) };
+      const next: StoredPin = { salt, hash: await hashPin(pin, salt, 2), version: 2 };
       localStorage.setItem(PIN_STORAGE_KEY, JSON.stringify(next));
       setStoredPin(next);
       setUnlocked(true);
@@ -122,11 +142,21 @@ export const ParentDashboard = () => {
       return;
     }
 
-    const candidate = await hashPin(pin, storedPin.salt);
+    const version = storedPin.version === 2 ? 2 : 1;
+    const candidate = await hashPin(pin, storedPin.salt, version);
     if (candidate !== storedPin.hash) {
       setError("That PIN is incorrect.");
       setBusy(false);
       return;
+    }
+    if (version === 1) {
+      const upgraded: StoredPin = {
+        salt: storedPin.salt,
+        hash: await hashPin(pin, storedPin.salt, 2),
+        version: 2,
+      };
+      localStorage.setItem(PIN_STORAGE_KEY, JSON.stringify(upgraded));
+      setStoredPin(upgraded);
     }
     setUnlocked(true);
     setPin("");

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ArrowRight, Leaf, Upload, UserRound, X } from "lucide-react";
 import { useTheme } from "next-themes";
 import { languageNames } from "@/lib/language";
+import { processImageUpload } from "@/lib/imageUpload";
 
 type OnboardingPalette = "blue" | "warm" | "sage";
 
@@ -28,15 +29,16 @@ export default function Onboarding() {
 
   const fileRef = useRef<HTMLInputElement | null>(null);
 
-  const handleImageUpload = (
+  const handleImageUpload = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => setImage(reader.result as string);
-    reader.readAsDataURL(file);
+    try {
+      setImage(await processImageUpload(file));
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "That image could not be used.");
+    }
   };
 
   const finishOnboarding = () => {
@@ -225,7 +227,7 @@ export default function Onboarding() {
                 <input
                   ref={fileRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp"
                   onChange={handleImageUpload}
                   className="hidden"
                 />

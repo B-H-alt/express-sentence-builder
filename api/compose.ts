@@ -1,4 +1,5 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
+import { authorizeFeature, rejectUnlessPost, setPrivateApiHeaders } from "./_security.js";
 
 interface ApiRequest {
   method?: string;
@@ -18,52 +19,8 @@ interface ComposeBody {
   language?: unknown;
 }
 
-const WINDOW_MS = 60_000;
-const MAX_REQUESTS_PER_WINDOW = 20;
-const requestsByUser = new Map<string, { count: number; resetAt: number }>();
-
-const getHeader = (req: ApiRequest, name: string) => {
-  const value = req.headers[name];
-  return Array.isArray(value) ? value[0] : value;
-};
-
-const isRateLimited = (userId: string) => {
-  const now = Date.now();
-  if (requestsByUser.size > 1_000) {
-    for (const [key, value] of requestsByUser) {
-      if (value.resetAt <= now) requestsByUser.delete(key);
-    }
-  }
-  const current = requestsByUser.get(userId);
-  if (!current || current.resetAt <= now) {
-    requestsByUser.set(userId, { count: 1, resetAt: now + WINDOW_MS });
-    return false;
-  }
-
-  current.count += 1;
-  return current.count > MAX_REQUESTS_PER_WINDOW;
-};
-
-const authenticateParent = async (req: ApiRequest) => {
-  const supabaseUrl = process.env.SUPABASE_URL?.trim();
-  const publishableKey = process.env.SUPABASE_PUBLISHABLE_KEY?.trim();
-  const authorization = getHeader(req, "authorization")?.trim();
-
-  if (!supabaseUrl || !publishableKey || !authorization?.startsWith("Bearer ")) {
-    return null;
-  }
-
-  const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
-    headers: {
-      apikey: publishableKey,
-      Authorization: authorization,
-    },
-    signal: AbortSignal.timeout(4_000),
-  });
-
-  if (!response.ok) return null;
-  const user = (await response.json()) as { id?: unknown };
-  return typeof user.id === "string" && user.id ? user.id : null;
+export const config = {
+  api: { bodyParser: { sizeLimit: "16kb" } },
 };
 
 const parseTokens = (body: unknown) => {
@@ -92,30 +49,8 @@ const parseLanguage = (body: unknown) => {
 };
 
 export default async function handler(req: ApiRequest, res: ApiResponse) {
-  res.setHeader("Cache-Control", "no-store");
-
-  if (req.method !== "POST") {
-    res.status(405).json({ ok: false, error: "Method not allowed." });
-    return;
-  }
-
-  let userId: string | null = null;
-  try {
-    userId = await authenticateParent(req);
-  } catch {
-    res.status(503).json({ ok: false, error: "Account verification is unavailable." });
-    return;
-  }
-
-  if (!userId) {
-    res.status(401).json({ ok: false, error: "Sign in is required." });
-    return;
-  }
-
-  if (isRateLimited(userId)) {
-    res.status(429).json({ ok: false, error: "Too many requests. Please wait a moment." });
-    return;
-  }
+  setPrivateApiHeaders(res);
+  if (rejectUnlessPost(req, res)) return;
 
   const tokens = parseTokens(req.body);
   if (!tokens) {
@@ -125,11 +60,13 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   const tense = parseTense(req.body);
   const language = parseLanguage(req.body);
 
-  // Temporary fallback keeps the existing Vercel setting working while the
-  // secret is renamed. The browser no longer reads either value.
-  const apiKey =
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
-    process.env.VITE_GOOGLE_GENERATIVE_AI_API_KEY;
+  const access = await authorizeFeature(req, "grammar", 1);
+  if (!access.ok) {
+    res.status(access.status).json({ ok: false, error: access.error });
+    return;
+  }
+
+  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
   if (!apiKey) {
     res.status(503).json({ ok: false, error: "Grammar service is unavailable." });
@@ -146,7 +83,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       model: "gemini-3.5-flash-lite",
       contents: prompt,
       config: {
-        thinkingConfig: { thinkingLevel: "MINIMAL" },
+        thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
         temperature: 0.1,
         maxOutputTokens: 64,
       },

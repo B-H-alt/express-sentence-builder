@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import type { AppLanguage, CardDisplayAmount, CharacterGender, TextSize, VocabularyLevel } from "@/store/cardStore";
 import { useTheme } from "next-themes";
 import { languageNames } from "@/lib/language";
+import { processImageUpload } from "@/lib/imageUpload";
 
 interface SettingsPanelProps {
   open: boolean;
@@ -100,13 +101,14 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
     draftGender !== characterGender ||
     draftLanguage !== language;
 
-  const handlePickImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => setDraftImage(reader.result as string);
-    reader.readAsDataURL(file);
+    try {
+      setDraftImage(await processImageUpload(file));
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "That image could not be used.");
+    }
   };
 
   const handleSave = () => {
@@ -205,7 +207,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                 <input
                   ref={fileRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp"
                   onChange={handlePickImage}
                   className="hidden"
                 />

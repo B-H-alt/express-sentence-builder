@@ -4,6 +4,8 @@ import { useCardStore } from "@/store/cardStore";
 import { X, UploadCloud, Image as ImageIcon, Sparkles, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Card } from "@/pages/PecsApp";
+import { getAccessToken } from "@/lib/supabase";
+import { processImageUpload } from "@/lib/imageUpload";
 
 interface AddCardModalProps {
   open: boolean;
@@ -85,17 +87,15 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose, card 
     onClose();
   };
 
-  const handleFile = (file: File | null) => {
+  const handleFile = async (file: File | null) => {
     if (!file) return;
-    if (!file.type.startsWith("image/")) return;
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const result = reader.result as string;
+    try {
+      const result = await processImageUpload(file);
       setImageUrl(result);
       setGenError(null);
-    };
-    reader.readAsDataURL(file);
+    } catch (error) {
+      setGenError(error instanceof Error ? error.message : "That image could not be used.");
+    }
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -156,10 +156,15 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose, card 
 
     try {
       setIsGenerating(true);
+      const accessToken = await getAccessToken();
+      if (!accessToken) throw new Error("Sign in to generate a custom image.");
 
       const resp = await fetch("/api/replicate/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({
           prompt: effectivePrompt,
           // aspect_ratio handled server-side; kept here if you later want it
@@ -193,8 +198,8 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose, card 
       if (data.dataUrl) setImageUrl(data.dataUrl);
       else if (data.imageUrl) setImageUrl(data.imageUrl);
       else throw new Error("No image returned from server.");
-    } catch (err: any) {
-      setGenError(err?.message || "Failed to generate image.");
+    } catch (error: unknown) {
+      setGenError(error instanceof Error ? error.message : "Failed to generate image.");
     } finally {
       setIsGenerating(false);
     }
@@ -331,7 +336,7 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose, card 
                   <input
                     id="add-card-file-input"
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp"
                     className="hidden"
                     onChange={(e) => handleFile(e.target.files?.[0] || null)}
                   />
