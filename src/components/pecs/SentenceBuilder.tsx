@@ -7,6 +7,7 @@ import { BookOpen, Check, Loader2, Trash2, Volume2, Square, X } from "lucide-rea
 import { useToast } from "@/hooks/use-toast";
 import { composeSentence, type SentenceTense } from "@/utils/compose-sentence";
 import { getAccessToken } from "@/lib/supabase";
+import { getApiUrl } from "@/lib/runtimeUrls";
 import { appText, translateCardLabel } from "@/lib/language";
 
 interface SentenceBuilderProps {
@@ -121,7 +122,7 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
   const speakWithElevenLabs = async (text: string) => {
     const accessToken = await getAccessToken();
     if (!accessToken) throw new Error("Sign in required for enhanced voice");
-    const res = await fetch("/api/speak", {
+    const res = await fetch(getApiUrl("/api/speak"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

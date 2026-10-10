@@ -1,5 +1,5 @@
 import Replicate from "replicate";
-import { authorizeFeature, rejectUnlessPost, setPrivateApiHeaders } from "../_security.js";
+import { authorizeFeature, handleNativeCors, rejectUnlessPost, setPrivateApiHeaders } from "../_security.js";
 
 export const config = {
   api: {
@@ -20,6 +20,7 @@ interface ApiResponse {
   status: (code: number) => ApiResponse;
   json: (body: unknown) => void;
   setHeader: (name: string, value: string) => void;
+  end: (body?: unknown) => void;
 }
 
 type ProviderError = {
@@ -140,6 +141,7 @@ Strict constraints:
 
 export default async function handler(req: ApiRequest, res: ApiResponse) {
   setPrivateApiHeaders(res);
+  if (handleNativeCors(req, res)) return;
   if (rejectUnlessPost(req, res)) return;
 
   try {

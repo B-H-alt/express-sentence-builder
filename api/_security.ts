@@ -8,6 +8,7 @@ interface ApiResponse {
   status: (code: number) => ApiResponse;
   json: (body: unknown) => void;
   setHeader: (name: string, value: string) => void;
+  end: (body?: unknown) => void;
 }
 
 export type ProtectedFeature = "grammar" | "voice" | "image_generation";
@@ -21,11 +22,34 @@ type AccessDecision = {
 };
 
 const MAX_AUTH_HEADER_LENGTH = 4_096;
+const NATIVE_APP_ORIGINS = new Set([
+  "capacitor://localhost",
+  "http://localhost",
+  "https://localhost",
+]);
 
 export const setPrivateApiHeaders = (res: ApiResponse) => {
   res.setHeader("Cache-Control", "no-store, max-age=0");
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.setHeader("X-Content-Type-Options", "nosniff");
+};
+
+export const handleNativeCors = (req: ApiRequest, res: ApiResponse) => {
+  const origin = getHeader(req, "origin")?.trim();
+  if (origin && NATIVE_APP_ORIGINS.has(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Vary", "Origin");
+  }
+
+  if (req.method !== "OPTIONS") return false;
+  if (!origin || !NATIVE_APP_ORIGINS.has(origin)) {
+    res.status(403).json({ ok: false, error: "Origin not allowed." });
+    return true;
+  }
+  res.status(204).end();
+  return true;
 };
 
 export const rejectUnlessPost = (req: ApiRequest, res: ApiResponse) => {

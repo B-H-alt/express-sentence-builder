@@ -1,5 +1,6 @@
 // src/utils/compose-sentence.ts
 import { getAccessToken } from "@/lib/supabase";
+import { getApiUrl } from "@/lib/runtimeUrls";
 import type { AppLanguage } from "@/store/cardStore";
 
 const compositionCache = new Map<string, string>();
@@ -29,7 +30,7 @@ export async function composeSentence(input: { tokens?: string[]; text?: string;
 
     const controller = new AbortController();
     timeout = window.setTimeout(() => controller.abort(), 12_000);
-    const response = await fetch("/api/compose", {
+    const response = await fetch(getApiUrl("/api/compose"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

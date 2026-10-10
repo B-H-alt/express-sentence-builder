@@ -52,13 +52,13 @@ export const AppHeader = ({
   const profileInitial = userName.charAt(0).toUpperCase();
 
   return (
-    <header className="relative overflow-hidden border-b border-border bg-gradient-subtle px-4 py-2.5 sm:px-6">
+    <header className="app-safe-header relative overflow-hidden border-b border-border bg-gradient-subtle px-3 py-2.5 sm:px-6">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 -top-24 h-48 bg-[radial-gradient(40%_60%_at_20%_0%,hsl(var(--accent)/0.22),transparent_60%),radial-gradient(40%_60%_at_80%_0%,hsl(var(--primary)/0.22),transparent_60%)] blur-2xl"
       ></div>
-      <div className="container relative mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-4">
+      <div className="container relative mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-2 sm:gap-3">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-4">
           <Link to="/">
             <Button variant="ghost" size="icon" className="rounded-xl">
               <ArrowLeft className="w-5 h-5" />
@@ -68,7 +68,7 @@ export const AppHeader = ({
             <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent sm:text-2xl">
               Expressly
             </h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="truncate text-xs text-muted-foreground sm:text-sm">
               {getLevelLabel(currentLevel)}
             </p>
           </div>
@@ -91,7 +91,7 @@ export const AppHeader = ({
               }`}
             >
               <Image className="h-4 w-4" />
-              <span>{language === "es" ? "Imágenes" : "Pictures"}</span>
+              <span className="hidden min-[390px]:inline">{language === "es" ? "Imágenes" : "Pictures"}</span>
             </button>
             <button
               type="button"

@@ -10,11 +10,15 @@ import PecsApp from "./pages/PecsApp";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import { ParentDashboard } from "./components/pecs/ParentDashboard";
+import { useDeviceProfile } from "./hooks/useDeviceProfile";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <ThemeProvider
+const App = () => {
+  useDeviceProfile();
+
+  return (
+    <ThemeProvider
     attribute="class"
     defaultTheme="light"
     enableSystem={false}
@@ -36,7 +40,8 @@ const App = () => (
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
-  </ThemeProvider>
-);
+    </ThemeProvider>
+  );
+};
 
 export default App;

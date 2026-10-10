@@ -7,6 +7,7 @@ import { getSupabase, isCloudAccountConfigured } from "@/lib/supabase";
 import { switchAccountStorage } from "@/lib/accountStorage";
 import { isCaptchaConfigured } from "@/lib/captcha";
 import { TurnstileCheck } from "./TurnstileCheck";
+import { getAccountRedirectUrl } from "@/lib/runtimeUrls";
 
 interface ParentAccountDialogProps {
   open: boolean;
@@ -127,7 +128,7 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
         email: address,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/pecs-app`,
+          emailRedirectTo: getAccountRedirectUrl(),
           captchaToken: captchaToken || undefined,
         },
       });
@@ -170,7 +171,7 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
     const { error } = await supabase.auth.signInWithOtp({
       email: address,
       options: {
-        emailRedirectTo: `${window.location.origin}/pecs-app`,
+        emailRedirectTo: getAccountRedirectUrl(),
         shouldCreateUser: false,
         captchaToken: captchaToken || undefined,
       },
@@ -197,7 +198,7 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
       return;
     }
     const { error } = await supabase.auth.resetPasswordForEmail(address, {
-      redirectTo: `${window.location.origin}/pecs-app`,
+      redirectTo: getAccountRedirectUrl(),
       captchaToken: captchaToken || undefined,
     });
     resetCaptcha();

@@ -149,7 +149,7 @@ const PecsApp = () => {
   }
 
   return (
-    <div className={`relative min-h-screen w-full overflow-x-hidden flex flex-col ${lowStimulationMode ? "bg-background" : "bg-[radial-gradient(160%_100%_at_50%_-10%,hsl(var(--background)/0.06)_0%,transparent_70%),radial-gradient(120%_80%_at_0%_100%,hsl(var(--accent)/0.10)_0%,transparent_70%),radial-gradient(120%_80%_at_100%_100%,hsl(var(--secondary)/0.10)_0%,transparent_70%),linear-gradient(180deg,hsl(var(--background))_0%,hsl(var(--background))_100%)]"}`}>
+    <div className={`app-shell relative flex min-h-screen w-full flex-col overflow-x-hidden ${lowStimulationMode ? "bg-background" : "bg-[radial-gradient(160%_100%_at_50%_-10%,hsl(var(--background)/0.06)_0%,transparent_70%),radial-gradient(120%_80%_at_0%_100%,hsl(var(--accent)/0.10)_0%,transparent_70%),radial-gradient(120%_80%_at_100%_100%,hsl(var(--secondary)/0.10)_0%,transparent_70%),linear-gradient(180deg,hsl(var(--background))_0%,hsl(var(--background))_100%)]"}`}>
       {/* FIXED STACK */}
       <div
         ref={topBarRef}
@@ -175,7 +175,7 @@ const PecsApp = () => {
         </div>
 
         {/* Builder + Tabs (contained) */}
-        <div className="flex w-full flex-col gap-2 px-4 py-2 sm:px-6 lg:px-8">
+        <div className="flex w-full flex-col gap-2 px-3 py-2 sm:px-6 lg:px-8">
           <div className="max-h-[280px]">
             <SentenceBuilder showWord={showWords} onOpenGuide={() => handleGuideChange(true)} />
           </div>
@@ -193,9 +193,9 @@ const PecsApp = () => {
       </div>
 
       {/* MAIN CONTENT (starts below fixed stack) */}
-      <main className="flex-1 pb-8" style={{ paddingTop: topBarH }}>
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="mt-4">
+      <main className="app-safe-bottom flex-1 pb-8" style={{ paddingTop: topBarH }}>
+        <div className="w-full px-3 sm:px-6 lg:px-8">
+          <div className="mt-3 sm:mt-4">
             <CardGrid
               selectedCategory={selectedCategory}
               showWord={showWords}

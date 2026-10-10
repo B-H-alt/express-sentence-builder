@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import type { Card } from "@/pages/PecsApp";
 import { getAccessToken } from "@/lib/supabase";
 import { processImageUpload } from "@/lib/imageUpload";
+import { getApiUrl } from "@/lib/runtimeUrls";
 
 interface AddCardModalProps {
   open: boolean;
@@ -159,7 +160,7 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose, card 
       const accessToken = await getAccessToken();
       if (!accessToken) throw new Error("Sign in to generate a custom image.");
 
-      const resp = await fetch("/api/replicate/generate", {
+      const resp = await fetch(getApiUrl("/api/replicate/generate"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

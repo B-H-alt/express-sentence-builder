@@ -418,11 +418,57 @@ All colors MUST be HSL.
 }
 
 @layer base {
+  :root {
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-right: env(safe-area-inset-right, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-area-left: env(safe-area-inset-left, 0px);
+  }
+
   * {
     @apply border-border;
   }
 
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
   body {
     @apply bg-background text-foreground;
+    min-height: 100vh;
+    min-height: 100dvh;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
+}
+
+@layer utilities {
+  .app-shell {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  .app-safe-header {
+    padding-top: max(0.625rem, var(--safe-area-top));
+    padding-right: max(0.75rem, var(--safe-area-right));
+    padding-left: max(0.75rem, var(--safe-area-left));
+  }
+
+  .app-safe-bottom {
+    padding-bottom: max(2rem, var(--safe-area-bottom));
+  }
+
+  [data-input="touch"] button,
+  [data-input="touch"] [role="button"] {
+    -webkit-tap-highlight-color: transparent;
   }
 }

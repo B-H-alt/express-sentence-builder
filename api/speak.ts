@@ -1,4 +1,4 @@
-import { authorizeFeature, rejectUnlessPost, setPrivateApiHeaders } from "./_security.js";
+import { authorizeFeature, handleNativeCors, rejectUnlessPost, setPrivateApiHeaders } from "./_security.js";
 
 interface ApiRequest {
   method?: string;
@@ -10,7 +10,7 @@ interface ApiResponse {
   status: (code: number) => ApiResponse;
   json: (body: unknown) => void;
   setHeader: (name: string, value: string) => void;
-  end: (body?: Buffer) => void;
+  end: (body?: unknown) => void;
 }
 
 export const config = {
@@ -19,6 +19,7 @@ export const config = {
 
 export default async function handler(req: ApiRequest, res: ApiResponse) {
   setPrivateApiHeaders(res);
+  if (handleNativeCors(req, res)) return;
   if (rejectUnlessPost(req, res)) return;
 
   const text = typeof (req.body as { text?: unknown } | null)?.text === "string"

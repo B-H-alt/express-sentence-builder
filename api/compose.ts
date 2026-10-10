@@ -1,5 +1,5 @@
 import { GoogleGenAI, ThinkingLevel } from "@google/genai";
-import { authorizeFeature, rejectUnlessPost, setPrivateApiHeaders } from "./_security.js";
+import { authorizeFeature, handleNativeCors, rejectUnlessPost, setPrivateApiHeaders } from "./_security.js";
 
 interface ApiRequest {
   method?: string;
@@ -11,6 +11,7 @@ interface ApiResponse {
   status: (code: number) => ApiResponse;
   json: (body: unknown) => void;
   setHeader: (name: string, value: string) => void;
+  end: (body?: unknown) => void;
 }
 
 interface ComposeBody {
@@ -50,6 +51,7 @@ const parseLanguage = (body: unknown) => {
 
 export default async function handler(req: ApiRequest, res: ApiResponse) {
   setPrivateApiHeaders(res);
+  if (handleNativeCors(req, res)) return;
   if (rejectUnlessPost(req, res)) return;
 
   const tokens = parseTokens(req.body);
