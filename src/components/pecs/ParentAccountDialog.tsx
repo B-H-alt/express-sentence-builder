@@ -4,7 +4,7 @@ import { AlertTriangle, Cloud, KeyRound, LockKeyhole, LogOut, Mail, ShieldCheck,
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getSupabase, isCloudAccountConfigured } from "@/lib/supabase";
-import { switchAccountStorage } from "@/lib/accountStorage";
+import { clearAccountStorage, switchAccountStorage } from "@/lib/accountStorage";
 import { isCaptchaConfigured } from "@/lib/captcha";
 import { TurnstileCheck } from "./TurnstileCheck";
 import { getAccountRedirectUrl } from "@/lib/runtimeUrls";
@@ -282,8 +282,8 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
         finishRequest(body.error || "We could not delete the account. Please try again.");
         return;
       }
+      clearAccountStorage(user.id);
       await supabase.auth.signOut({ scope: "local" });
-      switchAccountStorage(null);
       window.location.reload();
     } catch {
       finishRequest("We could not delete the account. Please try again.");

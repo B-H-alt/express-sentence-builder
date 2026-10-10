@@ -39,3 +39,17 @@ export const switchAccountStorage = (userId: string | null) => {
   window.localStorage.setItem(ACTIVE_SCOPE_KEY, nextScope);
   return true;
 };
+
+export const clearAccountStorage = (userId: string) => {
+  const scope = scopeFor(userId);
+  const activeScope = window.localStorage.getItem(ACTIVE_SCOPE_KEY);
+
+  window.localStorage.removeItem(`${SCOPED_PREFIX}${scope}`);
+  window.localStorage.removeItem(`${SCOPED_PIN_PREFIX}${scope}`);
+
+  if (activeScope === scope) {
+    window.localStorage.removeItem(ACTIVE_DATA_KEY);
+    window.localStorage.removeItem(ACTIVE_PIN_KEY);
+    window.localStorage.setItem(ACTIVE_SCOPE_KEY, "guest");
+  }
+};
