@@ -12,13 +12,14 @@ This is the working launch checklist for the iPhone and iPad version of Expressl
 - Native API calls route to the protected Expressly server endpoints.
 - Native API access is limited to approved Capacitor origins.
 - Account confirmation and password reset use the verified Expressly website.
+- In-app account deletion is implemented with server-side user verification and a typed confirmation step.
 - API provider secrets remain server-side.
 
 ## Next engineering gates
 
 1. Test sign-up, sign-in, email confirmation, password reset, and sign-out in the native app.
 2. Test grammar, ElevenLabs voice, and image generation with a confirmed test account.
-3. Add in-app account deletion before App Store submission.
+3. Configure the server-only Supabase service-role key and verify account deletion using a disposable test account.
 4. Add universal links so confirmation links can reopen the native app.
 5. Add a branded app icon and launch screen.
 6. Test supported iPhone and iPad sizes, portrait and landscape, VoiceOver, Dynamic Type, and reduced motion.

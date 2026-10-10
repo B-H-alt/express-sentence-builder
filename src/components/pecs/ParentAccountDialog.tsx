@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
-import { Cloud, KeyRound, LockKeyhole, LogOut, Mail, ShieldCheck } from "lucide-react";
+import { AlertTriangle, Cloud, KeyRound, LockKeyhole, LogOut, Mail, ShieldCheck, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getSupabase, isCloudAccountConfigured } from "@/lib/supabase";
@@ -8,6 +8,7 @@ import { switchAccountStorage } from "@/lib/accountStorage";
 import { isCaptchaConfigured } from "@/lib/captcha";
 import { TurnstileCheck } from "./TurnstileCheck";
 import { getAccountRedirectUrl } from "@/lib/runtimeUrls";
+import { getApiUrl } from "@/lib/runtimeUrls";
 
 interface ParentAccountDialogProps {
   open: boolean;
@@ -38,6 +39,8 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
   const [resetCooldown, setResetCooldown] = useState(0);
   const [captchaToken, setCaptchaToken] = useState("");
   const [captchaResetKey, setCaptchaResetKey] = useState(0);
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
 
   useEffect(() => {
     if (!isCloudAccountConfigured) return;
@@ -253,6 +256,40 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
     finishRequest("Signed out on this device.");
   };
 
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmation !== "DELETE") return;
+    setLoading(true);
+    setMessage("");
+    const supabase = await getSupabase();
+    const { data } = await supabase?.auth.getSession() ?? { data: { session: null } };
+    const accessToken = data.session?.access_token;
+    if (!supabase || !accessToken) {
+      finishRequest("Sign in again before deleting the account.");
+      return;
+    }
+
+    try {
+      const response = await fetch(getApiUrl("/api/account/delete"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ confirmation: deleteConfirmation }),
+      });
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) {
+        finishRequest(body.error || "We could not delete the account. Please try again.");
+        return;
+      }
+      await supabase.auth.signOut({ scope: "local" });
+      switchAccountStorage(null);
+      window.location.reload();
+    } catch {
+      finishRequest("We could not delete the account. Please try again.");
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto rounded-2xl border-border/70">
@@ -297,6 +334,55 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
               <LogOut className="mr-2 h-4 w-4" />
               Sign out
             </Button>
+            {!showDeleteAccount ? (
+              <button
+                type="button"
+                onClick={() => setShowDeleteAccount(true)}
+                className="mx-auto flex items-center gap-2 text-sm font-medium text-destructive hover:underline"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete account
+              </button>
+            ) : (
+              <div className="space-y-3 rounded-xl border border-destructive/35 bg-destructive/5 p-4">
+                <div className="flex gap-2 text-sm text-foreground">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                  <p>This permanently deletes the parent account, learner profiles, saved progress, and private images.</p>
+                </div>
+                <label className="block text-xs font-medium text-muted-foreground" htmlFor="delete-account-confirmation">
+                  Type DELETE to confirm
+                </label>
+                <input
+                  id="delete-account-confirmation"
+                  value={deleteConfirmation}
+                  onChange={(event) => setDeleteConfirmation(event.target.value)}
+                  autoComplete="off"
+                  className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    className="flex-1"
+                    onClick={handleDeleteAccount}
+                    disabled={loading || deleteConfirmation !== "DELETE"}
+                  >
+                    {loading ? "Deleting…" : "Delete permanently"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowDeleteAccount(false);
+                      setDeleteConfirmation("");
+                    }}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         ) : view === "forgot" ? (
           <form className="space-y-4" onSubmit={handleForgotPassword}>
