@@ -52,7 +52,7 @@ const Privacy = () => (
       },
       {
         title: "Your choices and deletion",
-        content: <p>Parents and caregivers can change learner settings, clear device data, or delete the parent account from within Expressly. Account deletion is designed to remove the authenticated account, its linked server records, private stored files, and that account's cached device data.</p>,
+        content: <p>Parents and caregivers can download a copy of their Expressly data, change learner settings, clear device data, or delete the parent account from within Expressly. Account deletion is designed to remove the authenticated account, its linked server records, private stored files, and that account's cached device data.</p>,
       },
       {
         title: "Retention and security",
@@ -71,4 +71,3 @@ const Privacy = () => (
 );
 
 export default Privacy;
-

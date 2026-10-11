@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
-import { AlertTriangle, Cloud, KeyRound, LockKeyhole, LogOut, Mail, ShieldCheck, Trash2 } from "lucide-react";
+import { AlertTriangle, Cloud, Download, KeyRound, LockKeyhole, LogOut, Mail, ShieldCheck, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getSupabase, isCloudAccountConfigured } from "@/lib/supabase";
@@ -9,6 +9,7 @@ import { isCaptchaConfigured } from "@/lib/captcha";
 import { TurnstileCheck } from "./TurnstileCheck";
 import { getAccountRedirectUrl } from "@/lib/runtimeUrls";
 import { getApiUrl } from "@/lib/runtimeUrls";
+import { downloadExpresslyData } from "@/lib/accountDataExport";
 
 interface ParentAccountDialogProps {
   open: boolean;
@@ -267,6 +268,12 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
     finishRequest("Signed out on this device.");
   };
 
+  const handleDownloadData = () => {
+    if (!user) return;
+    downloadExpresslyData({ id: user.id, email: user.email });
+    setMessage("Your Expressly data was downloaded to this device.");
+  };
+
   const handleDeleteAccount = async () => {
     if (deleteConfirmation !== "DELETE") return;
     setLoading(true);
@@ -344,6 +351,10 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
             <Button variant="outline" className="w-full" onClick={handleSignOut} disabled={loading}>
               <LogOut className="mr-2 h-4 w-4" />
               Sign out
+            </Button>
+            <Button variant="outline" className="w-full" onClick={handleDownloadData} disabled={loading}>
+              <Download className="mr-2 h-4 w-4" />
+              Download my data
             </Button>
             {!showDeleteAccount ? (
               <button
