@@ -19,6 +19,7 @@ type AccountView = "sign-in" | "sign-up" | "forgot" | "reset";
 const MIN_PASSWORD_LENGTH = 12;
 const MAX_PASSWORD_LENGTH = 128;
 const PASSWORD_REQUIREMENTS = "Use at least 12 characters with uppercase, lowercase, a number, and a symbol.";
+const ACCOUNT_AGREEMENT_VERSION = "2026-10-11";
 
 const isStrongPassword = (password: string) =>
   password.length >= MIN_PASSWORD_LENGTH &&
@@ -39,6 +40,7 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
   const [resetCooldown, setResetCooldown] = useState(0);
   const [captchaToken, setCaptchaToken] = useState("");
   const [captchaResetKey, setCaptchaResetKey] = useState(0);
+  const [agreementAccepted, setAgreementAccepted] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
 
@@ -93,6 +95,7 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
     setPassword("");
     setConfirmPassword("");
     setMessage("");
+    setAgreementAccepted(false);
     setCaptchaToken("");
     setCaptchaResetKey((value) => value + 1);
   };
@@ -117,6 +120,10 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
       setMessage("The passwords do not match.");
       return;
     }
+    if (view === "sign-up" && !agreementAccepted) {
+      setMessage("Please read and accept the account agreement.");
+      return;
+    }
 
     setLoading(true);
     setMessage("");
@@ -133,6 +140,10 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
         options: {
           emailRedirectTo: getAccountRedirectUrl(),
           captchaToken: captchaToken || undefined,
+          data: {
+            account_agreement_version: ACCOUNT_AGREEMENT_VERSION,
+            account_agreement_accepted_at: new Date().toISOString(),
+          },
         },
       });
       resetCaptcha();
@@ -432,11 +443,14 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
               setConfirmPassword={setConfirmPassword}
               includeConfirmation={view === "sign-up"}
             />
+            {view === "sign-up" && (
+              <AccountAgreement accepted={agreementAccepted} onAcceptedChange={setAgreementAccepted} />
+            )}
             <TurnstileCheck onToken={setCaptchaToken} resetKey={captchaResetKey} />
             <Button
               className="w-full"
               type="submit"
-              disabled={loading || (isCaptchaConfigured && !captchaToken)}
+              disabled={loading || (view === "sign-up" && !agreementAccepted) || (isCaptchaConfigured && !captchaToken)}
             >
               {loading ? "Please wait…" : view === "sign-up" ? "Create parent account" : "Sign in"}
             </Button>
@@ -559,4 +573,30 @@ const TextButton = ({ children, onClick }: { children: string; onClick: () => vo
   <button type="button" onClick={onClick} className="text-sm font-medium text-primary hover:underline">
     {children}
   </button>
+);
+
+const AccountAgreement = ({ accepted, onAcceptedChange }: {
+  accepted: boolean;
+  onAcceptedChange: (accepted: boolean) => void;
+}) => (
+  <div className="space-y-2 rounded-xl border border-border bg-muted/25 p-3">
+    <label className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed">
+      <input
+        type="checkbox"
+        checked={accepted}
+        onChange={(event) => onAcceptedChange(event.target.checked)}
+        className="mt-1 h-4 w-4 shrink-0 accent-primary"
+      />
+      <span>I have read and accept the Expressly account agreement.</span>
+    </label>
+    <details className="pl-7 text-xs leading-relaxed text-muted-foreground">
+      <summary className="cursor-pointer font-medium text-primary">Read the agreement</summary>
+      <ul className="mt-2 list-disc space-y-1.5 pl-4">
+        <li>I am an adult authorized to create and manage this account.</li>
+        <li>Expressly supports communication. It is not medical advice or an emergency service.</li>
+        <li>I will only upload information and images I have permission to use.</li>
+        <li>I will use Expressly responsibly and supervise the learner when appropriate.</li>
+      </ul>
+    </details>
+  </div>
 );
