@@ -4,15 +4,19 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
+import { lazy, Suspense } from "react";
 
-import Index from "./pages/Index";
-import PecsApp from "./pages/PecsApp";
-import About from "./pages/About";
-import Privacy from "./pages/Privacy";
-import Terms from "./pages/Terms";
-import NotFound from "./pages/NotFound";
-import { ParentDashboard } from "./components/pecs/ParentDashboard";
 import { useDeviceProfile } from "./hooks/useDeviceProfile";
+
+const Index = lazy(() => import("./pages/Index"));
+const PecsApp = lazy(() => import("./pages/PecsApp"));
+const About = lazy(() => import("./pages/About"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const ParentDashboard = lazy(() =>
+  import("./components/pecs/ParentDashboard").then((module) => ({ default: module.ParentDashboard }))
+);
 
 const queryClient = new QueryClient();
 
@@ -32,15 +36,17 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/pecs-app" element={<PecsApp />} />
-            <Route path="/parent" element={<ParentDashboard />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-background text-sm font-medium text-muted-foreground">Loading Expressly…</div>}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/pecs-app" element={<PecsApp />} />
+              <Route path="/parent" element={<ParentDashboard />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
