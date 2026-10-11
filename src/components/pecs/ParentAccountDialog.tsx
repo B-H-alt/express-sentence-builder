@@ -580,15 +580,21 @@ const AccountAgreement = ({ accepted, onAcceptedChange }: {
   onAcceptedChange: (accepted: boolean) => void;
 }) => (
   <div className="space-y-2 rounded-xl border border-border bg-muted/25 p-3">
-    <label className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed">
+    <div className="flex items-start gap-3 text-sm leading-relaxed">
       <input
+        id="account-agreement"
         type="checkbox"
         checked={accepted}
         onChange={(event) => onAcceptedChange(event.target.checked)}
         className="mt-1 h-4 w-4 shrink-0 accent-primary"
       />
-      <span>I have read and accept the Expressly account agreement.</span>
-    </label>
+      <span>
+        <label htmlFor="account-agreement" className="cursor-pointer">I agree to the </label>
+        <a href="/terms" target="_blank" rel="noreferrer" className="font-medium text-primary hover:underline">Terms of Use</a>
+        {" "}and acknowledge the{" "}
+        <a href="/privacy" target="_blank" rel="noreferrer" className="font-medium text-primary hover:underline">Privacy Policy</a>.
+      </span>
+    </div>
     <details className="pl-7 text-xs leading-relaxed text-muted-foreground">
       <summary className="cursor-pointer font-medium text-primary">Read the agreement</summary>
       <ul className="mt-2 list-disc space-y-1.5 pl-4">

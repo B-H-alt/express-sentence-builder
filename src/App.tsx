@@ -8,6 +8,8 @@ import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
 import PecsApp from "./pages/PecsApp";
 import About from "./pages/About";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 import { ParentDashboard } from "./components/pecs/ParentDashboard";
 import { useDeviceProfile } from "./hooks/useDeviceProfile";
@@ -35,6 +37,8 @@ const App = () => {
             <Route path="/pecs-app" element={<PecsApp />} />
             <Route path="/parent" element={<ParentDashboard />} />
             <Route path="/about" element={<About />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

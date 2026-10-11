@@ -650,11 +650,11 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
           </div>
 
           <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border/70 bg-background px-6 py-4 md:px-8">
-            <p className="hidden text-xs text-muted-foreground sm:block">
-              {activeSection === "profile"
-                ? "Save after changing the learner profile."
-                : "Changes in this section save automatically."}
-            </p>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="hidden sm:inline">{activeSection === "profile" ? "Save after changing the learner profile." : "Changes in this section save automatically."}</span>
+              <a href="/privacy" target="_blank" rel="noreferrer" className="hover:text-foreground hover:underline">Privacy</a>
+              <a href="/terms" target="_blank" rel="noreferrer" className="hover:text-foreground hover:underline">Terms</a>
+            </div>
             <div className="ml-auto flex items-center gap-2">
               <Button type="button" variant="outline" onClick={onClose}>
                 Close
