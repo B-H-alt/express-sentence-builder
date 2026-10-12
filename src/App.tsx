@@ -15,9 +15,7 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-const ParentDashboard = lazy(() =>
-  import("./components/pecs/ParentDashboard").then((module) => ({ default: module.ParentDashboard }))
-);
+const ParentAccess = lazy(() => import("./pages/ParentAccess"));
 
 const queryClient = new QueryClient();
 
@@ -41,7 +39,7 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/pecs-app" element={<PecsApp />} />
-              <Route path="/parent" element={<ParentDashboard />} />
+              <Route path="/parent" element={<ParentAccess />} />
               <Route path="/about" element={<About />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />

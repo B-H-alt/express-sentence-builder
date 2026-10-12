@@ -1,13 +1,16 @@
 // src/components/pecs/SettingsPanel.tsx
 import React, { useEffect, useRef, useState } from "react";
 import { useCardStore } from "@/store/cardStore";
-import { X, User, Plus, Layers, Upload, Trash2, Save, Leaf, Volume2, Palette, MessagesSquare, Moon, Sun } from "lucide-react";
+import { X, User, Plus, Layers, Upload, Trash2, Save, Leaf, Volume2, Palette, MessagesSquare, Moon, Sun, LockKeyhole } from "lucide-react";
 import { AddCardModal } from "@/components/pecs/AddCardModal";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import type { AppLanguage, CardDisplayAmount, CharacterGender, TextSize, VocabularyLevel } from "@/store/cardStore";
 import { useTheme } from "next-themes";
 import { languageNames } from "@/lib/language";
 import { processImageUpload } from "@/lib/imageUpload";
+import { useCurrentAccountPlan } from "@/hooks/useAccountPlan";
+import { planIncludes } from "@/lib/plans";
 
 interface SettingsPanelProps {
   open: boolean;
@@ -21,6 +24,8 @@ const levelOptions: { level: VocabularyLevel; label: string; subtitle: string }[
 ];
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) => {
+  const { plan, loading: planLoading } = useCurrentAccountPlan();
+  const hasAdvancedLevels = planIncludes(plan, "advanced_levels");
   const {
     currentLevel,
     setLevel,
@@ -75,6 +80,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
     setDraftGender(characterGender);
     setDraftLanguage(language);
   }, [open, userName, userImage, characterGender, language]);
+
+  useEffect(() => {
+    if (!planLoading && !hasAdvancedLevels && currentLevel !== 1) {
+      setLevel(1);
+    }
+  }, [currentLevel, hasAdvancedLevels, planLoading, setLevel]);
 
   useEffect(() => {
     if (!open) return;
@@ -510,31 +521,43 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                 </p>
 
                 <div className="space-y-1.5">
-                  {levelOptions.map((opt) => (
-                    <button
-                      key={opt.level}
-                      type="button"
-                      onClick={() => setLevel(opt.level)}
-                      className={`w-full text-left rounded-xl px-3 py-2 text-sm flex items-start gap-2 border transition-colors ${
-                        currentLevel === opt.level
-                          ? "border-primary/70 bg-primary/5"
-                          : "border-border hover:bg-muted/60"
-                      }`}
-                    >
-                      <span className="mt-[2px] text-xs">
-                        {currentLevel === opt.level ? "✓" : "○"}
-                      </span>
-                      <span>
-                        <span className={`font-medium ${currentLevel === opt.level ? "text-primary" : ""}`}>
-                          {opt.label}
+                  {levelOptions.map((opt) => {
+                    const locked = opt.level > 1 && !hasAdvancedLevels;
+                    return (
+                      <button
+                        key={opt.level}
+                        type="button"
+                        disabled={locked || planLoading}
+                        aria-label={`${opt.label}${locked ? " (Plus plan)" : ""}`}
+                        onClick={() => setLevel(opt.level)}
+                        className={`w-full text-left rounded-xl px-3 py-2 text-sm flex items-start gap-2 border transition-colors ${
+                          currentLevel === opt.level
+                            ? "border-primary/70 bg-primary/5"
+                            : locked
+                              ? "cursor-not-allowed border-border bg-background/50 text-muted-foreground opacity-70"
+                              : "border-border hover:bg-muted/60"
+                        }`}
+                      >
+                        <span className="mt-[2px] text-xs">
+                          {locked ? <LockKeyhole className="h-3.5 w-3.5" aria-hidden="true" /> : currentLevel === opt.level ? "✓" : "○"}
                         </span>
-                        <span className="block text-[11px] text-muted-foreground">
-                          {opt.subtitle}
+                        <span>
+                          <span className={`font-medium ${currentLevel === opt.level ? "text-primary" : ""}`}>
+                            {opt.label}
+                          </span>
+                          <span className="block text-[11px] text-muted-foreground">
+                            {locked ? "Included with Plus and Care" : opt.subtitle}
+                          </span>
                         </span>
-                      </span>
-                    </button>
-                  ))}
+                      </button>
+                    );
+                  })}
                 </div>
+                {!planLoading && !hasAdvancedLevels && (
+                  <p className="text-xs text-muted-foreground">
+                    Free includes Level 1. <Link to="/pricing" onClick={onClose} className="font-medium text-primary underline-offset-4 hover:underline">View plans</Link>
+                  </p>
+                )}
               </div>}
 
               {activeSection === "display" && <div className="rounded-2xl border border-border/80 bg-muted/30 p-4 flex flex-col gap-3">

@@ -1,5 +1,14 @@
 export type AccountPlan = "preview" | "free" | "plus" | "care_team" | "internal_team";
 
+export type PlanFeature =
+  | "advanced_levels"
+  | "grammar"
+  | "natural_voice"
+  | "image_generation"
+  | "parent_dashboard"
+  | "multiple_learners"
+  | "care_collaboration";
+
 export interface PlanDetails {
   name: string;
   shortDescription: string;
@@ -45,3 +54,42 @@ export const PLAN_DETAILS: Record<AccountPlan, PlanDetails> = {
 
 export const isAccountPlan = (value: unknown): value is AccountPlan =>
   typeof value === "string" && value in PLAN_DETAILS;
+
+const PLAN_FEATURES: Record<AccountPlan, ReadonlySet<PlanFeature>> = {
+  free: new Set(),
+  preview: new Set([
+    "advanced_levels",
+    "grammar",
+    "natural_voice",
+    "image_generation",
+    "parent_dashboard",
+  ]),
+  plus: new Set([
+    "advanced_levels",
+    "grammar",
+    "natural_voice",
+    "image_generation",
+    "parent_dashboard",
+  ]),
+  care_team: new Set([
+    "advanced_levels",
+    "grammar",
+    "natural_voice",
+    "image_generation",
+    "parent_dashboard",
+    "multiple_learners",
+    "care_collaboration",
+  ]),
+  internal_team: new Set([
+    "advanced_levels",
+    "grammar",
+    "natural_voice",
+    "image_generation",
+    "parent_dashboard",
+    "multiple_learners",
+    "care_collaboration",
+  ]),
+};
+
+export const planIncludes = (plan: AccountPlan, feature: PlanFeature) =>
+  PLAN_FEATURES[plan].has(feature);

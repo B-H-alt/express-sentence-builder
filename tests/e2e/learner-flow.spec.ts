@@ -53,6 +53,29 @@ test("the signed-out parent account screen exposes the expected safe paths", asy
   await expect(page.getByRole("link", { name: "Privacy Policy" })).toHaveAttribute("href", "/privacy");
 });
 
+test("the free experience keeps advanced vocabulary levels locked", async ({ page }) => {
+  await seedLearner(page);
+  await page.goto("/pecs-app");
+
+  await page.getByRole("button", { name: "Open Test Learner's learner profile" }).click();
+  await page.getByRole("menuitem", { name: "Profile & settings" }).click();
+  await page.getByRole("tab", { name: "Display" }).click();
+
+  await expect(page.getByRole("button", { name: "Level 1 (Beginner)" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Level 2 (Intermediate) (Plus plan)" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Level 3 (Advanced) (Plus plan)" })).toBeDisabled();
+  await expect(page.getByRole("link", { name: "View plans" })).toHaveAttribute("href", "/pricing");
+});
+
+test("the parent dashboard explains its plan requirement", async ({ page }) => {
+  await seedLearner(page);
+  await page.goto("/parent");
+
+  await expect(page.getByRole("heading", { name: "Parent dashboard is locked" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "View plans" })).toHaveAttribute("href", "/pricing");
+  await expect(page.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/pecs-app?account=sign-in");
+});
+
 test("the core app fits inside the viewport", async ({ page }) => {
   await seedLearner(page);
   await page.goto("/pecs-app");
