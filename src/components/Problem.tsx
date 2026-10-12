@@ -63,7 +63,7 @@ const Problem = () => {
           </Card>
 
           {/* Expressly (dominant / solution) */}
-          <Card className="relative border-0 shadow-xl scale-[1.03] bg-background">
+          <Card className="relative border-0 bg-background shadow-xl sm:scale-[1.03]">
             {/* subtle highlight ring */}
             <div className="pointer-events-none absolute inset-0 rounded-2xl ring-2 ring-secondary/20" />
 
