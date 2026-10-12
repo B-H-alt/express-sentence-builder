@@ -56,3 +56,15 @@ test("unknown routes show a recovery link", async ({ page }) => {
   await expect(page.getByText("Oops! Page not found")).toBeVisible();
   await expect(page.getByRole("link", { name: "Return to Home" })).toHaveAttribute("href", "/");
 });
+
+test("challenge page presents the project without sales content", async ({ page }) => {
+  await page.goto("/challenge");
+
+  await expect(page).toHaveTitle("Expressly | Congressional App Challenge");
+  await expect(page.getByRole("heading", { name: "A clearer way to say what you need." })).toBeVisible();
+  await expect(page.getByText("Congressional App Challenge 2026")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Open Expressly" }).first()).toHaveAttribute("href", "/pecs-app");
+  await expect(page.getByRole("link", { name: "Plans" })).toHaveCount(0);
+  await expect(page.getByText(/\$14\.99|per month/i)).toHaveCount(0);
+  await expectNoHorizontalOverflow(page);
+});

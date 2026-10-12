@@ -14,6 +14,7 @@ const About = lazy(() => import("./pages/About"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Pricing = lazy(() => import("./pages/Pricing"));
+const Challenge = lazy(() => import("./pages/Challenge"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ParentAccess = lazy(() => import("./pages/ParentAccess"));
 
@@ -44,6 +45,7 @@ const App = () => {
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/pricing" element={<Pricing />} />
+              <Route path="/challenge" element={<Challenge />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
