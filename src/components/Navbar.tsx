@@ -16,9 +16,10 @@ const Navbar = () => {
           <span className="text-xl font-semibold tracking-tight">Expressly</span>
         </Link>
         <div className="hidden items-center gap-8 md:flex">
-          <a href="#how-it-works" className="text-sm font-medium text-muted-foreground hover:text-foreground">How it works</a>
-          <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground">Features</a>
+          <Link to="/#how-it-works" className="text-sm font-medium text-muted-foreground hover:text-foreground">How it works</Link>
+          <Link to="/#features" className="text-sm font-medium text-muted-foreground hover:text-foreground">Features</Link>
           <Link to="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground">About</Link>
+          <Link to="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground">Plans</Link>
           <button
             type="button"
             onClick={() => setShowAccount(true)}
@@ -36,9 +37,10 @@ const Navbar = () => {
       {open && (
         <div className="border-t border-border bg-background px-6 py-5 md:hidden">
           <div className="mx-auto flex max-w-7xl flex-col gap-4">
-            <a href="#how-it-works" onClick={() => setOpen(false)} className="font-medium">How it works</a>
-            <a href="#features" onClick={() => setOpen(false)} className="font-medium">Features</a>
+            <Link to="/#how-it-works" onClick={() => setOpen(false)} className="font-medium">How it works</Link>
+            <Link to="/#features" onClick={() => setOpen(false)} className="font-medium">Features</Link>
             <Link to="/about" onClick={() => setOpen(false)} className="font-medium">About</Link>
+            <Link to="/pricing" onClick={() => setOpen(false)} className="font-medium">Plans</Link>
             <button
               type="button"
               onClick={() => {

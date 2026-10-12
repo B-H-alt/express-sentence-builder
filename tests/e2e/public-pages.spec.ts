@@ -22,6 +22,7 @@ test("public information pages load and remain usable", async ({ page }) => {
     { path: "/about", heading: "Communication should not fail when it matters most." },
     { path: "/privacy", heading: "Privacy Policy" },
     { path: "/terms", heading: "Terms of Use" },
+    { path: "/pricing", heading: "Choose the support that fits." },
   ];
 
   for (const item of pages) {
@@ -29,6 +30,25 @@ test("public information pages load and remain usable", async ({ page }) => {
     await expect(page.getByRole("heading", { name: item.heading })).toBeVisible();
     await expectNoHorizontalOverflow(page);
   }
+});
+
+test("plans navigation returns to home page sections", async ({ page }) => {
+  await page.goto("/pricing");
+
+  if ((page.viewportSize()?.width ?? 1024) < 768) {
+    await page.getByRole("button", { name: "Open menu" }).click();
+  }
+  await page.getByRole("link", { name: "How it works" }).click();
+  await expect(page).toHaveURL(/\/#how-it-works$/);
+  await expect(page.getByRole("heading", { name: "Clear enough to use in the moment." })).toBeVisible();
+
+  await page.goto("/pricing");
+  if ((page.viewportSize()?.width ?? 1024) < 768) {
+    await page.getByRole("button", { name: "Open menu" }).click();
+  }
+  await page.getByRole("link", { name: "Features" }).click();
+  await expect(page).toHaveURL(/\/#features$/);
+  await expect(page.getByRole("heading", { name: "Set up the board for the person using it." })).toBeVisible();
 });
 
 test("unknown routes show a recovery link", async ({ page }) => {

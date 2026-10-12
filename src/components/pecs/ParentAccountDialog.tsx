@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
+import { Link } from "react-router-dom";
 import { AlertTriangle, Cloud, Download, KeyRound, LockKeyhole, LogOut, Mail, ShieldCheck, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -10,6 +11,8 @@ import { TurnstileCheck } from "./TurnstileCheck";
 import { getAccountRedirectUrl } from "@/lib/runtimeUrls";
 import { getApiUrl } from "@/lib/runtimeUrls";
 import { downloadExpresslyData } from "@/lib/accountDataExport";
+import { useAccountPlan } from "@/hooks/useAccountPlan";
+import { PLAN_DETAILS } from "@/lib/plans";
 
 interface ParentAccountDialogProps {
   open: boolean;
@@ -44,6 +47,7 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
   const [agreementAccepted, setAgreementAccepted] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const accountPlan = useAccountPlan(user);
 
   useEffect(() => {
     if (!isCloudAccountConfigured) return;
@@ -347,6 +351,23 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
                 <p className="font-medium">Signed in</p>
                 <p className="truncate text-sm text-muted-foreground">{user.email}</p>
               </div>
+            </div>
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-border p-4">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Current plan</p>
+                <p className="mt-1 font-semibold">
+                  {accountPlan.loading
+                    ? "Checking…"
+                    : accountPlan.plan
+                      ? PLAN_DETAILS[accountPlan.plan].name
+                      : "Not available"}
+                </p>
+              </div>
+              {accountPlan.plan !== "internal_team" && (
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/pricing" onClick={() => onOpenChange(false)}>View plans</Link>
+                </Button>
+              )}
             </div>
             <Button variant="outline" className="w-full" onClick={handleSignOut} disabled={loading}>
               <LogOut className="mr-2 h-4 w-4" />
