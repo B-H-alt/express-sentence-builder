@@ -76,6 +76,27 @@ test("the parent dashboard explains its plan requirement", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/pecs-app?account=sign-in");
 });
 
+test("calm mode removes secondary card controls without blocking communication", async ({ page }) => {
+  await seedLearner(page);
+  await page.goto("/pecs-app");
+
+  await page.getByRole("button", { name: "Open Test Learner's learner profile" }).click();
+  await page.getByRole("menuitem", { name: "Profile & settings" }).click();
+  await page.getByRole("tab", { name: "Display" }).click();
+  await page.getByRole("switch", { name: "Calm mode" }).click();
+  await page.getByRole("button", { name: "Close settings" }).click();
+
+  await page.getByRole("searchbox", { name: "Find a card" }).fill("eat");
+  const eatCard = page.getByRole("button", { name: "Add Eat to sentence" });
+  await expect(eatCard).toBeVisible();
+  await expect(page.getByRole("button", { name: "Add Eat to favorites" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Choose another word for Eat" })).toHaveCount(0);
+
+  await eatCard.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("button", { name: "Remove Eat from sentence" })).toBeVisible();
+});
+
 test("the core app fits inside the viewport", async ({ page }) => {
   await seedLearner(page);
   await page.goto("/pecs-app");
