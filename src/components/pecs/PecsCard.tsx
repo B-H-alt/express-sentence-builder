@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { translateCardLabel } from "@/lib/language";
 
+const genderSpecificBodyCards = new Set(["l1-50", "l2-54", "l2-56", "l2-58"]);
+
 interface PecsCardProps {
   card: Card;
   showWord: boolean;
@@ -50,7 +52,9 @@ export const PecsCard = ({
       ? girlCardImages[card.id]
       : boyCardImages[card.id];
   const displayedImage =
-    sharedCardImages[card.id] || genderImage || existingImage;
+    genderSpecificBodyCards.has(card.id)
+      ? genderImage || sharedCardImages[card.id] || existingImage
+      : sharedCardImages[card.id] || genderImage || existingImage;
 
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData("card", JSON.stringify({ ...card, text: displayedLabel }));
