@@ -83,6 +83,35 @@ export const CategoryTabs = ({
     ["home", "favorites", "all"].includes(category.id) || !hiddenCategories.includes(category.id)
   );
 
+  const renderCategory = (category: (typeof categoriesToShow)[number]) => {
+    const Icon = category.icon;
+    const isSelected = selectedCategory === category.id;
+
+    return (
+      <Button
+        key={category.id}
+        variant={isSelected ? "default" : "outline"}
+        size="default"
+        onClick={() => {
+          onSearchQueryChange("");
+          onSelectCategory(category.id);
+        }}
+        className={cn(
+          "rounded-xl gap-2 whitespace-nowrap transition-all",
+          isSelected &&
+            (lowStimulationMode
+              ? "bg-primary text-primary-foreground border-primary"
+              : "bg-gradient-accent text-white border-transparent hover:brightness-110"),
+          !isSelected &&
+            "bg-card text-foreground border border-border hover:bg-card/90 hover:text-foreground hover:border-accent"
+        )}
+      >
+        <Icon className={category.id === "body" ? "h-7 w-7" : "h-5 w-5"} />
+        {language === "es" ? translateCategory(category.id, language) : category.label}
+      </Button>
+    );
+  };
+
   return (
     <div data-guide="find-words" className="flex flex-col gap-2 pb-1 md:flex-row md:items-center">
       <div className="relative shrink-0 md:w-52 lg:w-64">
@@ -107,38 +136,7 @@ export const CategoryTabs = ({
         )}
       </div>
       <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto">
-      {categoriesToShow.map((category) => {
-        const Icon = category.icon;
-        const isSelected = selectedCategory === category.id;
-
-        return (
-          <Button
-            key={category.id}
-            variant={isSelected ? "default" : "outline"}
-            size="default"
-            onClick={() => {
-              onSearchQueryChange("");
-              onSelectCategory(category.id);
-            }}
-            className={cn(
-              "rounded-xl gap-2 whitespace-nowrap transition-all",
-              isSelected &&
-                (lowStimulationMode
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-gradient-accent text-white border-transparent hover:brightness-110"),
-              !isSelected &&
-                "bg-card text-foreground border border-border hover:bg-card/90 hover:text-foreground hover:border-accent"
-            )}
-          >
-            <Icon
-              className={
-                category.id === "body" ? "w-7 h-7" : "w-5 h-5"
-              }
-            />
-            {language === "es" ? translateCategory(category.id, language) : category.label}
-          </Button>
-        );
-      })}
+        {categoriesToShow.map(renderCategory)}
       </div>
     </div>
   );

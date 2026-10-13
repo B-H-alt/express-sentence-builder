@@ -20,6 +20,7 @@ export const CategoryHome = ({ showWord, onSelectCategory }: CategoryHomeProps) 
   } = useCardStore();
   const language = useCardStore((state) => state.language);
   const characterGender = useCardStore((state) => state.characterGender);
+  const lowStimulationMode = useCardStore((state) => state.lowStimulationMode);
   const copy = appText[language];
 
   const availableCards = getFilteredCards();
@@ -45,11 +46,13 @@ export const CategoryHome = ({ showWord, onSelectCategory }: CategoryHomeProps) 
 
   return (
     <div>
-      <section className="rounded-3xl border border-border bg-card p-5 sm:p-6">
+      <section className={`relative overflow-hidden rounded-3xl border border-border p-5 sm:p-6 ${lowStimulationMode ? "bg-card" : "bg-gradient-to-br from-card via-card to-primary/5"}`}>
+          {!lowStimulationMode && (
+            <div aria-hidden className="pointer-events-none absolute -right-12 -top-16 h-40 w-40 rounded-full bg-secondary/10 blur-3xl" />
+          )}
           <div className="flex items-center justify-between gap-3">
-            <div>
+            <div className="relative">
               <h2 className="text-lg font-semibold text-foreground">{language === "es" ? "Tus tarjetas rápidas" : "Your quick cards"}</h2>
-              <p className="text-sm text-muted-foreground">{language === "es" ? "Favoritos y tarjetas usadas recientemente." : "Favorites and cards you used recently."}</p>
             </div>
             <button
               type="button"

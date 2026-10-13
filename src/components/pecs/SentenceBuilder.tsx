@@ -234,7 +234,7 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
           </button>
         </div>
         <div data-guide="sentence-actions" className="flex flex-wrap items-center justify-end gap-2">
-          <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+          {sentence.length > 0 && <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
             <span className="hidden sm:inline">{copy.tense}</span>
             <select
               aria-label="Sentence tense"
@@ -246,7 +246,7 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
               <option value="present">{copy.present}</option>
               <option value="future">{copy.future}</option>
             </select>
-          </label>
+          </label>}
           {sentence.length > 0 && (
             <>
               <Button size="sm" onClick={handleFinish} className="rounded-xl" disabled={isComposing}>
