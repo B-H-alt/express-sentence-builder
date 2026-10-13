@@ -63,20 +63,30 @@ export const PecsCard = ({
     }
   };
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!onClick || (event.key !== "Enter" && event.key !== " ")) return;
+    event.preventDefault();
+    onClick();
+  };
+
   return (
     <div
       className={cn(
-        "relative group aspect-square rounded-2xl border-2 cursor-pointer select-none",
+        "relative group aspect-square rounded-2xl cursor-pointer select-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/45 focus-visible:ring-offset-2",
         "bg-card-base hover:bg-card-hover active:bg-card-selected",
-        "border-border hover:border-primary/50",
+        lowStimulationMode ? "border border-border" : "border-2 border-border hover:border-primary/50",
         lowStimulationMode
           ? "shadow-none"
           : "transition-all duration-200 active:scale-95 shadow-sm hover:shadow-md",
         inSentence ? "w-[100px] h-[100px]" : "w-full"
       )}
       draggable={!inSentence}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      aria-label={onClick ? `Add ${displayedLabel} to sentence` : undefined}
       onDragStart={handleDragStart}
       onClick={onClick}
+      onKeyDown={handleKeyDown}
       onContextMenu={handleLongPress}
     >
       {/* Remove button for sentence cards */}
@@ -86,15 +96,18 @@ export const PecsCard = ({
             e.stopPropagation();
             onRemove();
           }}
-          className="absolute bottom-1.5 right-1.5 w-5 h-5 bg-muted/60 text-muted-foreground rounded-full flex items-center justify-center shadow-sm z-20 hover:bg-muted hover:scale-105 transition-all"
+          aria-label={`Remove ${displayedLabel} from sentence`}
+          className="absolute bottom-1.5 right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-muted/80 text-muted-foreground shadow-sm z-20 hover:bg-muted transition-colors"
         >
-          <X className="w-3 h-3" />
+          <X className="h-3.5 w-3.5" />
         </button>
       )}
 
       {/* Favorite star */}
-      {!inSentence && onFavorite && (
+      {!inSentence && onFavorite && !lowStimulationMode && (
         <button
+          type="button"
+          aria-label={isFavorite ? `Remove ${displayedLabel} from favorites` : `Add ${displayedLabel} to favorites`}
           onClick={(e) => {
             e.stopPropagation();
             onFavorite();
@@ -111,7 +124,7 @@ export const PecsCard = ({
       )}
 
       {/* Edit button for custom cards */}
-      {!inSentence && onEdit && (
+      {!inSentence && onEdit && !lowStimulationMode && (
         <button
           type="button"
           aria-label={`Edit ${card.text}`}
@@ -125,7 +138,7 @@ export const PecsCard = ({
         </button>
       )}
 
-      {!inSentence && !onEdit && variations.length > 1 && onSelectVariation && (
+      {!inSentence && !onEdit && !lowStimulationMode && variations.length > 1 && onSelectVariation && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button

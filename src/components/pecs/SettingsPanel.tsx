@@ -440,7 +440,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                       <div>
                         <h3 className="text-sm font-semibold">Calm mode</h3>
                         <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                          Calmer colors, less movement, lighter shadows, and fewer cards at once.
+                          Fewer cards, more space, less movement, and no editing controls on the learner’s cards.
                         </p>
                       </div>
                     </div>

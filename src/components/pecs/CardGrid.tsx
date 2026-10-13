@@ -37,6 +37,7 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
   const copy = appText[language];
   const [editingCard, setEditingCard] = useState<Card | null>(null);
   const [page, setPage] = useState(1);
+  const [announcement, setAnnouncement] = useState({ id: 0, text: "" });
 
   const levelFilteredCards = getFilteredCards();
   
@@ -75,8 +76,13 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
     cardsPerPage === 4 ? "large" : cardsPerPage === 8 ? "medium" : "compact";
 
   const handleCardClick = (card: Card) => {
-    addToSentence({ ...card, text: translateCardLabel(card.text, language, characterGender) });
+    const label = translateCardLabel(card.text, language, characterGender);
+    addToSentence({ ...card, text: label });
     incrementUsage(card.id);
+    setAnnouncement((current) => ({
+      id: current.id + 1,
+      text: language === "es" ? `Se agregó ${label} a la oración` : `Added ${label} to the sentence`,
+    }));
   };
 
   const handleVariationClick = (card: Card, label: string) => {
@@ -113,6 +119,9 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
 
   return (
     <div data-guide="card-area" className={`relative h-full overflow-hidden overflow-y-auto rounded-2xl border border-border p-3 sm:rounded-3xl sm:p-4 ${lowStimulationMode ? "bg-background shadow-none" : "bg-gradient-subtle shadow-soft"}`}>
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        <span key={announcement.id}>{announcement.text}</span>
+      </div>
       <div
         aria-hidden
         className={`pointer-events-none absolute -z-10 right-[-20%] top-[-20%] h-[60%] w-[60%]
@@ -143,7 +152,7 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
               <h3 className="text-lg font-semibold text-foreground mb-3 px-1">
                 {language === "es" ? translateCategory(category, language) : categoryLabels[category] || category}
               </h3>
-              <div className={`grid ${gridColumns} gap-3`}>
+              <div className={`grid ${gridColumns} ${lowStimulationMode ? "gap-4" : "gap-3"}`}>
                 {cards.map((card) => (
                   <PecsCard
                     key={card.id}
@@ -163,7 +172,7 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
           ))}
         </div>
       ) : (
-        <div className={`grid ${gridColumns} gap-3`}>
+        <div className={`grid ${gridColumns} ${lowStimulationMode ? "gap-4" : "gap-3"}`}>
           {visibleCards.map((card) => (
             <PecsCard
               key={card.id}
