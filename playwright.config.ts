@@ -16,11 +16,23 @@ export default defineConfig({
   projects: [
     {
       name: "desktop",
+      testIgnore: "**/ipad-flow.spec.ts",
       use: { ...devices["Desktop Chrome"] },
     },
     {
       name: "mobile",
+      testIgnore: "**/ipad-flow.spec.ts",
       use: { ...devices["Pixel 7"] },
+    },
+    {
+      name: "ipad-portrait",
+      testMatch: "**/ipad-flow.spec.ts",
+      use: { ...devices["iPad Pro 11"], browserName: "chromium" },
+    },
+    {
+      name: "ipad-landscape",
+      testMatch: "**/ipad-flow.spec.ts",
+      use: { ...devices["iPad Pro 11 landscape"], browserName: "chromium" },
     },
   ],
   webServer: {

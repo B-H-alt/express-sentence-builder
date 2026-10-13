@@ -2,10 +2,13 @@ import { useEffect } from "react";
 
 type DeviceProfile = "phone" | "tablet" | "desktop";
 
-const getDeviceProfile = (): DeviceProfile => {
+const getDeviceProfile = (hasCoarsePointer: boolean): DeviceProfile => {
   const width = window.innerWidth;
 
   if (width < 640) return "phone";
+  // Large iPads can be wider than desktop breakpoints in landscape. Input
+  // method keeps them on the touch-first tablet layout after rotation.
+  if (hasCoarsePointer && width < 1400) return "tablet";
   if (width < 1024) return "tablet";
   return "desktop";
 };
@@ -22,7 +25,7 @@ export const useDeviceProfile = () => {
     const standalone = window.matchMedia("(display-mode: standalone)");
 
     const update = () => {
-      root.dataset.device = getDeviceProfile();
+      root.dataset.device = getDeviceProfile(coarsePointer.matches);
       root.dataset.input = coarsePointer.matches ? "touch" : "pointer";
       root.dataset.orientation = window.innerWidth > window.innerHeight ? "landscape" : "portrait";
       root.classList.toggle("app-standalone", standalone.matches);

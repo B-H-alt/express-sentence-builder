@@ -471,4 +471,22 @@ All colors MUST be HSL.
   [data-input="touch"] [role="button"] {
     -webkit-tap-highlight-color: transparent;
   }
+
+  [data-device="tablet"][data-input="touch"] button {
+    min-height: 44px;
+  }
+
+  .category-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+  }
+
+  .category-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  [data-device="tablet"] .category-scroll > * {
+    scroll-snap-align: start;
+  }
 }

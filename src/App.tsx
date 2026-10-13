@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { lazy, Suspense } from "react";
+import { Capacitor } from "@capacitor/core";
 
 import { useDeviceProfile } from "./hooks/useDeviceProfile";
 
@@ -38,7 +39,7 @@ const App = () => {
         <BrowserRouter>
           <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-background text-sm font-medium text-muted-foreground">Loading Expressly…</div>}>
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={Capacitor.isNativePlatform() ? <PecsApp /> : <Index />} />
               <Route path="/pecs-app" element={<PecsApp />} />
               <Route path="/parent" element={<ParentDashboard />} />
               <Route path="/about" element={<About />} />

@@ -9,6 +9,10 @@ This is the working launch checklist for the iPhone and iPad version of Expressl
 - iPhone simulator build succeeds without code signing.
 - Phone, tablet, desktop, orientation, and touch layouts are detected automatically.
 - iPhone and iPad safe areas are supported.
+- iPad portrait and landscape communication flows have dedicated automated coverage.
+- Large iPads remain on the touch-first tablet layout after rotation.
+- The installed app opens directly into the communication board instead of the marketing website.
+- The native app icon and launch screen use Expressly branding.
 - Native API calls route to the protected Expressly server endpoints.
 - Native API access is limited to approved Capacitor origins.
 - Account confirmation and password reset use the verified Expressly website.
@@ -17,11 +21,11 @@ This is the working launch checklist for the iPhone and iPad version of Expressl
 
 ## Next engineering gates
 
-1. Test sign-up, sign-in, email confirmation, password reset, and sign-out in the native app.
-2. Test grammar, ElevenLabs voice, and image generation with a confirmed test account.
-3. Configure the server-only Supabase service-role key and verify account deletion using a disposable test account.
-4. Add universal links so confirmation links can reopen the native app.
-5. Add a branded app icon and launch screen.
+1. Install Xcode 26 or later. Apple's current upload requirement does not accept a build produced by the installed Xcode 16.4.
+2. Test sign-up, sign-in, email confirmation, password reset, and sign-out in the native app.
+3. Test grammar, ElevenLabs voice, and image generation with a confirmed test account.
+4. Configure the server-only Supabase service-role key and verify account deletion using a disposable test account.
+5. Add universal links so confirmation links can reopen the native app.
 6. Test supported iPhone and iPad sizes, portrait and landscape, VoiceOver, Dynamic Type, and reduced motion.
 7. Add automated checks for authentication, account isolation, rate limits, and API authorization.
 8. Run TestFlight with the founders and a small family or therapist testing group.
@@ -37,4 +41,4 @@ This is the working launch checklist for the iPhone and iPad version of Expressl
 
 ## Current safety boundary
 
-This work is isolated on `feature/ios-responsive-foundation`. Do not merge or deploy it until native authentication and protected-feature tests pass.
+Do not submit the first production build until native authentication, protected-feature testing, account deletion, and App Store privacy disclosures are verified end to end.
