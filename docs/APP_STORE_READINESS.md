@@ -24,6 +24,8 @@ This is the working launch checklist for the iPhone and iPad version of Expressl
 
 ## Next engineering gates
 
+Use [the real iPad release test](IPAD_RELEASE_TEST.md) to record device results. These checks remain unverified until completed on physical hardware.
+
 1. Install Xcode 26 or later. Apple's current upload requirement does not accept a build produced by the installed Xcode 16.4.
 2. Run `npm run mobile:release-check` and provide all browser-safe production values through the protected build environment.
 3. Test sign-up, sign-in, email confirmation, password reset, and sign-out in the native app.
