@@ -13,7 +13,7 @@ interface LegalPageProps {
 }
 
 export const LegalPage = ({ title, summary, sections }: LegalPageProps) => (
-  <main className="min-h-screen bg-background text-foreground">
+  <main className="min-h-screen overflow-x-hidden bg-background text-foreground">
     <header className="border-b border-border bg-background">
       <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-5">
         <Link to="/" className="flex items-center gap-3 font-semibold" aria-label="Expressly home">
@@ -51,4 +51,3 @@ export const LegalPage = ({ title, summary, sections }: LegalPageProps) => (
     </article>
   </main>
 );
-

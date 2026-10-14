@@ -56,7 +56,7 @@ const AboutPage = () => {
   ];
 
   return (
-    <main className="bg-background pt-16">
+    <main className="overflow-x-hidden bg-background pt-16">
       <Navbar />
       {/* HERO */}
       <CoreIdea />
