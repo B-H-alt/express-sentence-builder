@@ -23,13 +23,14 @@ This is the working launch checklist for the iPhone and iPad version of Expressl
 ## Next engineering gates
 
 1. Install Xcode 26 or later. Apple's current upload requirement does not accept a build produced by the installed Xcode 16.4.
-2. Test sign-up, sign-in, email confirmation, password reset, and sign-out in the native app.
-3. Test grammar, ElevenLabs voice, and image generation with a confirmed test account.
-4. Configure the server-only Supabase service-role key and verify account deletion using a disposable test account.
-5. Add universal links so confirmation links can reopen the native app.
-6. Test supported iPhone and iPad sizes, portrait and landscape, VoiceOver, Dynamic Type, and reduced motion.
-7. Add automated checks for authentication, account isolation, rate limits, and API authorization.
-8. Run TestFlight with the founders and a small family or therapist testing group.
+2. Run `npm run mobile:release-check` and provide all browser-safe production values through the protected build environment.
+3. Test sign-up, sign-in, email confirmation, password reset, and sign-out in the native app.
+4. Test grammar, ElevenLabs voice, and image generation with a confirmed test account.
+5. Configure the server-only Supabase service-role key and verify account deletion using a disposable test account.
+6. Add universal links so confirmation links can reopen the native app.
+7. Test supported iPhone and iPad sizes, portrait and landscape, VoiceOver, Dynamic Type, and reduced motion.
+8. Add automated checks for authentication, account isolation, rate limits, and API authorization.
+9. Run TestFlight with the founders and a small family or therapist testing group.
 
 ## Business and Apple gates
 
