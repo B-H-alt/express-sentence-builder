@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "test:launch": "playwright test",
     "test:launch:headed": "playwright test --headed",
+    "screenshots:app-store": "node scripts/capture-app-store-screenshots.mjs",
     "preview": "vite preview",
     "mobile:sync": "npm run build && cap sync ios",
     "mobile:open": "cap open ios"

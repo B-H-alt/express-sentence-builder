@@ -13,6 +13,7 @@ This is the working launch checklist for the iPhone and iPad version of Expressl
 - Large iPads remain on the touch-first tablet layout after rotation.
 - The installed app opens directly into the communication board instead of the marketing website.
 - The native app icon and launch screen use Expressly branding.
+- Repeatable, privacy-safe App Store screenshot capture is available for current iPhone and iPad sizes.
 - Native API calls route to the protected Expressly server endpoints.
 - Native API access is limited to approved Capacitor origins.
 - Account confirmation and password reset use the verified Expressly website.
@@ -37,7 +38,7 @@ This is the working launch checklist for the iPhone and iPad version of Expressl
 3. Publish the privacy policy and support contact pages.
 4. Complete Apple's privacy disclosures from the verified data inventory.
 5. Decide whether subscriptions launch with version one. Digital subscriptions must use Apple's approved purchase system in the iOS app.
-6. Prepare the App Store description, screenshots, age rating, review notes, and test account.
+6. Review the prepared App Store description and screenshots, then confirm the age rating and test account.
 
 ## Current safety boundary
 

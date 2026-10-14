@@ -59,6 +59,7 @@ coverage/
 playwright-report/
 test-results/
 blob-report/
+artifacts/app-store-screenshots/
 
 # ==========================
 # Temporary Files
