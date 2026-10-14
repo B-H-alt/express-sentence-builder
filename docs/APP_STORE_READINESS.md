@@ -19,6 +19,8 @@ This is the working launch checklist for the iPhone and iPad version of Expressl
 - Account confirmation and password reset use the verified Expressly website.
 - In-app account deletion is implemented with server-side user verification and a typed confirmation step.
 - API provider secrets remain server-side.
+- A valid app privacy manifest is bundled with the iOS target and documents the account and protected-feature data handled by the app.
+- `npm run mobile:app-store-audit` checks the bundle identity, version, device support, icon, launch screen, privacy manifest, and listing URLs before release work.
 
 ## Next engineering gates
 

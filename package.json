@@ -15,6 +15,7 @@
     "preview": "vite preview",
     "mobile:sync": "npm run build && cap sync ios",
     "mobile:release-check": "node scripts/check-mobile-release-env.mjs",
+    "mobile:app-store-audit": "node scripts/audit-app-store-readiness.mjs",
     "mobile:open": "cap open ios"
   },
   "dependencies": {

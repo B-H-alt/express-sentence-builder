@@ -30,7 +30,9 @@ const learnerState = {
     currentLevel: 1,
     showWords: true,
     language: "en",
-    calmMode: false,
+    lowStimulationMode: false,
+    favorites: ["l1-1", "l1-11", "l1-13", "l1-22"],
+    recentCardIds: ["l1-23", "l1-14", "l1-15", "l1-16"],
   },
   version: 15,
 };
