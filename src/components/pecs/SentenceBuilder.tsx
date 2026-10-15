@@ -10,6 +10,7 @@ import { composeSentence, type SentenceTense } from "@/utils/compose-sentence";
 import { getAccessToken } from "@/lib/supabase";
 import { getApiUrl } from "@/lib/runtimeUrls";
 import { appText, translateCardLabel } from "@/lib/language";
+import { playAudioToEnd } from "@/utils/play-audio";
 
 interface SentenceBuilderProps {
   showWord: boolean;
@@ -113,9 +114,9 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
     audioRef.current.preservesPitch = true;
     audioRef.current.volume = speechVolume;
     try {
-      await audioRef.current.play();
+      await playAudioToEnd(audioRef.current);
     } finally {
-      audioRef.current.onended = () => URL.revokeObjectURL(url);
+      URL.revokeObjectURL(url);
     }
   };
 
@@ -180,7 +181,8 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
       } else {
         try {
           await speakWithElevenLabs(spoken);
-        } catch {
+        } catch (error) {
+          if (error instanceof DOMException && error.name === "AbortError") return false;
           await speakWithWebAPI(spoken);
           toast({ title: "Using device voice" });
         }
