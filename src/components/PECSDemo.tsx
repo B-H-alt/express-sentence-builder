@@ -289,8 +289,6 @@ const PECSDemo = () => {
         </div>
       </div>
 
-      {/* audio element holder */}
-      <audio ref={audioRef} hidden />
     </section>
   );
 };

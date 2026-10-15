@@ -740,7 +740,7 @@ export const useCardStore = create<CardStore>()(
       name: "pecs-storage",
       version: 15,
 
-      partialize: (state) => ({
+      partialize: (state): Partial<CardStore> => ({
         sentence: state.sentence,
         favorites: state.favorites,
         currentLevel: state.currentLevel,
@@ -762,7 +762,7 @@ export const useCardStore = create<CardStore>()(
         characterGender: state.characterGender,
       }),
 
-      migrate: (persistedState: unknown, _version: number) => {
+      migrate: (persistedState: unknown, _version: number): Partial<CardStore> => {
         // Ensure cards always refresh from allCards, and also fix old user cards
         const prev = (persistedState ?? {}) as Partial<CardStore>;
 

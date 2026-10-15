@@ -2,6 +2,10 @@ import { CircleHelp, Hand, MessageCircle, MoreHorizontal, OctagonAlert, Volume2 
 import { useCardStore } from "@/store/cardStore";
 import { appText, translateCardLabel } from "@/lib/language";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect, useRef } from "react";
+import { getAccessToken } from "@/lib/supabase";
+import { getApiUrl } from "@/lib/runtimeUrls";
+import { playAudioToEnd } from "@/utils/play-audio";
 
 const quickMessages = [
   { text: "Yes", icon: MessageCircle },
@@ -20,8 +24,63 @@ export const SpeakNowBar = () => {
   const recordQuickPhrase = useCardStore((state) => state.recordQuickPhrase);
   const language = useCardStore((state) => state.language);
   const copy = appText[language];
+  const playback = useRef<HTMLAudioElement | null>(null);
+  const pending = useRef<AbortController | null>(null);
+  const sequence = useRef(0);
+  const clips = useRef(new Map<string, Blob>());
 
-  const speak = (text: string) => {
+  useEffect(() => () => {
+    sequence.current += 1;
+    pending.current?.abort();
+    playback.current?.pause();
+    window.speechSynthesis?.cancel();
+  }, []);
+
+  const speak = async (text: string) => {
+    const current = ++sequence.current;
+    pending.current?.abort();
+    playback.current?.pause();
+    window.speechSynthesis?.cancel();
+    const controller = new AbortController();
+    pending.current = controller;
+    if (navigator.onLine) {
+      try {
+        const token = await getAccessToken();
+        if (current !== sequence.current) return;
+        if (token) {
+          const key = `${language}:${text}`;
+          let blob = clips.current.get(key);
+          if (!blob) {
+            const response = await fetch(getApiUrl("/api/speak"), {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+              body: JSON.stringify({ text }),
+              signal: controller.signal,
+            });
+            if (!response.ok || !response.headers.get("content-type")?.startsWith("audio/")) throw new Error("Enhanced voice unavailable");
+            blob = await response.blob();
+            if (current !== sequence.current) return;
+            if (clips.current.size >= 14) clips.current.clear();
+            clips.current.set(key, blob);
+          }
+          if (current !== sequence.current) return;
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          playback.current = audio;
+          audio.volume = speechVolume;
+          audio.playbackRate = speechRate;
+          audio.preservesPitch = true;
+          try { await playAudioToEnd(audio); }
+          finally { URL.revokeObjectURL(url); }
+          if (current === sequence.current) recordQuickPhrase(text);
+          return;
+        }
+      } catch {
+        if (current !== sequence.current || controller.signal.aborted) return;
+        toast({ title: language === "es" ? "Usando la voz del dispositivo" : "Using device voice" });
+      }
+    }
+    if (current !== sequence.current) return;
     const unavailable = () => toast({ title: language === "es" ? "Voz no disponible" : "Device voice unavailable", description: language === "es" ? "Puedes mostrar tu mensaje." : "You can still show your message." });
     if (!("speechSynthesis" in window)) { unavailable(); return; }
     window.speechSynthesis.cancel();
@@ -33,8 +92,8 @@ export const SpeakNowBar = () => {
     if (!navigator.onLine && voices.length > 0 && !localVoice) { unavailable(); return; }
     utterance.rate = speechRate;
     utterance.volume = speechVolume;
-    utterance.onend = () => recordQuickPhrase(text);
-    utterance.onerror = unavailable;
+    utterance.onend = () => { if (current === sequence.current) recordQuickPhrase(text); };
+    utterance.onerror = () => { if (current === sequence.current) unavailable(); };
     window.speechSynthesis.speak(utterance);
   };
 

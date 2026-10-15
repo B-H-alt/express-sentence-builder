@@ -23,5 +23,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run typecheck
       - run: npx playwright install --with-deps chromium
       - run: npm run test:launch
+      - run: npm run test:offline

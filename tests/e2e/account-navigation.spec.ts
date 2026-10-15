@@ -25,6 +25,8 @@ test("landing sign-in opens the app and updates the account button", async ({ pa
   await page.getByPlaceholder("Password", { exact: true }).fill("Test-password-123!");
   await page.getByRole("dialog").getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/\/pecs-app(?:\?|$)/);
+  // Route changes before the lazy-loaded communication screen is ready.
+  await page.getByRole("searchbox", { name: "Find a card" }).waitFor();
   await expect(page.getByText("You're signed in", { exact: true })).toBeVisible();
   await page.goto("/");
   if (mobile) await page.getByRole("button", { name: "Open menu", exact: true }).click();
