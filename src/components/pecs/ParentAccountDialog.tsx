@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { AlertTriangle, Cloud, Download, KeyRound, LockKeyhole, LogOut, Mail, ShieldCheck, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -44,6 +44,9 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
   const [agreementAccepted, setAgreementAccepted] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const loginPending = useRef(false);
+
+  const openSignedInApp = () => window.location.replace("/pecs-app?account=signed-in");
 
   useEffect(() => {
     if (!isCloudAccountConfigured) return;
@@ -55,14 +58,24 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
       supabase.auth.getUser().then(({ data }) => {
         if (!mounted) return;
         setUser(data.user ?? null);
-        if (switchAccountStorage(data.user?.id ?? null)) window.location.reload();
+        if (switchAccountStorage(data.user?.id ?? null)) {
+          if (data.user) openSignedInApp();
+          else window.location.reload();
+        }
       });
       const { data } = supabase.auth.onAuthStateChange((event, session) => {
         if (!mounted) return;
         setUser(session?.user ?? null);
-        if ((event === "SIGNED_IN" || event === "SIGNED_OUT") && switchAccountStorage(session?.user?.id ?? null)) {
-          window.location.reload();
-          return;
+        if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+          const accountChanged = switchAccountStorage(session?.user?.id ?? null);
+          if (event === "SIGNED_IN" && (accountChanged || loginPending.current)) {
+            openSignedInApp();
+            return;
+          }
+          if (accountChanged) {
+            window.location.reload();
+            return;
+          }
         }
         if (event === "PASSWORD_RECOVERY") {
           setView("reset");
@@ -160,6 +173,7 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
       return;
     }
 
+    loginPending.current = true;
     const { error } = await supabase.auth.signInWithPassword({
       email: address,
       password,
@@ -167,6 +181,11 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
     });
     resetCaptcha();
     setPassword("");
+    if (!error) {
+      openSignedInApp();
+      return;
+    }
+    loginPending.current = false;
     finishRequest(error ? "The email or password is incorrect." : "Signed in securely.");
   };
 

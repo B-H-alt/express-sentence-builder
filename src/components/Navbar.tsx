@@ -1,11 +1,29 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Menu, UserRound, X } from "lucide-react";
 import { ParentAccountDialog } from "@/components/pecs/ParentAccountDialog";
+import { getSupabase } from "@/lib/supabase";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    let unsubscribe: (() => void) | undefined;
+    getSupabase().then((client) => {
+      if (!client || !active) return;
+      client.auth.getSession().then(({ data }) => {
+        if (active) setSignedIn(Boolean(data.session));
+      });
+      const { data } = client.auth.onAuthStateChange((_event, session) => {
+        if (active) setSignedIn(Boolean(session));
+      });
+      unsubscribe = () => data.subscription.unsubscribe();
+    });
+    return () => { active = false; unsubscribe?.(); };
+  }, []);
 
   return (
     <>
@@ -25,7 +43,7 @@ const Navbar = () => {
             className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
           >
             <UserRound className="h-4 w-4" />
-            Sign in
+            {signedIn ? "My account" : "Sign in"}
           </button>
           <Link to="/pecs-app" className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">Open app</Link>
         </div>
@@ -48,7 +66,7 @@ const Navbar = () => {
               className="flex items-center gap-2 rounded-xl border border-border px-4 py-3 text-left font-semibold"
             >
               <UserRound className="h-4 w-4" />
-              Sign in to your account
+              {signedIn ? "My account" : "Sign in to your account"}
             </button>
             <Link to="/pecs-app" onClick={() => setOpen(false)} className="mt-1 rounded-full bg-primary px-5 py-3 text-center font-semibold text-primary-foreground">Open app</Link>
           </div>

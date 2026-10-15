@@ -13,6 +13,7 @@ import Onboarding from "@/components/pecs/Onboarding";
 import { SpeakNowBar } from "@/components/pecs/SpeakNowBar";
 import { FeedbackDialog } from "@/components/pecs/FeedbackDialog";
 import { AppGuideDialog } from "@/components/pecs/AppGuideDialog";
+import { useToast } from "@/hooks/use-toast";
 
 export interface Card {
   id: string;
@@ -34,6 +35,15 @@ const PecsApp = () => {
   const [showParentAccount, setShowParentAccount] = useState(accountRequested);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (searchParams.get("account") !== "signed-in") return;
+    toast({ title: "You're signed in", description: "Welcome to Expressly." });
+    const next = new URLSearchParams(searchParams);
+    next.delete("account");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams, toast]);
 
   const { currentLevel, showWords, setShowWords, lowStimulationMode, textSize } = useCardStore(useShallow((state) => ({
     currentLevel: state.currentLevel, showWords: state.showWords, setShowWords: state.setShowWords,
