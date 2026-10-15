@@ -2,11 +2,12 @@
 import { getAccessToken } from "@/lib/supabase";
 import { getApiUrl } from "@/lib/runtimeUrls";
 import type { AppLanguage } from "@/store/cardStore";
+import { correctOfflineGrammar } from "./offline-grammar";
 
 const compositionCache = new Map<string, string>();
 export type SentenceTense = "past" | "present" | "future";
 export type CompositionIssue = "sign_in_required" | "email_not_confirmed" | "rate_limited" | "unavailable" | "offline";
-export type CompositionResult = { sentence: string; issue?: CompositionIssue };
+export type CompositionResult = { sentence: string; issue?: CompositionIssue; source?: "offline_rules" };
 
 // Compose a sentence from input tokens or text using the server-side Gemini model
 export async function composeSentence(input: { tokens?: string[]; text?: string; tense?: SentenceTense; language?: AppLanguage }): Promise<CompositionResult> {
@@ -22,7 +23,10 @@ export async function composeSentence(input: { tokens?: string[]; text?: string;
   const cacheKey = `${language}:${tense}:${tokens.toLocaleLowerCase()}`;
   const cached = compositionCache.get(cacheKey);
   if (cached !== undefined) return { sentence: cached };
-  if (!navigator.onLine) return { sentence: "", issue: "offline" };
+  if (!navigator.onLine) {
+    const sentence = correctOfflineGrammar(inputLabels, tense, language);
+    return { sentence, issue: "offline", ...(sentence ? { source: "offline_rules" as const } : {}) };
+  }
 
   let timeout: number | undefined;
   try {

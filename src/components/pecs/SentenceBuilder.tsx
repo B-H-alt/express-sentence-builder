@@ -77,7 +77,9 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
       setUsedOriginalWords(!improved);
       setCompositionNotice(
         result.issue === "offline"
-          ? language === "es" ? "Sin conexión. Se muestran tus palabras originales." : "You're offline. Showing your original words."
+          ? result.source === "offline_rules"
+            ? "You're offline. Basic grammar applied on this device."
+            : language === "es" ? "Sin conexión. Se muestran tus palabras originales." : "You're offline. Showing your original words."
           : result.issue === "sign_in_required"
           ? copy.grammarSignIn
           : result.issue === "email_not_confirmed"
@@ -341,7 +343,7 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
               {usedOriginalWords ? copy.originalCards : copy.sentence}
             </p>
             <p className="mt-1 text-lg font-semibold leading-7">{composedText}</p>
-            {usedOriginalWords && (
+            {(usedOriginalWords || compositionNotice) && (
               <p className="mt-1 text-sm text-muted-foreground">
                 {compositionNotice || copy.grammarUnavailable}
               </p>

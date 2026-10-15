@@ -1,6 +1,24 @@
 import { expect, test } from "@playwright/test";
 import { seedLearner, blockThirdPartyWidgets } from "./helpers";
 
+test("offline Finish applies basic grammar without a server request", async ({ page, context }) => {
+  await seedLearner(page);
+  await blockThirdPartyWidgets(page);
+  await page.goto("/pecs-app");
+  const search = page.getByRole("searchbox", { name: "Find a card" });
+  await search.fill("mom");
+  await page.getByRole("button", { name: "Add Mom to sentence", exact: true }).click();
+  await search.fill("eat");
+  await page.getByRole("button", { name: "Add Eat to sentence", exact: true }).click();
+  const requests: string[] = [];
+  page.on("request", (request) => { if (request.url().includes("/api/")) requests.push(request.url()); });
+  await context.setOffline(true);
+  await page.getByRole("button", { name: "Finish sentence", exact: true }).click();
+  await expect(page.getByText("Mom is eating.", { exact: true })).toBeVisible();
+  await expect(page.getByText("You're offline. Basic grammar applied on this device.", { exact: true })).toBeVisible();
+  expect(requests).toEqual([]);
+});
+
 for (const speechWorks of [true, false]) {
   test(`offline device speech ${speechWorks ? "completes" : "fails without losing cards"}`, async ({ page, context }) => {
     await blockThirdPartyWidgets(page);
