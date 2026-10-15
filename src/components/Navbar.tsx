@@ -37,6 +37,7 @@ const Navbar = () => {
           <a href="#how-it-works" className="text-sm font-medium text-muted-foreground hover:text-foreground">How it works</a>
           <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground">Features</a>
           <Link to="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground">About</Link>
+          <Link to="/pecs-app" className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">Open app</Link>
           <button
             type="button"
             onClick={() => setShowAccount(true)}
@@ -45,7 +46,6 @@ const Navbar = () => {
             <UserRound className="h-4 w-4" />
             {signedIn ? "My account" : "Sign in"}
           </button>
-          <Link to="/pecs-app" className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">Open app</Link>
         </div>
         <button type="button" aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen((value) => !value)} className="rounded-xl border border-border p-2 md:hidden">
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
