@@ -148,6 +148,10 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose, card 
 
   const generateImage = async () => {
     setGenError(null);
+    if (!navigator.onLine) {
+      setGenError("Image generation needs an internet connection. You can still upload a picture from this device.");
+      return;
+    }
 
     const effectivePrompt = buildEffectivePrompt();
     if (!effectivePrompt) {

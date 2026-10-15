@@ -5,7 +5,7 @@ import type { AppLanguage } from "@/store/cardStore";
 
 const compositionCache = new Map<string, string>();
 export type SentenceTense = "past" | "present" | "future";
-export type CompositionIssue = "sign_in_required" | "email_not_confirmed" | "rate_limited" | "unavailable";
+export type CompositionIssue = "sign_in_required" | "email_not_confirmed" | "rate_limited" | "unavailable" | "offline";
 export type CompositionResult = { sentence: string; issue?: CompositionIssue };
 
 // Compose a sentence from input tokens or text using the server-side Gemini model
@@ -22,6 +22,7 @@ export async function composeSentence(input: { tokens?: string[]; text?: string;
   const cacheKey = `${language}:${tense}:${tokens.toLocaleLowerCase()}`;
   const cached = compositionCache.get(cacheKey);
   if (cached !== undefined) return { sentence: cached };
+  if (!navigator.onLine) return { sentence: "", issue: "offline" };
 
   let timeout: number | undefined;
   try {

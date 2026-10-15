@@ -1,6 +1,7 @@
 import { CircleHelp, Hand, MessageCircle, MoreHorizontal, OctagonAlert, Volume2 } from "lucide-react";
 import { useCardStore } from "@/store/cardStore";
 import { appText, translateCardLabel } from "@/lib/language";
+import { useToast } from "@/hooks/use-toast";
 
 const quickMessages = [
   { text: "Yes", icon: MessageCircle },
@@ -13,6 +14,7 @@ const quickMessages = [
 ];
 
 export const SpeakNowBar = () => {
+  const { toast } = useToast();
   const speechRate = useCardStore((state) => state.speechRate);
   const speechVolume = useCardStore((state) => state.speechVolume);
   const recordQuickPhrase = useCardStore((state) => state.recordQuickPhrase);
@@ -20,14 +22,20 @@ export const SpeakNowBar = () => {
   const copy = appText[language];
 
   const speak = (text: string) => {
-    if (!("speechSynthesis" in window)) return;
+    const unavailable = () => toast({ title: language === "es" ? "Voz no disponible" : "Device voice unavailable", description: language === "es" ? "Puedes mostrar tu mensaje." : "You can still show your message." });
+    if (!("speechSynthesis" in window)) { unavailable(); return; }
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = language === "es" ? "es-US" : "en-US";
+    const voices = window.speechSynthesis.getVoices();
+    const localVoice = voices.find((voice) => voice.localService && voice.lang.toLowerCase().startsWith(language));
+    if (localVoice) utterance.voice = localVoice;
+    if (!navigator.onLine && voices.length > 0 && !localVoice) { unavailable(); return; }
     utterance.rate = speechRate;
     utterance.volume = speechVolume;
+    utterance.onend = () => recordQuickPhrase(text);
+    utterance.onerror = unavailable;
     window.speechSynthesis.speak(utterance);
-    recordQuickPhrase(text);
   };
 
   return (

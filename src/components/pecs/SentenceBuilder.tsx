@@ -76,7 +76,9 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
       const finalText = improved || raw;
       setUsedOriginalWords(!improved);
       setCompositionNotice(
-        result.issue === "sign_in_required"
+        result.issue === "offline"
+          ? language === "es" ? "Sin conexión. Se muestran tus palabras originales." : "You're offline. Showing your original words."
+          : result.issue === "sign_in_required"
           ? copy.grammarSignIn
           : result.issue === "email_not_confirmed"
             ? copy.grammarConfirmEmail
@@ -116,13 +118,21 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
   };
 
   const speakWithWebAPI = async (text: string) => {
-    return new Promise<void>((resolve) => {
-      if (!("speechSynthesis" in window)) return resolve();
+    return new Promise<void>((resolve, reject) => {
+      if (!("speechSynthesis" in window)) return reject(new Error("Device speech is unavailable."));
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = language === "es" ? "es-US" : "en-US";
+      const voices = window.speechSynthesis.getVoices();
+      const localVoice = voices.find((voice) => voice.localService && voice.lang.toLowerCase().startsWith(language));
+      if (localVoice) utterance.voice = localVoice;
+      if (!navigator.onLine && voices.length > 0 && !localVoice) {
+        reject(new Error("No installed voice for this language."));
+        return;
+      }
       utterance.rate = speechRate;
       utterance.volume = speechVolume;
       utterance.onend = () => resolve();
+      utterance.onerror = () => reject(new Error("Device speech could not finish."));
       window.speechSynthesis.speak(utterance);
     });
   };
@@ -163,14 +173,23 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
   const speakText = async (spoken: string) => {
     setIsSpeaking(true);
     try {
-      await speakWithElevenLabs(spoken);
-    } catch (err: unknown) {
-      console.error(err);
-      await speakWithWebAPI(spoken);
+      if (!navigator.onLine) {
+        await speakWithWebAPI(spoken);
+      } else {
+        try {
+          await speakWithElevenLabs(spoken);
+        } catch {
+          await speakWithWebAPI(spoken);
+          toast({ title: "Using device voice" });
+        }
+      }
+      return true;
+    } catch {
       toast({
-        title: "Using browser voice",
-        description: "Couldn’t use ElevenLabs. Fell back to Web Speech.",
+        title: language === "es" ? "No se pudo hablar" : "Speech couldn't play",
+        description: language === "es" ? "Tus tarjetas siguen aquí. Puedes mostrar tu mensaje." : "Your cards are still here. You can show your message instead.",
       });
+      return false;
     } finally {
       setIsSpeaking(false);
     }
@@ -206,11 +225,12 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
   };
 
   const handleSpeak = async () => {
+    const sourceSentence = useCardStore.getState().sentence;
     const spoken = await resolveSentence();
     if (!spoken) return;
     setShowComposed(true);
-    if (!saveCurrentSentence()) return;
-    await speakText(spoken);
+    const played = await speakText(spoken);
+    if (played && useCardStore.getState().sentence === sourceSentence) saveCurrentSentence();
   };
 
   return (
