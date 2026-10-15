@@ -37,6 +37,16 @@ test("a learner can find a card, add it, and clear the sentence", async ({ page 
   await expect(page.getByRole("button", { name: "Clear sentence" })).toHaveCount(0);
 });
 
+test("choosing an alternative adds only the selected word", async ({ page }) => {
+  await seedLearner(page);
+  await page.goto("/pecs-app");
+  await page.getByRole("searchbox", { name: "Find a card" }).fill("dad");
+  await page.getByRole("button", { name: "Choose another word for Dad" }).click();
+  await page.getByRole("menuitem", { name: "Papa", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Remove Papa from sentence" })).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Remove Dad from sentence" })).toHaveCount(0);
+});
+
 test("the signed-out parent account screen exposes the expected safe paths", async ({ page }) => {
   await seedLearner(page);
   await page.goto("/pecs-app?account=sign-in");

@@ -33,7 +33,7 @@ export const FeedbackDialog = ({ open, onOpenChange }: FeedbackDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md rounded-2xl border-border/70">
+      <DialogContent className="feedback-dialog max-w-md rounded-2xl border-border/70">
         <DialogHeader>
           <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <MessageSquareText className="h-5 w-5" />

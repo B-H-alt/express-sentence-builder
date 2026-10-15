@@ -31,7 +31,7 @@ const categoryLabels: Record<string, string> = {
 };
 
 export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQuery }: CardGridProps) => {
-  const { favorites, addToSentence, toggleFavorite, incrementUsage, getFilteredCards, cardsPerPage, currentLevel, lowStimulationMode } = useCardStore();
+  const { favorites, selectCard, toggleFavorite, getFilteredCards, cardsPerPage, currentLevel, lowStimulationMode } = useCardStore();
   const language = useCardStore((state) => state.language);
   const characterGender = useCardStore((state) => state.characterGender);
   const copy = appText[language];
@@ -77,8 +77,7 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
 
   const handleCardClick = (card: Card) => {
     const label = translateCardLabel(card.text, language, characterGender);
-    addToSentence({ ...card, text: label });
-    incrementUsage(card.id);
+    selectCard({ ...card, text: label });
     setAnnouncement((current) => ({
       id: current.id + 1,
       text: language === "es" ? `Se agregó ${label} a la oración` : `Added ${label} to the sentence`,
@@ -86,8 +85,7 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
   };
 
   const handleVariationClick = (card: Card, label: string) => {
-    addToSentence({ ...card, text: label });
-    incrementUsage(card.id);
+    selectCard({ ...card, text: label });
   };
 
   const selectedCategoryLabel =

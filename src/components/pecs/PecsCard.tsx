@@ -68,6 +68,7 @@ export const PecsCard = ({
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) return;
     if (!onClick || (event.key !== "Enter" && event.key !== " ")) return;
     event.preventDefault();
     onClick();
@@ -154,7 +155,12 @@ export const PecsCard = ({
               <ChevronDown className="h-4 w-4" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="min-w-36 rounded-xl p-1.5">
+          <DropdownMenuContent
+            align="start"
+            className="min-w-36 rounded-xl p-1.5"
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
+          >
             {variations.map((label) => (
               <DropdownMenuItem
                 key={label}
@@ -188,6 +194,8 @@ export const PecsCard = ({
               alt={displayedLabel}
               className="max-w-full max-h-full object-contain rounded-lg"
               draggable={false}
+              decoding="async"
+              loading={inSentence ? "eager" : "lazy"}
             />
           ) : (
             <div className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl bg-gradient-to-br from-primary/20 to-secondary/20">

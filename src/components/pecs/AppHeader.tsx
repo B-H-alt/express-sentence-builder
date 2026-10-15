@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { BookOpen, Settings, Image, Type, ArrowLeft, ChevronDown, LayoutDashboard, MessageSquareText, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import { useCardStore, VocabularyLevel } from "@/store/cardStore";
 
 interface AppHeaderProps {
@@ -59,11 +60,11 @@ export const AppHeader = ({
       ></div>
       <div className="container relative mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-2 sm:gap-3">
         <div className="flex min-w-0 items-center gap-2 sm:gap-4">
-          <Link to="/">
+          {!Capacitor.isNativePlatform() && <Link to="/" aria-label="Return to Expressly website">
             <Button variant="ghost" size="icon" className="rounded-xl">
               <ArrowLeft className="w-5 h-5" />
             </Button>
-          </Link>
+          </Link>}
           <div>
             <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent sm:text-2xl">
               Expressly

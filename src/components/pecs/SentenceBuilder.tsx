@@ -1,5 +1,6 @@
 // src/components/SentenceBuilder.tsx
 import { useEffect, useRef, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useCardStore } from "@/store/cardStore";
 import { PecsCard } from "./PecsCard";
 import { Button } from "@/components/ui/button";
@@ -26,10 +27,17 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
     lowStimulationMode,
     cards,
     addToSentence,
-    incrementUsage,
+    selectCard,
     language,
     characterGender,
-  } = useCardStore();
+  } = useCardStore(useShallow((state) => ({
+    sentence: state.sentence, removeFromSentence: state.removeFromSentence,
+    clearSentence: state.clearSentence, completeSentence: state.completeSentence,
+    speechRate: state.speechRate, speechVolume: state.speechVolume,
+    lowStimulationMode: state.lowStimulationMode, cards: state.cards,
+    addToSentence: state.addToSentence, selectCard: state.selectCard,
+    language: state.language, characterGender: state.characterGender,
+  })));
   const copy = appText[language];
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -178,8 +186,7 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
     const translatedStarter = language === "es"
       ? label === "I want" ? "Yo quiero" : label === "I need" ? "Yo necesito" : "Yo me siento"
       : label;
-    addToSentence({ ...source, text: translatedStarter });
-    incrementUsage(source.id);
+    selectCard({ ...source, text: translatedStarter });
     setShowStarters(false);
   };
 

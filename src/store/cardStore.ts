@@ -227,6 +227,7 @@ interface CardStore {
   setCharacterGender: (gender: CharacterGender) => void;
   // Sentence actions
   addToSentence: (card: Card) => void;
+  selectCard: (card: Card) => void;
   removeFromSentence: (index: number) => void;
   clearSentence: () => void;
   completeSentence: () => ProgressEntry | null;
@@ -530,6 +531,14 @@ export const useCardStore = create<CardStore>()(
         set((state) => ({
           sentence: [...state.sentence, card],
         })),
+
+      // One notification and persistence write for each learner selection.
+      selectCard: (card) => set((state) => ({
+        sentence: [...state.sentence, card],
+        cards: state.cards.map((item) => item.id === card.id ? { ...item, usage: item.usage + 1 } : item),
+        customCards: state.customCards.map((item) => item.id === card.id ? { ...item, usage: item.usage + 1 } : item),
+        recentCardIds: [card.id, ...state.recentCardIds.filter((id) => id !== card.id)].slice(0, 12),
+      })),
 
       removeFromSentence: (index) =>
         set((state) => ({

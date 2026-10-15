@@ -472,8 +472,37 @@ All colors MUST be HSL.
     -webkit-tap-highlight-color: transparent;
   }
 
-  [data-device="tablet"][data-input="touch"] button {
+  [data-device="tablet"][data-input="touch"] button:not([role="switch"]) {
     min-height: 44px;
+  }
+
+  .theme-options > button {
+    min-height: 88px !important;
+    height: 88px;
+  }
+
+  .keyboard-dialog[role="dialog"] {
+    top: calc(var(--visual-top, 0px) + var(--visual-height, 100dvh) / 2);
+    max-height: calc(var(--visual-height, 100dvh) - 2rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    width: calc(100% - 2rem);
+  }
+
+  [data-keyboard="open"] .feedback-dialog textarea {
+    height: 5rem;
+  }
+
+  [data-keyboard="open"] .feedback-dialog form > button[type="submit"] {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+  }
+
+  [data-keyboard="open"] .communication-header .app-safe-header,
+  [data-keyboard="open"] .communication-header .sentence-header,
+  [data-keyboard="open"] .communication-header .quick-speech-header {
+    display: none;
   }
 
   .category-scroll {

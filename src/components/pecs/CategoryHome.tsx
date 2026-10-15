@@ -14,8 +14,7 @@ export const CategoryHome = ({ showWord, onSelectCategory }: CategoryHomeProps) 
     favorites,
     recentCardIds,
     getFilteredCards,
-    addToSentence,
-    incrementUsage,
+    selectCard,
     toggleFavorite,
   } = useCardStore();
   const language = useCardStore((state) => state.language);
@@ -36,12 +35,10 @@ export const CategoryHome = ({ showWord, onSelectCategory }: CategoryHomeProps) 
     .filter((card, index, cards) => cards.findIndex((item) => item.id === card.id) === index)
     .slice(0, 8);
   const handleCardClick = (card: (typeof availableCards)[number]) => {
-    addToSentence({ ...card, text: translateCardLabel(card.text, language, characterGender) });
-    incrementUsage(card.id);
+    selectCard({ ...card, text: translateCardLabel(card.text, language, characterGender) });
   };
   const handleVariationClick = (card: (typeof availableCards)[number], label: string) => {
-    addToSentence({ ...card, text: label });
-    incrementUsage(card.id);
+    selectCard({ ...card, text: label });
   };
 
   return (

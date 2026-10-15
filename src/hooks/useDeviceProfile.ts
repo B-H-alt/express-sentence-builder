@@ -23,6 +23,25 @@ export const useDeviceProfile = () => {
     const root = document.documentElement;
     const coarsePointer = window.matchMedia("(pointer: coarse)");
     const standalone = window.matchMedia("(display-mode: standalone)");
+    const viewport = window.visualViewport;
+    let focusTimer: ReturnType<typeof setTimeout>;
+    const updateViewport = () => {
+      const height = viewport?.height ?? window.innerHeight;
+      root.style.setProperty("--visual-height", `${height}px`);
+      root.style.setProperty("--visual-top", `${viewport?.offsetTop ?? 0}px`);
+      const editing = document.activeElement?.matches("input, textarea, [contenteditable='true']");
+      root.dataset.keyboard = editing && window.innerHeight - height > 150 ? "open" : "closed";
+    };
+    const revealInput = () => {
+      updateViewport();
+      clearTimeout(focusTimer);
+      focusTimer = setTimeout(() => {
+        const input = document.activeElement;
+        if (input instanceof HTMLElement && input.matches("input, textarea")) {
+          input.scrollIntoView({ block: "nearest", behavior: "auto" });
+        }
+      }, 250);
+    };
 
     const update = () => {
       root.dataset.device = getDeviceProfile(coarsePointer.matches);
@@ -32,12 +51,25 @@ export const useDeviceProfile = () => {
     };
 
     update();
+    updateViewport();
+    viewport?.addEventListener("resize", revealInput);
+    viewport?.addEventListener("scroll", updateViewport);
+    document.addEventListener("focusin", revealInput);
+    document.addEventListener("focusout", updateViewport);
     window.addEventListener("resize", update);
     window.addEventListener("orientationchange", update);
     coarsePointer.addEventListener("change", update);
     standalone.addEventListener("change", update);
 
     return () => {
+      clearTimeout(focusTimer);
+      viewport?.removeEventListener("resize", revealInput);
+      viewport?.removeEventListener("scroll", updateViewport);
+      document.removeEventListener("focusin", revealInput);
+      document.removeEventListener("focusout", updateViewport);
+      root.style.removeProperty("--visual-height");
+      root.style.removeProperty("--visual-top");
+      delete root.dataset.keyboard;
       window.removeEventListener("resize", update);
       window.removeEventListener("orientationchange", update);
       coarsePointer.removeEventListener("change", update);

@@ -1,5 +1,6 @@
 // src/pages/PecsApp.tsx
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { SentenceBuilder } from "@/components/pecs/SentenceBuilder";
 import { CardGrid } from "@/components/pecs/CardGrid";
@@ -34,7 +35,10 @@ const PecsApp = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
-  const { currentLevel, showWords, setShowWords, lowStimulationMode, textSize } = useCardStore();
+  const { currentLevel, showWords, setShowWords, lowStimulationMode, textSize } = useCardStore(useShallow((state) => ({
+    currentLevel: state.currentLevel, showWords: state.showWords, setShowWords: state.setShowWords,
+    lowStimulationMode: state.lowStimulationMode, textSize: state.textSize,
+  })));
   const sentenceLength = useCardStore((state) => state.sentence.length);
 
   useEffect(() => {
@@ -154,7 +158,7 @@ const PecsApp = () => {
       <div
         ref={topBarRef}
         className={[
-          "fixed inset-x-0 top-0 z-50",
+          "communication-header fixed inset-x-0 top-0 z-50",
           lowStimulationMode ? "bg-background" : "bg-[hsl(var(--background))]/92 backdrop-blur-md",
           "border-b border-border/60",
           lowStimulationMode ? "shadow-none" : "shadow-[0_10px_30px_-18px_rgba(0,0,0,0.55)]",
@@ -176,11 +180,11 @@ const PecsApp = () => {
 
         {/* Builder + Tabs (contained) */}
         <div className="flex w-full flex-col gap-2 px-3 py-2 sm:px-6 lg:px-8">
-          <div className="max-h-[280px]">
+          <div className="sentence-header max-h-[280px]">
             <SentenceBuilder showWord={showWords} onOpenGuide={() => handleGuideChange(true)} />
           </div>
 
-          <SpeakNowBar />
+          <div className="quick-speech-header"><SpeakNowBar /></div>
 
           <CategoryTabs
             selectedCategory={selectedCategory}

@@ -1,11 +1,13 @@
 // src/components/pecs/SettingsPanel.tsx
 import React, { useEffect, useRef, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useCardStore } from "@/store/cardStore";
 import { X, User, Plus, Layers, Upload, Trash2, Save, Leaf, Volume2, Palette, MessagesSquare, Moon, Sun } from "lucide-react";
 import { AddCardModal } from "@/components/pecs/AddCardModal";
 import { Button } from "@/components/ui/button";
 import type { AppLanguage, CardDisplayAmount, CharacterGender, TextSize, VocabularyLevel } from "@/store/cardStore";
 import { useTheme } from "next-themes";
+import { Slider } from "@/components/ui/slider";
 import { languageNames } from "@/lib/language";
 import { processImageUpload } from "@/lib/imageUpload";
 
@@ -34,7 +36,14 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
     setSpeechRate,
     speechVolume,
     setSpeechVolume,
-  } = useCardStore();
+  } = useCardStore(useShallow((state) => ({
+    currentLevel: state.currentLevel, setLevel: state.setLevel,
+    cardsPerPage: state.cardsPerPage, setCardsPerPage: state.setCardsPerPage,
+    lowStimulationMode: state.lowStimulationMode, setLowStimulationMode: state.setLowStimulationMode,
+    textSize: state.textSize, setTextSize: state.setTextSize,
+    speechRate: state.speechRate, setSpeechRate: state.setSpeechRate,
+    speechVolume: state.speechVolume, setSpeechVolume: state.setSpeechVolume,
+  })));
   const { theme, setTheme } = useTheme();
   const activeTheme = theme ?? "light";
   const darkAppearance = activeTheme === "dark" || activeTheme.endsWith("-dark");
@@ -131,14 +140,15 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
       />
 
       <div
-        className="fixed inset-0 z-[90] flex items-center justify-center p-4"
+        className="fixed inset-x-0 z-[90] flex items-center justify-center p-4"
+        style={{ top: "var(--visual-top, 0px)", height: "var(--visual-height, 100dvh)" }}
         onClick={onClose}
       >
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="settings-title"
-          className="relative flex max-h-[calc(100vh-2rem)] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-border/60 bg-background shadow-2xl"
+          className="relative flex max-h-full w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-border/60 bg-background shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex shrink-0 items-center justify-between gap-4 border-b border-border/70 bg-background px-6 py-4 md:px-8">
@@ -344,7 +354,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                     </button>
                   </div>
                 </div>
-                <div className="grid gap-2 sm:grid-cols-3">
+                <div className="theme-options grid auto-rows-fr grid-cols-2 gap-2 sm:grid-cols-3">
                   <button
                     type="button"
                     aria-pressed={currentPalette === "blue"}
@@ -360,7 +370,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                       <span className="h-4 w-4 rounded-full bg-[#19b9c3]" />
                       <span className="h-4 w-4 rounded-full bg-white ring-1 ring-black/10" />
                     </span>
-                    Expressly Blue
+                    Blue
                   </button>
                   <button
                     type="button"
@@ -610,14 +620,14 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                     <span>Volume</span>
                     <span>{Math.round(speechVolume * 100)}%</span>
                   </span>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.1"
-                    value={speechVolume}
-                    onChange={(event) => setSpeechVolume(Number(event.target.value))}
-                    className="mt-2 w-full accent-primary"
+                  <Slider
+                    aria-label="Volume"
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={[speechVolume]}
+                    onValueChange={([volume]) => setSpeechVolume(volume)}
+                    className="mt-2"
                   />
                 </label>
               </div>}
