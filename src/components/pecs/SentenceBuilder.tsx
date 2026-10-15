@@ -142,6 +142,9 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
       const msg = await res.text().catch(() => "");
       throw new Error(`ElevenLabs error (${res.status}): ${msg || res.statusText}`);
     }
+    if (!res.headers.get("content-type")?.startsWith("audio/")) {
+      throw new Error("Enhanced voice endpoint did not return audio. Use the server-enabled preview or deployed app.");
+    }
     const blob = await res.blob();
     await playBlob(blob);
   };

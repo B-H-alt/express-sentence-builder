@@ -39,10 +39,10 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return;
   }
 
-  const apiKey = process.env.ELEVENLABS_API_KEY;
-  const voiceId = process.env.ELEVENLABS_VOICE_ID || "21m00Tcm4TlvDq8ikWAM";
+  const apiKey = process.env.ELEVENLABS_API_KEY?.trim();
+  const voiceId = process.env.ELEVENLABS_VOICE_ID?.trim() || "21m00Tcm4TlvDq8ikWAM";
   if (!apiKey) {
-    res.status(503).json({ error: "Voice service is unavailable." });
+    res.status(503).json({ error: "Voice service is unavailable.", code: "voice_not_configured" });
     return;
   }
 
@@ -62,7 +62,18 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       signal: AbortSignal.timeout(10_000),
     });
     if (!response.ok) {
-      res.status(502).json({ error: "Voice service failed." });
+      const body = await response.json().catch(() => null) as { detail?: { status?: unknown } } | null;
+      const knownCodes = new Set(["invalid_api_key", "missing_permissions", "quota_exceeded", "voice_not_found", "model_not_found", "subscription_required", "too_many_concurrent_requests", "system_busy"]);
+      const providerCode = typeof body?.detail?.status === "string" && knownCodes.has(body.detail.status)
+        ? body.detail.status : "provider_error";
+      // Never log credentials, provider messages, or learner communication.
+      console.error("Enhanced voice request failed", { status: response.status, code: providerCode });
+      res.status(502).json({ error: "Enhanced voice is temporarily unavailable.", code: `voice_${providerCode}` });
+      return;
+    }
+
+    if (!response.headers.get("content-type")?.startsWith("audio/")) {
+      res.status(502).json({ error: "Voice service returned an invalid response.", code: "voice_invalid_response" });
       return;
     }
 
