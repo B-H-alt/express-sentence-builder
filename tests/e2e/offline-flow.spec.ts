@@ -13,7 +13,7 @@ test("offline Finish applies basic grammar without a server request", async ({ p
   const requests: string[] = [];
   page.on("request", (request) => { if (request.url().includes("/api/")) requests.push(request.url()); });
   await context.setOffline(true);
-  await page.getByRole("button", { name: "Finish sentence", exact: true }).click();
+  await page.getByRole("button", { name: /^(Finish sentence|Finish|Done)$/ }).click();
   await expect(page.getByText("Mom is eating.", { exact: true })).toBeVisible();
   await expect(page.getByText("You're offline. Basic grammar applied on this device.", { exact: true })).toBeVisible();
   expect(requests).toEqual([]);
