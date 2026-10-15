@@ -94,20 +94,6 @@ export const PecsCard = ({
       onKeyDown={handleKeyDown}
       onContextMenu={handleLongPress}
     >
-      {/* Remove button for sentence cards */}
-      {inSentence && onRemove && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove();
-          }}
-          aria-label={`Remove ${displayedLabel} from sentence`}
-          className="absolute bottom-1.5 right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-muted/80 text-muted-foreground shadow-sm z-20 hover:bg-muted transition-colors"
-        >
-          <X className="h-3.5 w-3.5" />
-        </button>
-      )}
-
       {/* Favorite star */}
       {!inSentence && onFavorite && !lowStimulationMode && (
         <button
@@ -178,14 +164,14 @@ export const PecsCard = ({
       <div
         className={cn(
           "w-full h-full flex flex-col items-center justify-between",
-          displaySize === "large" ? "p-4 md:p-5" : "p-3"
+          inSentence ? "gap-1 p-1.5" : displaySize === "large" ? "p-4 md:p-5" : "p-3"
         )}
       >
         {/* Image area: fixed proportion so the label always has room */}
         <div
           className={cn(
             "w-full flex items-center justify-center",
-            showWord ? "h-[68%] mb-1" : "h-full"
+            inSentence ? "min-h-0 flex-1" : showWord ? "h-[68%] mb-1" : "h-full"
           )}
         >
           {displayedImage ? (
@@ -198,14 +184,24 @@ export const PecsCard = ({
               loading={inSentence ? "eager" : "lazy"}
             />
           ) : (
-            <div className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl bg-gradient-to-br from-primary/20 to-secondary/20">
+            <div className={cn("rounded-xl flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20", inSentence ? "h-full max-h-full max-w-full aspect-square text-xl" : "w-16 h-16 text-3xl")}>
               {displayedLabel.charAt(0).toUpperCase()}
             </div>
           )}
         </div>
 
         {/* Label area: reserve vertical space for up to two lines */}
-        {showWord && (
+        {inSentence ? (
+          <div className="flex min-h-8 w-full shrink-0 items-center gap-1">
+            {showWord && <span className="min-w-0 flex-1 break-words text-center text-sm font-semibold leading-4 text-foreground line-clamp-2 [overflow-wrap:anywhere]">{displayedLabel}</span>}
+            {onRemove && <button
+              type="button"
+              onClick={(event) => { event.stopPropagation(); onRemove(); }}
+              aria-label={`Remove ${displayedLabel} from sentence`}
+              className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted/80 text-muted-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            ><X className="h-3.5 w-3.5" /></button>}
+          </div>
+        ) : showWord && (
           <span
             className={cn(
               "font-semibold text-foreground text-center line-clamp-2 mt-1",
