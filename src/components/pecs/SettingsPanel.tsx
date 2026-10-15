@@ -1,7 +1,7 @@
 // src/components/pecs/SettingsPanel.tsx
 import React, { useEffect, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { useCardStore } from "@/store/cardStore";
+import { useCardStore, vocabularyLevelCounts } from "@/store/cardStore";
 import { X, User, Plus, Layers, Upload, Trash2, Save, Leaf, Volume2, Palette, MessagesSquare, Moon, Sun } from "lucide-react";
 import { AddCardModal } from "@/components/pecs/AddCardModal";
 import { Button } from "@/components/ui/button";
@@ -17,9 +17,9 @@ interface SettingsPanelProps {
 }
 
 const levelOptions: { level: VocabularyLevel; label: string; subtitle: string }[] = [
-  { level: 1, label: "Level 1 (Beginner)", subtitle: "Smaller starter set (about 30 cards)" },
-  { level: 2, label: "Level 2 (Intermediate)", subtitle: "Expanded vocabulary (about 75 cards)" },
-  { level: 3, label: "Level 3 (Advanced)", subtitle: "Full set (about 150 cards)" },
+  { level: 1, label: "Level 1 (Beginner)", subtitle: `Everyday needs and core words (${vocabularyLevelCounts[1]} built-in cards)` },
+  { level: 2, label: "Level 2 (Intermediate)", subtitle: `Daily life and more choices (${vocabularyLevelCounts[2]} built-in cards)` },
+  { level: 3, label: "Level 3 (Advanced)", subtitle: `All current vocabulary (${vocabularyLevelCounts[3]} built-in cards)` },
 ];
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) => {
@@ -516,7 +516,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                   <h3 className="text-sm font-semibold">Vocabulary level</h3>
                 </div>
                 <p className="text-xs text-muted-foreground mb-2">
-                  Choose how many cards appear in the PECS board.
+                  Choose the available vocabulary. Card size controls how many cards appear at once. You can change levels at any time.
                 </p>
 
                 <div className="space-y-1.5">

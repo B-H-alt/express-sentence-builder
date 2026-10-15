@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCardStore } from "@/store/cardStore";
-import type { LucideIcon } from "lucide-react";
 import { appText, translateCategory } from "@/lib/language";
 
 interface CategoryTabsProps {
@@ -44,24 +43,11 @@ const baseCategories = [
   { id: "social", label: "Social", icon: VenetianMask },
 ];
 
-// Level-dependent categories
-const levelCategories: Record<
-  1 | 2 | 3,
-  { id: string; label: string; icon: LucideIcon }[]
-> = {
-  1: [],
-
-  2: [
-    { id: "food", label: "Food", icon: Utensils },
-    { id: "descriptive", label: "Descriptive", icon: CircleEllipsis },
-  ],
-
-  3: [
-    { id: "food", label: "Food", icon: Utensils },
-    { id: "descriptive", label: "Descriptive", icon: CircleEllipsis },
-    { id: "time", label: "Time", icon: Clock },
-  ],
-};
+const additionalCategories = [
+  { id: "food", label: "Food", icon: Utensils },
+  { id: "descriptive", label: "Descriptive", icon: CircleEllipsis },
+  { id: "time", label: "Time", icon: Clock },
+];
 
 export const CategoryTabs = ({
   selectedCategory,
@@ -73,13 +59,19 @@ export const CategoryTabs = ({
   const lowStimulationMode = useCardStore((state) => state.lowStimulationMode);
   const hiddenCategories = useCardStore((state) => state.hiddenCategories);
   const language = useCardStore((state) => state.language);
+  const cards = useCardStore((state) => state.cards);
+  const customCards = useCardStore((state) => state.customCards);
   const copy = appText[language];
   // Clamp level to 1–3
   const levelKey = Math.max(1, Math.min(3, currentLevel)) as 1 | 2 | 3;
+  const availableCategories = new Set([
+    ...cards.filter((card) => (card.level ?? 1) <= levelKey),
+    ...customCards,
+  ].map((card) => card.category));
 
   const categoriesToShow = [
     ...baseCategories,
-    ...levelCategories[levelKey],
+    ...additionalCategories.filter((category) => availableCategories.has(category.id)),
     { id: "all", label: "All cards", icon: Grid3x3 },
   ].filter((category) =>
     ["home", "favorites", "phrases", "all"].includes(category.id) || !hiddenCategories.includes(category.id)

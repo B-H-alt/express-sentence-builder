@@ -184,6 +184,8 @@ import now from "@/assets/pecs/now.jpg";
 import later from "@/assets/pecs/later.jpg";
 import makeBed from "@/assets/pecs/makeBed.jpg";
 
+import { auditedMinimumLevels } from "@/lib/vocabularyLevels";
+
 export type VocabularyLevel = 1 | 2 | 3;
 export type CharacterGender = "girl" | "boy";
 export type CardDisplayAmount = 4 | 8 | 12 | "all";
@@ -278,7 +280,7 @@ interface CardStore {
 
 
 
-// Level 1 - Beginner (46 cards)
+// Historical Level 1 group (50 cards). Audited minimum levels are applied below.
 const level1Cards: Card[] = [
   // People
   { id: "l1-1", text: "Mom", category: "people", usage: 0, level: 1, image: momImg },
@@ -505,7 +507,11 @@ const level3Cards: Card[] = [
   { id: "l3-82", text: "Floss", category: "activities", usage: 0, level: 3, image: later },
 ];
 
-const allCards = level3Cards;
+// The arrays above preserve historical order and IDs, not audited access levels.
+const allCards = level3Cards.map((card) => ({ ...card, level: auditedMinimumLevels[card.id] ?? card.level }));
+export const vocabularyLevelCounts = Object.fromEntries(
+  [1, 2, 3].map((level) => [level, allCards.filter((card) => (card.level ?? 1) <= level).length])
+) as Record<VocabularyLevel, number>;
 
 export const USER_CARD_ID = "expressly-user-card";
 
