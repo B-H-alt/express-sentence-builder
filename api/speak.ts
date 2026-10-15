@@ -56,15 +56,14 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       },
       body: JSON.stringify({
         text,
-        model_id: "eleven_turbo_v2",
+        model_id: "eleven_flash_v2_5",
         voice_settings: { stability: 0.5, similarity_boost: 0.75, style: 0, use_speaker_boost: true },
       }),
       signal: AbortSignal.timeout(10_000),
     });
     if (!response.ok) {
       const body = await response.json().catch(() => null) as { detail?: { status?: unknown } } | null;
-      const knownCodes = new Set(["invalid_api_key", "missing_permissions", "quota_exceeded", "voice_not_found", "model_not_found", "subscription_required", "too_many_concurrent_requests", "system_busy"]);
-      const providerCode = typeof body?.detail?.status === "string" && knownCodes.has(body.detail.status)
+      const providerCode = typeof body?.detail?.status === "string" && /^[a-z][a-z0-9_]{0,63}$/.test(body.detail.status)
         ? body.detail.status : "provider_error";
       // Never log credentials, provider messages, or learner communication.
       console.error("Enhanced voice request failed", { status: response.status, code: providerCode });
