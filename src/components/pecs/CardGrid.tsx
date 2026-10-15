@@ -7,6 +7,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { CategoryHome } from "./CategoryHome";
 import { getCardVariations } from "@/lib/cardVariations";
 import { appText, translateCardLabel, translateCategory } from "@/lib/language";
+import { normalizeCardSearch, searchCardLabels } from "@/utils/card-search";
 
 interface CardGridProps {
   selectedCategory: string;
@@ -55,12 +56,10 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
 
   const levelFilteredCards = getFilteredCards();
   
-  const normalizedSearch = searchQuery.trim().toLocaleLowerCase();
-  const filteredCards = levelFilteredCards.filter(card => {
-    if (normalizedSearch) {
-      return [card.text, translateCardLabel(card.text, language, characterGender), ...getCardVariations(card.text, language)]
-        .some((label) => label.toLocaleLowerCase().includes(normalizedSearch));
-    }
+  const normalizedSearch = normalizeCardSearch(searchQuery);
+  const search = normalizedSearch ? searchCardLabels(levelFilteredCards, searchQuery, (card) =>
+    [card.text, translateCardLabel(card.text, language, characterGender)]) : null;
+  const filteredCards = search ? search.cards : levelFilteredCards.filter(card => {
     if (selectedCategory === "all") return true;
     if (selectedCategory === "favorites") return favorites.includes(card.id);
     return card.category === selectedCategory;
@@ -152,10 +151,13 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
         </button>
         <h2 className="truncate text-lg font-semibold text-foreground">{selectedCategoryLabel}</h2>
       </div>
+      {search?.similarSpelling && <p role="status" className="mb-4 text-sm text-muted-foreground">{language === "es" ? "Tarjetas con una escritura parecida." : "Cards with similar spelling."}</p>}
       {filteredCards.length === 0 ? (
         <div className="flex min-h-52 flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-background/60 px-6 text-center">
           <h3 className="font-semibold text-foreground">{language === "es" ? "No hay tarjetas" : "No matching cards"}</h3>
-          <p className="mt-1 text-sm text-muted-foreground">{language === "es" ? "Prueba otra palabra o elige una categoría." : "Try another word or choose a category."}</p>
+          <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">{normalizedSearch
+            ? language === "es" ? "Prueba una palabra más corta o borra la búsqueda para ver las tarjetas. La búsqueda usa tu nivel de vocabulario actual." : "Try a shorter word, or clear the search to browse cards. Search uses your current vocabulary level."
+            : language === "es" ? "Elige otra categoría. Puedes añadir favoritos con la estrella de una tarjeta." : selectedCategory === "favorites" ? "Tap the star on a card to keep it here." : "Choose another category to find a card."}</p>
         </div>
       ) : selectedCategory === "all" && !normalizedSearch && cardsByCategory ? (
         <div className="space-y-6">
