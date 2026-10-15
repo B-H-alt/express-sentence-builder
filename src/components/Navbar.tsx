@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, UserRound, X } from "lucide-react";
+import { CircleUserRound, LogIn, Menu, X } from "lucide-react";
 import { ParentAccountDialog } from "@/components/pecs/ParentAccountDialog";
 import { getSupabase } from "@/lib/supabase";
 
@@ -8,6 +8,10 @@ const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
+  const AccountIcon = signedIn ? CircleUserRound : LogIn;
+  const accountStyle = signedIn
+    ? "border-primary/20 bg-primary/5 text-primary hover:bg-primary/10"
+    : "border-border bg-background text-foreground hover:bg-muted";
 
   useEffect(() => {
     let active = true;
@@ -41,9 +45,9 @@ const Navbar = () => {
           <button
             type="button"
             onClick={() => setShowAccount(true)}
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+            className={`inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition-colors ${accountStyle}`}
           >
-            <UserRound className="h-4 w-4" />
+            <AccountIcon className="h-4 w-4" aria-hidden="true" />
             {signedIn ? "My account" : "Sign in"}
           </button>
         </div>
@@ -63,9 +67,9 @@ const Navbar = () => {
                 setOpen(false);
                 setShowAccount(true);
               }}
-              className="flex items-center gap-2 rounded-xl border border-border px-4 py-3 text-left font-semibold"
+              className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-left font-semibold transition-colors ${accountStyle}`}
             >
-              <UserRound className="h-4 w-4" />
+              <AccountIcon className="h-4 w-4" aria-hidden="true" />
               {signedIn ? "My account" : "Sign in to your account"}
             </button>
             <Link to="/pecs-app" onClick={() => setOpen(false)} className="mt-1 rounded-full bg-primary px-5 py-3 text-center font-semibold text-primary-foreground">Open app</Link>
