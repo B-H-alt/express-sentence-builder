@@ -17,13 +17,14 @@ const quickMessages = [
   { text: "All done", icon: MessageCircle },
 ];
 
-export const SpeakNowBar = () => {
+export const SpeakNowBar = ({ phrases }: { phrases?: string[] }) => {
   const { toast } = useToast();
   const speechRate = useCardStore((state) => state.speechRate);
   const speechVolume = useCardStore((state) => state.speechVolume);
   const recordQuickPhrase = useCardStore((state) => state.recordQuickPhrase);
   const language = useCardStore((state) => state.language);
   const copy = appText[language];
+  const messages = phrases ? phrases.map((text) => ({ text, icon: Volume2 })) : quickMessages;
   const playback = useRef<HTMLAudioElement | null>(null);
   const pending = useRef<AbortController | null>(null);
   const sequence = useRef(0);
@@ -99,28 +100,28 @@ export const SpeakNowBar = () => {
 
   return (
     <section
-      className="rounded-xl border border-border/80 bg-card px-2.5 py-1.5"
-      aria-labelledby="speak-now-title"
+      className={phrases ? "" : "rounded-xl border border-border/80 bg-card px-2.5 py-1.5"}
+      aria-label={phrases ? (language === "es" ? "Escuchar frases guardadas" : "Speak saved phrases") : copy.speakNow}
     >
       <div className="flex items-center gap-3">
-        <div className="flex shrink-0 items-center gap-1.5 px-1 text-primary">
+        {!phrases && <div className="flex shrink-0 items-center gap-1.5 px-1 text-primary">
           <Volume2 className="h-4 w-4" aria-hidden="true" />
           <span id="speak-now-title" className="text-sm font-semibold text-foreground">
             {copy.speakNow}
           </span>
-        </div>
-        <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto pb-1">
-          {quickMessages.map(({ text, icon: Icon }) => {
-            const spokenText = translateCardLabel(text, language);
+        </div>}
+        <div className={phrases ? "grid min-w-0 flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-3" : "flex min-w-0 flex-1 gap-2 overflow-x-auto pb-1"}>
+          {messages.map(({ text, icon: Icon }) => {
+            const spokenText = phrases ? text : translateCardLabel(text, language);
             return (
             <button
               key={text}
               type="button"
               onClick={() => speak(spokenText)}
-              className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-sm font-semibold text-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className={phrases ? "flex min-h-20 min-w-0 items-center gap-3 rounded-xl border border-border bg-background p-4 text-left font-semibold text-foreground [overflow-wrap:anywhere] hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" : "inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-sm font-semibold text-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"}
               aria-label={`${copy.speak} ${spokenText}`}
             >
-              <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
+              <Icon className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
               {spokenText}
             </button>
           )})}

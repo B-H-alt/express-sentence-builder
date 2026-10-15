@@ -202,6 +202,12 @@ const dedupeCardsById = (cards: Card[]): Card[] => {
   return Array.from(seen.values());
 };
 
+export interface SavedPhrase {
+  id: string;
+  text: string;
+  language: AppLanguage;
+}
+
 interface CardStore {
   cards: Card[];
   sentence: Card[];
@@ -218,6 +224,9 @@ interface CardStore {
   customCards: Card[];
   progressEntries: ProgressEntry[];
   hiddenCategories: string[];
+  savedPhrases: SavedPhrase[];
+  savePhrase: (text: string) => boolean;
+  removeSavedPhrase: (id: string) => void;
 
   // NEW — Onboarding fields
   onboardingComplete: boolean;
@@ -518,6 +527,16 @@ export const useCardStore = create<CardStore>()(
       customCards: [],
       progressEntries: [],
       hiddenCategories: [],
+      savedPhrases: [],
+      savePhrase: (text) => {
+        const clean = text.trim().replace(/\s+/g, " ");
+        const { savedPhrases, language } = get();
+        if (!clean || clean.length > 240 || savedPhrases.length >= 50) return false;
+        if (savedPhrases.some((phrase) => phrase.language === language && phrase.text.toLocaleLowerCase() === clean.toLocaleLowerCase())) return false;
+        set({ savedPhrases: [...savedPhrases, { id: crypto.randomUUID(), text: clean, language }] });
+        return true;
+      },
+      removeSavedPhrase: (id) => set((state) => ({ savedPhrases: state.savedPhrases.filter((phrase) => phrase.id !== id) })),
 
       // --- NEW ONBOARDING FIELDS ---
       onboardingComplete: false,
@@ -755,6 +774,7 @@ export const useCardStore = create<CardStore>()(
         customCards: state.customCards,
         progressEntries: state.progressEntries,
         hiddenCategories: state.hiddenCategories,
+        savedPhrases: state.savedPhrases,
 
         onboardingComplete: state.onboardingComplete,
         userName: state.userName,

@@ -33,6 +33,7 @@ export const downloadExpresslyData = (account: ExportAccount) => {
       hiddenCategories: state.hiddenCategories,
     },
     favorites: state.favorites,
+    savedPhrases: state.savedPhrases,
     recentCards: state.recentCardIds,
     customCards: state.customCards.map((card) => ({
       id: card.id,

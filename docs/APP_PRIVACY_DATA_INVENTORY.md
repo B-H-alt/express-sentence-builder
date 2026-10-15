@@ -12,6 +12,7 @@ This is an engineering inventory for App Store privacy disclosures and the futur
 | Selected card words | Create a grammatically corrected sentence | Expressly's protected server endpoint | Google Gemini only when grammar correction is requested |
 | Sentence text | Produce enhanced speech | Expressly's protected server endpoint | ElevenLabs only when enhanced voice is requested |
 | Card usage and completed-sentence history | Show the parent progress dashboard | The user's device browser storage | Nobody unless cloud synchronization is added |
+| Saved phrases and their language | Reuse messages with one tap | The user's device browser storage, included in data downloads | ElevenLabs receives the phrase when enhanced speech is requested; offline speech uses the device voice |
 | Feature usage counts and subscription entitlement | Enforce limits and account access | Supabase | Supabase |
 | CAPTCHA token | Prevent automated account abuse | Supabase Auth | Cloudflare Turnstile and Supabase |
 

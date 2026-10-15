@@ -4,6 +4,7 @@ import { useShallow } from "zustand/react/shallow";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { SentenceBuilder } from "@/components/pecs/SentenceBuilder";
 import { CardGrid } from "@/components/pecs/CardGrid";
+import { SavedPhrases } from "@/components/pecs/SavedPhrases";
 import { CategoryTabs } from "@/components/pecs/CategoryTabs";
 import { AppHeader } from "@/components/pecs/AppHeader";
 import { useCardStore } from "@/store/cardStore";
@@ -210,7 +211,7 @@ const PecsApp = () => {
       <main className="app-safe-bottom flex-1 pb-8" style={{ paddingTop: topBarH }}>
         <div className="w-full px-3 sm:px-6 lg:px-8">
           <div className="mt-3 sm:mt-4">
-            <CardGrid
+            {selectedCategory === "phrases" && !searchQuery.trim() ? <SavedPhrases onHome={() => setSelectedCategory("home")} /> : <CardGrid
               selectedCategory={selectedCategory}
               showWord={showWords}
               onSelectCategory={(category) => {
@@ -218,7 +219,7 @@ const PecsApp = () => {
                 setSelectedCategory(category);
               }}
               searchQuery={searchQuery}
-            />
+            />}
           </div>
         </div>
       </main>

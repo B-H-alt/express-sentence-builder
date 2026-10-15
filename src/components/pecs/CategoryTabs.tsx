@@ -13,6 +13,7 @@ import {
   CircleEllipsis,
   Search,
   X,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCardStore } from "@/store/cardStore";
@@ -31,6 +32,7 @@ interface CategoryTabsProps {
 const baseCategories = [
   { id: "home", label: "Home", icon: Home },
   { id: "favorites", label: "Favorites", icon: Star },
+  { id: "phrases", label: "Saved phrases", icon: MessageSquare },
   { id: "people", label: "People", icon: User },
   { id: "body", label: "Body", icon: PersonStanding },
   { id: "feelings", label: "Feelings", icon: Smile },
@@ -80,7 +82,7 @@ export const CategoryTabs = ({
     ...levelCategories[levelKey],
     { id: "all", label: "All cards", icon: Grid3x3 },
   ].filter((category) =>
-    ["home", "favorites", "all"].includes(category.id) || !hiddenCategories.includes(category.id)
+    ["home", "favorites", "phrases", "all"].includes(category.id) || !hiddenCategories.includes(category.id)
   );
 
   const renderCategory = (category: (typeof categoriesToShow)[number]) => {
@@ -107,7 +109,7 @@ export const CategoryTabs = ({
         )}
       >
         <Icon className={category.id === "body" ? "h-7 w-7" : "h-5 w-5"} />
-        {language === "es" ? translateCategory(category.id, language) : category.label}
+        {category.id === "phrases" ? (language === "es" ? "Frases guardadas" : category.label) : language === "es" ? translateCategory(category.id, language) : category.label}
       </Button>
     );
   };
