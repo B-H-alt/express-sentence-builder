@@ -47,7 +47,7 @@ if (icon.width !== 1024 || icon.height !== 1024) failures.push("The App Store ic
 if (![0, 2, 3].includes(icon.colorType)) failures.push("The App Store icon must not contain an alpha channel.");
 
 const listing = await text("docs/APP_STORE_LISTING_DRAFT.md");
-for (const url of ["https://www.expressly.us/", "https://www.expressly.us/about", "https://www.expressly.us/privacy", "https://www.expressly.us/terms"]) {
+for (const url of ["https://www.expressly.us/", "https://www.expressly.us/support", "https://www.expressly.us/privacy", "https://www.expressly.us/terms"]) {
   if (!listing.includes(url)) failures.push(`The App Store listing is missing ${url}.`);
 }
 

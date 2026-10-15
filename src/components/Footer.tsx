@@ -12,6 +12,7 @@ const Footer = () => (
       </div>
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-muted-foreground">
         <Link to="/about" className="hover:text-foreground">About</Link>
+        <Link to="/support" className="hover:text-foreground">Help & Support</Link>
         <Link to="/privacy" className="hover:text-foreground">Privacy</Link>
         <Link to="/terms" className="hover:text-foreground">Terms</Link>
         <Link to="/pecs-app" className="hover:text-foreground">Open app</Link>

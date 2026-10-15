@@ -28,6 +28,9 @@ Expressly includes:
 * Light, dark, and calm display options
 * Parent settings and progress tools
 * English and Spanish card labels
+* Offline card-based communication and basic English grammar
+
+Enhanced voices, AI grammar correction, and image generation need an internet connection and an eligible verified account. Offline speech uses an available device voice. The website needs a complete initial download before it can reopen offline; browser storage may be cleared or evicted.
 
 Expressly is a communication support tool. It does not provide medical advice, diagnosis, or treatment.
 
@@ -38,7 +41,7 @@ AAC,communication,visual,speech,picture,cards,autism,language,caregiver
 ## URLs
 
 * Marketing URL: https://www.expressly.us/
-* Support URL: https://www.expressly.us/about
+* Support URL: https://www.expressly.us/support (prepared locally; publish and verify the contact mailbox before submission)
 * Privacy Policy URL: https://www.expressly.us/privacy
 * Terms URL: https://www.expressly.us/terms
 
@@ -46,7 +49,9 @@ AAC,communication,visual,speech,picture,cards,autism,language,caregiver
 
 Expressly can be opened and used without creating an account. Account-protected features can be reviewed with the test account supplied privately in App Store Connect. Account deletion is available inside the account dialog after signing in.
 
-The app uses picture cards to build a sentence. Tap a card to add it to the sentence area. Use Finish sentence to prepare the message, then speak it. Settings are available from the learner profile menu.
+Tap cards to build a message. Speak prepares and reads the message. Finish saves a completed message without speaking and clears the sentence cards; it is not a required first step before Speak. Speak now reads short phrases directly. Settings are available from the learner profile menu.
+
+Enhanced voice is provided through the protected Expressly backend. If it is unavailable, the app attempts device speech. Offline grammar is a conservative English fallback, not the full online grammar service. Please test protected features with the verified review account supplied in App Store Connect, not with production administrator credentials.
 
 ## Items that must be confirmed before submission
 

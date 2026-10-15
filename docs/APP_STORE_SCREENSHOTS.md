@@ -16,8 +16,8 @@ It captures four screens for each required device family:
 
 1. The communication home screen
 2. Starting a message with a person card
-3. Completing a short message
-4. The personalization settings
+3. A short message ready to speak (not a fabricated AI result)
+4. The display personalization settings
 
 ## Current output sizes
 
@@ -32,3 +32,5 @@ These match sizes accepted by App Store Connect as of October 2026. Recheck Appl
 * No real account, email address, learner history, or API key is used.
 * Third party CAPTCHA requests are blocked during capture.
 * Generated screenshots are local review artifacts and are not committed to Git.
+* These are browser-rendered previews. Compare them with the native release before App Store upload. They do not demonstrate actual device playback, keyboard behavior, or authentication.
+* Use the four filenames beginning `01-communication-home`, `02-build-a-message`, `03-message-ready-to-speak`, and `04-personalize-expressly`. Older `03-complete-a-message.png` captures may remain in the output folder and are not part of the refreshed set.

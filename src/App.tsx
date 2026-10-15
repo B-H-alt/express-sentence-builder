@@ -14,6 +14,7 @@ const PecsApp = lazy(() => import("./pages/PecsApp"));
 const About = lazy(() => import("./pages/About"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
+const Support = lazy(() => import("./pages/Support"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ParentDashboard = lazy(() =>
   import("./components/pecs/ParentDashboard").then((module) => ({ default: module.ParentDashboard }))
@@ -45,6 +46,7 @@ const App = () => {
               <Route path="/about" element={<About />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
+              <Route path="/support" element={<Support />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

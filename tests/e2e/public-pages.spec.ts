@@ -18,6 +18,7 @@ test("landing page opens the communication app", async ({ page }) => {
 });
 
 const publicPages = [
+  { path: "/support", heading: "Help & Support" },
   { path: "/about", heading: "Communication should not fail when it matters most." },
   { path: "/privacy", heading: "Privacy Policy" },
   { path: "/terms", heading: "Terms of Use" },

@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { MessageSquareText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SUPPORT_EMAIL } from "@/lib/support";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +29,7 @@ export const FeedbackDialog = ({ open, onOpenChange }: FeedbackDialogProps) => {
       "",
       email.trim() ? `Reply to: ${email.trim()}` : "No reply email provided.",
     ].join("\n");
-    window.location.href = `mailto:expressly54@gmail.com?subject=${encodeURIComponent("Expressly feedback")}&body=${encodeURIComponent(body)}`;
+    window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Expressly feedback")}&body=${encodeURIComponent(body)}`;
   };
 
   return (

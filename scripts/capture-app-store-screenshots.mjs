@@ -51,6 +51,19 @@ const waitForServer = async () => {
 };
 
 const screenshot = async (page, directory, name) => {
+  await page.evaluate(async () => {
+    // Lazy images can have zero-size bounds until decoded. Load actual assets,
+    // including the ones introduced by category navigation, before capture.
+    const images = Array.from(document.images);
+    images.forEach((image) => { image.loading = "eager"; });
+    await Promise.all(images.map((image) => image.decode()));
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  });
+  await page.waitForFunction(() => Array.from(document.images).every((image) => {
+    const bounds = image.getBoundingClientRect();
+    const visible = bounds.width > 0 && bounds.height > 0 && bounds.top < innerHeight && bounds.bottom > 0 && bounds.left < innerWidth && bounds.right > 0;
+    return !visible || (image.complete && image.naturalWidth > 0);
+  }));
   await page.screenshot({
     path: path.join(directory, `${name}.png`),
     fullPage: false,
@@ -77,7 +90,12 @@ const captureDevice = async (browser, device) => {
   }, learnerState);
   await page.route("https://challenges.cloudflare.com/**", (route) => route.abort());
   await page.goto(`${baseURL}/pecs-app`, { waitUntil: "networkidle" });
-  await page.getByRole("heading", { name: "Expressly" }).waitFor();
+  await page.getByRole("heading", { name: "Expressly", exact: true }).waitFor();
+  await page.getByRole("button", { name: "Speak Yes", exact: true }).waitFor();
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await Promise.all(Array.from(document.images).map((image) => image.decode().catch(() => {})));
+  });
 
   await screenshot(page, directory, "01-communication-home");
 
@@ -87,11 +105,12 @@ const captureDevice = async (browser, device) => {
 
   await page.getByRole("button", { name: "Actions" }).click();
   await page.getByRole("button", { name: "Add Eat to sentence" }).click();
-  await screenshot(page, directory, "03-complete-a-message");
+  await screenshot(page, directory, "03-message-ready-to-speak");
 
   await page.getByRole("button", { name: "Open Alex's learner profile" }).click();
   await page.getByRole("menuitem", { name: "Profile & settings" }).click();
   await page.getByRole("heading", { name: "Settings" }).waitFor();
+  await page.getByRole("tab", { name: "Display", exact: true }).click();
   await screenshot(page, directory, "04-personalize-expressly");
 
   await context.close();
