@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { useCardStore } from "@/store/cardStore";
 import { PecsCard } from "./PecsCard";
 import { Card } from "@/pages/PecsApp";
@@ -29,6 +29,20 @@ const categoryLabels: Record<string, string> = {
   descriptive: "Descriptions",
   time: "Time"
 };
+
+// Stable props keep untouched cards out of the render path when one card is tapped.
+const GridCard = memo(({ card, showWord, isFavorite, displaySize, language, onSelect, onToggleFavorite, onEditCard, onVariation }: {
+  card: Card; showWord: boolean; isFavorite: boolean;
+  displaySize: "compact" | "medium" | "large"; language: "en" | "es";
+  onSelect: (card: Card) => void; onToggleFavorite: (id: string) => void;
+  onEditCard: (card: Card) => void; onVariation: (card: Card, label: string) => void;
+}) => (
+  <PecsCard card={card} showWord={showWord} isFavorite={isFavorite} displaySize={displaySize}
+    onClick={() => onSelect(card)} onFavorite={() => onToggleFavorite(card.id)}
+    onEdit={card.id.startsWith("custom-") ? () => onEditCard(card) : undefined}
+    variations={getCardVariations(card.text, language)} onSelectVariation={(label) => onVariation(card, label)} />
+));
+GridCard.displayName = "GridCard";
 
 export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQuery }: CardGridProps) => {
   const { favorites, selectCard, toggleFavorite, getFilteredCards, cardsPerPage, currentLevel, lowStimulationMode } = useCardStore();
@@ -75,18 +89,18 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
   const cardDisplaySize =
     cardsPerPage === 4 ? "large" : cardsPerPage === 8 ? "medium" : "compact";
 
-  const handleCardClick = (card: Card) => {
+  const handleCardClick = useCallback((card: Card) => {
     const label = translateCardLabel(card.text, language, characterGender);
     selectCard({ ...card, text: label });
     setAnnouncement((current) => ({
       id: current.id + 1,
       text: language === "es" ? `Se agregó ${label} a la oración` : `Added ${label} to the sentence`,
     }));
-  };
+  }, [language, characterGender, selectCard]);
 
-  const handleVariationClick = (card: Card, label: string) => {
+  const handleVariationClick = useCallback((card: Card, label: string) => {
     selectCard({ ...card, text: label });
-  };
+  }, [selectCard]);
 
   const selectedCategoryLabel =
     normalizedSearch
@@ -152,17 +166,17 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
               </h3>
               <div className={`grid ${gridColumns} ${lowStimulationMode ? "gap-4" : "gap-3"}`}>
                 {cards.map((card) => (
-                  <PecsCard
+                  <GridCard
                     key={card.id}
                     card={card}
                     showWord={showWord}
-                    onClick={() => handleCardClick(card)}
-                    onFavorite={() => toggleFavorite(card.id)}
-                    onEdit={card.id.startsWith("custom-") ? () => setEditingCard(card) : undefined}
+                    onSelect={handleCardClick}
+                    onToggleFavorite={toggleFavorite}
+                    onEditCard={setEditingCard}
                     isFavorite={favorites.includes(card.id)}
                     displaySize={cardDisplaySize}
-                    variations={getCardVariations(card.text, language)}
-                    onSelectVariation={(label) => handleVariationClick(card, label)}
+                    language={language}
+                    onVariation={handleVariationClick}
                   />
                 ))}
               </div>
@@ -172,17 +186,17 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
       ) : (
         <div className={`grid ${gridColumns} ${lowStimulationMode ? "gap-4" : "gap-3"}`}>
           {visibleCards.map((card) => (
-            <PecsCard
+            <GridCard
               key={card.id}
               card={card}
               showWord={showWord}
-              onClick={() => handleCardClick(card)}
-              onFavorite={() => toggleFavorite(card.id)}
-              onEdit={card.id.startsWith("custom-") ? () => setEditingCard(card) : undefined}
+              onSelect={handleCardClick}
+              onToggleFavorite={toggleFavorite}
+              onEditCard={setEditingCard}
               isFavorite={favorites.includes(card.id)}
               displaySize={cardDisplaySize}
-              variations={getCardVariations(card.text, language)}
-              onSelectVariation={(label) => handleVariationClick(card, label)}
+              language={language}
+              onVariation={handleVariationClick}
             />
           ))}
         </div>

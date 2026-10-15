@@ -23,6 +23,18 @@ The full suite passed 28 browser tests after the store and menu changes. A Relea
 
 ## Remaining verification
 
+## Touch rendering follow-up
+
+- Grid cards now receive stable callbacks through a memoized wrapper. A card selection no longer rebuilds every untouched card in the category.
+- Touch devices use an opaque fixed header without backdrop filtering, avoiding live blur of content scrolling behind the header.
+- Touch card feedback changes colors instead of scaling the card and animating its shadow.
+- Category swipes explicitly allow horizontal panning. The card area uses the page scroll instead of a redundant vertical scroller.
+- Elements with button semantics, including the card tiles, use `touch-action: manipulation` to avoid double-tap gesture recognition delaying activation while preserving pinch zoom.
+
+A production browser preview with tablet touch emulation and four-times CPU throttling completed ten card-add/clear cycles without errors or horizontal overflow. Recorded click event durations ranged from 16 to 80 ms (including clears and warm-up); these are Chromium diagnostics, not physical iPad measurements. The full 28-test suite passed after the rendering changes.
+
+## Remaining physical verification
+
 - Actual keyboard behavior on the physical iPad, especially feedback, PIN creation, rotation, and floating keyboards.
 - Full tap-to-visible-sentence latency and scroll smoothness on the physical iPad.
 - Protected network feature latency under realistic connection conditions.

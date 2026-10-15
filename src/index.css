@@ -444,6 +444,7 @@ All colors MUST be HSL.
   }
 
   button,
+  [role="button"],
   input,
   select,
   textarea {
@@ -506,6 +507,7 @@ All colors MUST be HSL.
   }
 
   .category-scroll {
+    touch-action: pan-x;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-inline: contain;
     scrollbar-width: none;
@@ -513,6 +515,23 @@ All colors MUST be HSL.
 
   .category-scroll::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Static surfaces avoid repainting blurred layers underneath every swipe. */
+  [data-input="touch"] .communication-header {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-color: hsl(var(--background));
+  }
+
+  [data-input="touch"] [data-guide="card-area"] {
+    overflow-y: visible;
+  }
+
+  [data-input="touch"] [aria-label^="Add "][role="button"] {
+    transition-property: background-color, border-color;
+    transform: none;
+    contain: layout style;
   }
 
   [data-device="tablet"] .category-scroll > * {
