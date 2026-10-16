@@ -21,7 +21,7 @@ const questions = [
   },
   {
     title: "How do I keep a copy of my cards and settings?",
-    text: "Use the data download option in your parent account before changing devices or clearing app data. Many learner settings, custom cards, and progress records currently stay on the device. Signing in does not automatically copy them to another device. Account deletion is also available in your parent account.",
+    text: "Open Profile & settings, then Profile > Backup. Download a backup before changing devices or clearing app data. Use Restore from file on the other device. Backups include uploaded photos; linked images may still need internet. Keep the file private. Signing in alone does not copy your board to another device.",
   },
 ];
 

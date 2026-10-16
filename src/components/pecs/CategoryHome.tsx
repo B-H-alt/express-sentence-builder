@@ -1,4 +1,7 @@
 import { Star } from "lucide-react";
+import { useMemo } from "react";
+import { useShallow } from "zustand/react/shallow";
+import { selectVocabularyCards } from "@/lib/vocabularySelector";
 import { useCardStore } from "@/store/cardStore";
 import { PecsCard } from "./PecsCard";
 import { getCardVariations } from "@/lib/cardVariations";
@@ -13,17 +16,16 @@ export const CategoryHome = ({ showWord, onSelectCategory }: CategoryHomeProps) 
   const {
     favorites,
     recentCardIds,
-    getFilteredCards,
     selectCard,
     toggleFavorite,
-  } = useCardStore();
+  } = useCardStore(useShallow(state => ({ favorites: state.favorites, recentCardIds: state.recentCardIds, selectCard: state.selectCard, toggleFavorite: state.toggleFavorite })));
   const language = useCardStore((state) => state.language);
   const characterGender = useCardStore((state) => state.characterGender);
   const lowStimulationMode = useCardStore((state) => state.lowStimulationMode);
   const copy = appText[language];
 
-  const availableCards = getFilteredCards();
-  const cardsById = new Map(availableCards.map((card) => [card.id, card]));
+  const availableCards = useCardStore(selectVocabularyCards);
+  const cardsById = useMemo(() => new Map(availableCards.map((card) => [card.id, card])), [availableCards]);
 
   const favoriteCards = favorites
     .map((id) => cardsById.get(id))

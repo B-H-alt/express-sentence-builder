@@ -82,7 +82,7 @@ export const PecsCard = ({
         lowStimulationMode ? "border border-border" : "border-2 border-border hover:border-primary/50",
         lowStimulationMode
           ? "shadow-none"
-          : "transition-all duration-200 active:scale-95 shadow-sm hover:shadow-md",
+          : "transition-[background-color,border-color,box-shadow,transform] duration-200 active:scale-95 shadow-sm hover:shadow-md",
         inSentence ? "w-[100px] h-[100px]" : "w-full"
       )}
       draggable={!inSentence}

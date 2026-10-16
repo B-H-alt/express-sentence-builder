@@ -1,3 +1,5 @@
+import { flushBoardInteractions, clearBoardInteractions } from "./boardPersistence";
+
 const ACTIVE_DATA_KEY = "pecs-storage";
 const ACTIVE_PIN_KEY = "expressly-parent-pin-v1";
 const ACTIVE_SCOPE_KEY = "expressly-active-account-scope-v1";
@@ -11,10 +13,13 @@ export const switchAccountStorage = (userId: string | null) => {
   const previousScope = window.localStorage.getItem(ACTIVE_SCOPE_KEY);
 
   if (!previousScope) {
+    flushBoardInteractions();
     window.localStorage.setItem(ACTIVE_SCOPE_KEY, nextScope);
     return false;
   }
   if (previousScope === nextScope) return false;
+
+  flushBoardInteractions();
 
   const activeData = window.localStorage.getItem(ACTIVE_DATA_KEY);
   if (activeData) {
@@ -48,6 +53,7 @@ export const clearAccountStorage = (userId: string) => {
   window.localStorage.removeItem(`${SCOPED_PIN_PREFIX}${scope}`);
 
   if (activeScope === scope) {
+    clearBoardInteractions();
     window.localStorage.removeItem(ACTIVE_DATA_KEY);
     window.localStorage.removeItem(ACTIVE_PIN_KEY);
     window.localStorage.setItem(ACTIVE_SCOPE_KEY, "guest");

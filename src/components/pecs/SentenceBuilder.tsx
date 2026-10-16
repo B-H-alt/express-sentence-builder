@@ -1,5 +1,6 @@
 // src/components/SentenceBuilder.tsx
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
+import type { Card } from "@/pages/PecsApp";
 import { useShallow } from "zustand/react/shallow";
 import { useCardStore } from "@/store/cardStore";
 import { PecsCard } from "./PecsCard";
@@ -16,6 +17,13 @@ interface SentenceBuilderProps {
   showWord: boolean;
   onOpenGuide: () => void;
 }
+
+const SentenceCard = memo(({ card, index, showWord, onRemove }: { card: Card; index: number; showWord: boolean; onRemove: (index: number) => void }) => (
+  <div className="flex-shrink-0">
+    <PecsCard card={card} showWord={showWord} onRemove={() => onRemove(index)} inSentence />
+  </div>
+));
+SentenceCard.displayName = "SentenceCard";
 
 export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps) => {
   const {
@@ -390,9 +398,7 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
           </p>
         ) : (
           sentence.map((c, i) => (
-            <div key={`${c.id}-${i}`} className="flex-shrink-0">
-              <PecsCard card={c} showWord={showWord} onRemove={() => removeFromSentence(i)} inSentence />
-            </div>
+            <SentenceCard key={`${c.id}-${i}`} card={c} index={i} showWord={showWord} onRemove={removeFromSentence} />
           ))
         )}
       </div>

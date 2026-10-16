@@ -1,4 +1,6 @@
 import { Button } from "@/components/ui/button";
+import { useMemo } from "react";
+import { selectVocabularyCards } from "@/lib/vocabularySelector";
 import {
   Heart,
   Home,
@@ -65,14 +67,9 @@ export const CategoryTabs = ({
   const lowStimulationMode = useCardStore((state) => state.lowStimulationMode);
   const hiddenCategories = useCardStore((state) => state.hiddenCategories);
   const language = useCardStore((state) => state.language);
-  const cards = useCardStore((state) => state.cards);
-  const customCards = useCardStore((state) => state.customCards);
+  const cards = useCardStore(selectVocabularyCards);
   const copy = appText[language];
-  const levelKey = Math.max(1, Math.min(5, currentLevel));
-  const availableCategories = new Set([
-    ...cards.filter((card) => (card.level ?? 1) <= levelKey),
-    ...customCards,
-  ].map((card) => card.category));
+  const availableCategories = useMemo(() => new Set(cards.map(card => card.category)), [cards]);
 
   const categoriesToShow = [
     ...baseCategories,

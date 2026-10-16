@@ -1,0 +1,84 @@
+import { expect, test, type Page } from "@playwright/test";
+import { seedLearner, blockThirdPartyWidgets } from "./helpers";
+
+const openAccount = async (page: Page) => {
+  await seedLearner(page);
+  await blockThirdPartyWidgets(page);
+  await page.goto("/pecs-app?account=sign-in");
+  await expect(page.getByRole("heading", { name: "Sign in to Expressly", exact: true })).toBeVisible();
+};
+
+test("sign-up requires agreement and sends the confirmation redirect", async ({ page }) => {
+  let payload: Record<string, unknown> = {};
+  let requestUrl = "";
+  await page.route("**/auth/v1/signup**", async (route) => {
+    payload = route.request().postDataJSON();
+    requestUrl = route.request().url();
+    await route.fulfill({ json: { user: { id: "signup-test", email: "test@example.com" }, session: null } });
+  });
+  await openAccount(page);
+  await page.getByRole("button", { name: "Sign up", exact: true }).click();
+  await page.getByPlaceholder("parent@example.com").fill("test@example.com");
+  await page.getByPlaceholder("At least 12 characters", { exact: true }).fill("Test-password-123!");
+  await page.getByPlaceholder("Enter it again").fill("Test-password-123!");
+  const submit = page.getByRole("button", { name: "Create parent account", exact: true });
+  await expect(submit).toBeDisabled();
+  await page.locator("#account-agreement").check();
+  await submit.click();
+  await expect(page.getByRole("status")).toContainText("Check your email");
+  expect(payload.email).toBe("test@example.com");
+  expect(payload.data).toMatchObject({ account_agreement_version: "2026-10-11" });
+  expect(new URL(requestUrl).searchParams.get("redirect_to")).toMatch(/\/pecs-app\?account=sign-in$/);
+});
+
+test("incorrect password leaves a clear message and permits retry", async ({ page }) => {
+  await page.route("**/auth/v1/token**", route => route.fulfill({ status: 400, json: { error_code: "invalid_credentials", msg: "Invalid login credentials" } }));
+  await openAccount(page);
+  await page.getByPlaceholder("parent@example.com").fill("test@example.com");
+  await page.getByPlaceholder("Password", { exact: true }).fill("wrong-password");
+  await page.getByRole("dialog").getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page.getByRole("status")).toHaveText("The email or password is incorrect.");
+  await expect(page.getByRole("dialog").getByRole("button", { name: "Sign in", exact: true })).toBeEnabled();
+  await expect(page.getByPlaceholder("Password", { exact: true })).toHaveValue("");
+});
+
+test("reset email uses account redirect and prevents immediate resend", async ({ page }) => {
+  let count = 0;
+  await page.route("**/auth/v1/recover**", async route => {
+    count++;
+    expect(new URL(route.request().url()).searchParams.get("redirect_to")).toMatch(/\/pecs-app\?account=sign-in$/);
+    await route.fulfill({ json: {} });
+  });
+  await openAccount(page);
+  await page.getByRole("button", { name: "Forgot password?", exact: true }).click();
+  await page.getByPlaceholder("parent@example.com").fill("test@example.com");
+  await page.getByRole("button", { name: "Send password reset link", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("If an account exists");
+  await expect(page.getByRole("button", { name: /Try again in/ })).toBeDisabled();
+  expect(count).toBe(1);
+});
+
+test("recovery link opens password editor rather than redirecting away", async ({ page }) => {
+  await seedLearner(page);
+  await blockThirdPartyWidgets(page);
+  const user = { id: "11111111-1111-4111-8111-111111111111", aud: "authenticated", role: "authenticated", email: "test@example.com", app_metadata: {}, user_metadata: {}, created_at: new Date().toISOString() };
+  const encode = (v: unknown) => Buffer.from(JSON.stringify(v)).toString("base64url");
+  const token = `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ sub: user.id, exp: Math.floor(Date.now()/1000)+3600 })}.test-signature`;
+  let updated = false;
+  await page.route("**/auth/v1/**", route => {
+    if (route.request().method() === "PUT") {
+      expect(route.request().postDataJSON().password).toBe("New-password-123!");
+      updated = true;
+    }
+    return route.fulfill({ json: user });
+  });
+  await page.goto(`/pecs-app?account=sign-in#access_token=${token}&refresh_token=test-refresh&expires_in=3600&token_type=bearer&type=recovery`);
+  await expect(page.getByRole("heading", { name: "Choose a new password", exact: true })).toBeVisible();
+  // Allow initial auth checks to finish, so a late redirect cannot hide a failure.
+  await page.waitForTimeout(1000);
+  await page.getByPlaceholder("At least 12 characters", { exact: true }).fill("New-password-123!");
+  await page.getByPlaceholder("Enter it again").fill("New-password-123!");
+  await page.getByRole("button", { name: "Save new password", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("Password updated");
+  expect(updated).toBe(true);
+});

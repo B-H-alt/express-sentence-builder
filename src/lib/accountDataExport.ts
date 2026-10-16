@@ -5,15 +5,15 @@ interface ExportAccount {
   email?: string;
 }
 
-export const downloadExpresslyData = (account: ExportAccount) => {
+export const createExpresslyData = (account?: ExportAccount) => {
   const state = useCardStore.getState();
   const exportedAt = new Date();
   const data = {
     exportVersion: 1,
     exportedAt: exportedAt.toISOString(),
     account: {
-      id: account.id,
-      email: account.email ?? null,
+      id: account?.id ?? null,
+      email: account?.email ?? null,
     },
     learnerProfile: {
       name: state.userName,
@@ -23,6 +23,7 @@ export const downloadExpresslyData = (account: ExportAccount) => {
       onboardingComplete: state.onboardingComplete,
     },
     preferences: {
+      theme: window.localStorage.getItem("expressly-theme") ?? "light",
       vocabularyLevel: state.currentLevel,
       cardsShown: state.cardsPerPage,
       showWords: state.showWords,
@@ -51,13 +52,19 @@ export const downloadExpresslyData = (account: ExportAccount) => {
       category: card.category,
     })),
     progressHistory: state.progressEntries,
+    cardUsage: Object.fromEntries(state.cards.map(card => [card.id, card.usage])),
   };
+  return data;
+};
+
+export const downloadExpresslyData = (account?: ExportAccount) => {
+  const data = createExpresslyData(account);
 
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
   const objectUrl = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = objectUrl;
-  link.download = `expressly-data-${exportedAt.toISOString().slice(0, 10)}.json`;
+  link.download = `expressly-data-${data.exportedAt.slice(0, 10)}.json`;
   document.body.appendChild(link);
   link.click();
   link.remove();

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { boardPersistence, registerBuiltinCardIds } from "@/lib/boardPersistence";
 import { Card } from "@/pages/PecsApp";
 import { expandedVocabulary } from "@/lib/expandedVocabulary";
 import { defaultAccessibility, normalizeAccessibility, type AccessibilityPreferences } from "@/lib/accessibilityPreferences";
@@ -214,6 +215,7 @@ export interface SavedPhrase {
 
 interface CardStore {
   cards: Card[];
+  cardUsage: Record<string, number>;
   sentence: Card[];
   favorites: string[];
   currentLevel: VocabularyLevel;
@@ -519,11 +521,13 @@ export const vocabularyLevelCounts = Object.fromEntries(
 ) as Record<VocabularyLevel, number>;
 
 export const USER_CARD_ID = "expressly-user-card";
+registerBuiltinCardIds(allCards.map(card => card.id));
 
 export const useCardStore = create<CardStore>()(
   persist(
     (set, get) => ({
       cards: allCards,
+      cardUsage: {},
       sentence: [],
       favorites: [],
       currentLevel: 1,
@@ -570,7 +574,8 @@ export const useCardStore = create<CardStore>()(
         sentence: [...state.sentence, card],
         cards: state.cards.map((item) => item.id === card.id ? { ...item, usage: item.usage + 1 } : item),
         customCards: state.customCards.map((item) => item.id === card.id ? { ...item, usage: item.usage + 1 } : item),
-        recentCardIds: [card.id, ...state.recentCardIds.filter((id) => id !== card.id)].slice(0, 12),
+        recentCardIds: state.recentCardIds[0] === card.id ? state.recentCardIds
+          : [card.id, ...state.recentCardIds.filter((id) => id !== card.id)].slice(0, 12),
       })),
 
       removeFromSentence: (index) =>
@@ -640,7 +645,8 @@ export const useCardStore = create<CardStore>()(
           customCards: state.customCards.map((card) =>
             card.id === cardId ? { ...card, usage: card.usage + 1 } : card
           ),
-          recentCardIds: [cardId, ...state.recentCardIds.filter((id) => id !== cardId)].slice(0, 12),
+          recentCardIds: state.recentCardIds[0] === cardId ? state.recentCardIds
+            : [cardId, ...state.recentCardIds.filter((id) => id !== cardId)].slice(0, 12),
         })),
 
       // --- LEVEL CONTROL ---
@@ -771,9 +777,11 @@ export const useCardStore = create<CardStore>()(
     // --- PERSIST CONFIG ---
     {
       name: "pecs-storage",
+      storage: boardPersistence,
       version: 15,
 
       partialize: (state): Partial<CardStore> => ({
+        cardUsage: Object.fromEntries(state.cards.filter(card => card.usage > 0).map(card => [card.id, card.usage])),
         sentence: state.sentence,
         favorites: state.favorites,
         currentLevel: state.currentLevel,
@@ -837,7 +845,17 @@ export const useCardStore = create<CardStore>()(
       },
       merge: (persistedState, currentState) => {
         const previous = (persistedState ?? {}) as Partial<CardStore>;
-        return { ...currentState, ...previous, cards: allCards, accessibility: normalizeAccessibility(previous.accessibility) };
+        const cards = allCards.map(card => {
+          const usage = previous.cardUsage?.[card.id];
+          return { ...card, usage: typeof usage === "number" && Number.isFinite(usage) && usage >= 0 ? usage : 0 };
+        });
+        const byId = new Map([...cards, ...(previous.customCards ?? [])].map(card => [card.id, card]));
+        const sentence = (previous.sentence ?? []).flatMap(item => {
+          const card = byId.get(item.id);
+          return card ? [{ ...card, text: item.text ?? card.text }]
+            : typeof item.category === "string" && typeof item.usage === "number" ? [item] : [];
+        });
+        return { ...currentState, ...previous, cards, sentence, accessibility: normalizeAccessibility(previous.accessibility) };
       },
     }
   )

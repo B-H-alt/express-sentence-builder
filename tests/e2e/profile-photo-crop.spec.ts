@@ -16,7 +16,7 @@ test("profile photo crop supports zoom, positioning, cancel and explicit profile
     }
     return canvas.toDataURL("image/png").split(",")[1];
   });
-  const upload = () => page.locator('input[type="file"]').setInputFiles({ name: "crop-test.png", mimeType: "image/png", buffer: Buffer.from(photo, "base64") });
+  const upload = () => page.getByLabel("Choose profile photo", { exact: true }).setInputFiles({ name: "crop-test.png", mimeType: "image/png", buffer: Buffer.from(photo, "base64") });
   await upload();
   await expect(page.getByRole("heading", { name: "Adjust your photo", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Save profile", exact: true })).toBeDisabled();

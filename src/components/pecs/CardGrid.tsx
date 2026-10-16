@@ -1,4 +1,6 @@
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
+import { selectVocabularyCards } from "@/lib/vocabularySelector";
 import { useCardStore } from "@/store/cardStore";
 import { PecsCard } from "./PecsCard";
 import { Card } from "@/pages/PecsApp";
@@ -49,7 +51,11 @@ const GridCard = memo(({ card, showWord, isFavorite, displaySize, language, onSe
 GridCard.displayName = "GridCard";
 
 export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQuery }: CardGridProps) => {
-  const { favorites, selectCard, toggleFavorite, getFilteredCards, cardsPerPage, currentLevel, lowStimulationMode } = useCardStore();
+  const { favorites, selectCard, toggleFavorite, cardsPerPage, currentLevel, lowStimulationMode } = useCardStore(useShallow(state => ({
+    favorites: state.favorites, selectCard: state.selectCard, toggleFavorite: state.toggleFavorite,
+    cardsPerPage: state.cardsPerPage, currentLevel: state.currentLevel, lowStimulationMode: state.lowStimulationMode,
+  })));
+  const levelFilteredCards = useCardStore(selectVocabularyCards);
   const language = useCardStore((state) => state.language);
   const characterGender = useCardStore((state) => state.characterGender);
   const copy = appText[language];
@@ -57,16 +63,14 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
   const [page, setPage] = useState(1);
   const [announcement, setAnnouncement] = useState({ id: 0, text: "" });
 
-  const levelFilteredCards = getFilteredCards();
-  
   const normalizedSearch = normalizeCardSearch(searchQuery);
-  const search = normalizedSearch ? searchCardLabels(levelFilteredCards, searchQuery, (card) =>
-    [card.text, translateCardLabel(card.text, language, characterGender)]) : null;
-  const filteredCards = search ? search.cards : levelFilteredCards.filter(card => {
+  const search = useMemo(() => normalizedSearch ? searchCardLabels(levelFilteredCards, searchQuery, (card) =>
+    [card.text, translateCardLabel(card.text, language, characterGender)]) : null, [normalizedSearch, searchQuery, levelFilteredCards, language, characterGender]);
+  const filteredCards = useMemo(() => search ? search.cards : levelFilteredCards.filter(card => {
     if (selectedCategory === "all") return true;
     if (selectedCategory === "favorites") return favorites.includes(card.id);
     return card.category === selectedCategory;
-  });
+  }), [search, levelFilteredCards, selectedCategory, favorites]);
 
   useEffect(() => {
     setPage(1);

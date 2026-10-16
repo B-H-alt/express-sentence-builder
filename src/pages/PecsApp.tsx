@@ -51,7 +51,7 @@ const PecsApp = () => {
     currentLevel: state.currentLevel, showWords: state.showWords, setShowWords: state.setShowWords,
     lowStimulationMode: state.lowStimulationMode, textSize: state.textSize,
   })));
-  const sentenceLength = useCardStore((state) => state.sentence.length);
+  const sentenceLength = useCardStore((state) => showGuide ? state.sentence.length : 0);
 
   useEffect(() => {
     document.documentElement.classList.toggle("low-stimulation", lowStimulationMode);

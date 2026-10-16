@@ -13,6 +13,7 @@ import { processImageUpload } from "@/lib/imageUpload";
 import { AccessibilitySettings } from "./AccessibilitySettings";
 import { ProfilePhotoCropper } from "./ProfilePhotoCropper";
 import { UnsavedChangesDialog } from "./UnsavedChangesDialog";
+import { BoardBackupSettings } from "./BoardBackupSettings";
 
 interface SettingsPanelProps {
   open: boolean;
@@ -244,6 +245,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                 <input
                   ref={fileRef}
                   type="file"
+                  aria-label="Choose profile photo"
                   accept="image/jpeg,image/png,image/webp"
                   onChange={handlePickImage}
                   className="hidden"
@@ -331,6 +333,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                   Card labels and speech.
                 </p>
               </div>}
+
+              {activeSection === "profile" && <BoardBackupSettings disabled={hasChanges || draftLevel !== currentLevel || Boolean(cropSource)} onRestored={onClose} />}
 
               {/* Theme */}
               {activeSection === "display" && <div className="space-y-3">
