@@ -27,6 +27,7 @@ export const downloadExpresslyData = (account: ExportAccount) => {
       cardsShown: state.cardsPerPage,
       showWords: state.showWords,
       calmMode: state.lowStimulationMode,
+      accessibility: state.accessibility,
       textSize: state.textSize,
       speechRate: state.speechRate,
       speechVolume: state.speechVolume,

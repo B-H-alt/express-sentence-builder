@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { Card } from "@/pages/PecsApp";
 import { expandedVocabulary } from "@/lib/expandedVocabulary";
+import { defaultAccessibility, normalizeAccessibility, type AccessibilityPreferences } from "@/lib/accessibilityPreferences";
 
 // Import PECS images
 import momImg from "@/assets/pecs/mom.jpg";
@@ -219,6 +220,9 @@ interface CardStore {
   cardsPerPage: CardDisplayAmount;
   showWords: boolean;
   lowStimulationMode: boolean;
+  accessibility: AccessibilityPreferences;
+  setAccessibility: (key: keyof AccessibilityPreferences, enabled: boolean) => void;
+  resetAccessibility: () => void;
   textSize: TextSize;
   language: AppLanguage;
   speechRate: number;
@@ -526,6 +530,9 @@ export const useCardStore = create<CardStore>()(
       cardsPerPage: "all",
       showWords: true,
       lowStimulationMode: false,
+      accessibility: { ...defaultAccessibility },
+      setAccessibility: (key, enabled) => set((state) => ({ accessibility: { ...state.accessibility, [key]: enabled } })),
+      resetAccessibility: () => set({ accessibility: { ...defaultAccessibility } }),
       textSize: "default",
       language: "en",
       speechRate: 1,
@@ -773,6 +780,7 @@ export const useCardStore = create<CardStore>()(
         cardsPerPage: state.cardsPerPage,
         showWords: state.showWords,
         lowStimulationMode: state.lowStimulationMode,
+        accessibility: state.accessibility,
         textSize: state.textSize,
         language: state.language,
         speechRate: state.speechRate,
@@ -805,6 +813,7 @@ export const useCardStore = create<CardStore>()(
 
         return {
           ...prev,
+          accessibility: normalizeAccessibility(prev.accessibility),
           cards: allCards,
           cardsPerPage: [4, 8, 12, "all"].includes(prev.cardsPerPage)
             ? prev.cardsPerPage
@@ -825,6 +834,10 @@ export const useCardStore = create<CardStore>()(
           progressEntries: Array.isArray(prev.progressEntries) ? prev.progressEntries : [],
           hiddenCategories: Array.isArray(prev.hiddenCategories) ? prev.hiddenCategories : [],
         };
+      },
+      merge: (persistedState, currentState) => {
+        const previous = (persistedState ?? {}) as Partial<CardStore>;
+        return { ...currentState, ...previous, cards: allCards, accessibility: normalizeAccessibility(previous.accessibility) };
       },
     }
   )

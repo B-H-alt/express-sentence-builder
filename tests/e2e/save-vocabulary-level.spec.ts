@@ -1,0 +1,40 @@
+import { expect, test } from "@playwright/test";
+import { seedLearner, blockThirdPartyWidgets } from "./helpers";
+
+test("level changes need saving, can be cancelled, and confirm success", async ({ page }) => {
+  await seedLearner(page);
+  await blockThirdPartyWidgets(page);
+  await page.goto("/pecs-app");
+  const openDisplay = async () => {
+    await page.getByRole("button", { name: "Open Test Learner's learner profile", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Profile & settings", exact: true }).click();
+    await page.getByRole("tab", { name: "Display", exact: true }).click();
+  };
+  const savedLevel = () => page.evaluate(() => JSON.parse(localStorage.getItem("pecs-storage")!).state.currentLevel);
+  await openDisplay();
+  await expect(page.getByRole("button", { name: "Save level", exact: true })).toBeDisabled();
+  const explore = page.getByRole("button", { name: /Level 4 \(Explore\)/ });
+  await explore.click();
+  await expect(explore).toHaveAttribute("aria-pressed", "true");
+  expect(await savedLevel()).toBe(1);
+  await expect(page.getByRole("status").filter({ hasText: "Change not saved." })).toBeVisible();
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(explore).toHaveAttribute("aria-pressed", "false");
+  await expect(page.getByRole("button", { name: "Save level", exact: true })).toBeDisabled();
+  await explore.click();
+  await page.getByRole("button", { name: "Close settings", exact: true }).click();
+  await expect(page.getByRole("alertdialog")).toBeVisible();
+  await page.getByRole("button", { name: "Leave without saving", exact: true }).click();
+  expect(await savedLevel()).toBe(1);
+  await openDisplay();
+  await expect(explore).toHaveAttribute("aria-pressed", "false");
+  await explore.click();
+  await page.getByRole("button", { name: "Save level", exact: true }).click();
+  expect(await savedLevel()).toBe(4);
+  await expect(page.getByRole("status").filter({ hasText: "Level 4 saved." })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Save level", exact: true })).toBeDisabled();
+  await page.getByRole("button", { name: "Close settings", exact: true }).click();
+  await expect(page.getByText("Level 4 (Explore)", { exact: true })).toBeVisible();
+  await openDisplay();
+  await expect(explore).toHaveAttribute("aria-pressed", "true");
+});

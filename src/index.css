@@ -2,6 +2,110 @@
 @tailwind components;
 @tailwind utilities;
 
+.profile-photo-zoom { appearance: none; -webkit-appearance: none; background: transparent; cursor: pointer; }
+.profile-photo-zoom::-webkit-slider-runnable-track { height: 6px; border-radius: 999px; background: hsl(var(--border)); }
+.profile-photo-zoom::-moz-range-track { height: 6px; border-radius: 999px; background: hsl(var(--border)); }
+.profile-photo-zoom::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 28px; height: 28px; margin-top: -11px; border: 2px solid hsl(var(--primary)); border-radius: 50%; background: hsl(var(--background)); }
+.profile-photo-zoom::-moz-range-thumb { width: 24px; height: 24px; border: 2px solid hsl(var(--primary)); border-radius: 50%; background: hsl(var(--background)); }
+.profile-photo-zoom:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; border-radius: 8px; }
+
+/* Optional communication-app preferences. Never filter symbol images or dim
+   the whole screen. Device Reduce Motion and Calm mode continue to win. */
+html.accessibility-reduceMotion *,
+html.accessibility-reduceMotion *::before,
+html.accessibility-reduceMotion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+html.accessibility-reduceMotion [role="button"],
+html.accessibility-reduceMotion button {
+  transform: none !important;
+}
+
+html.accessibility-plainBackgrounds {
+  --gradient-subtle: none;
+  --gradient-hero: none;
+  --gradient-accent: none;
+}
+html.accessibility-plainBackgrounds [class*="bg-gradient"]:not(.bg-clip-text),
+html.accessibility-plainBackgrounds .app-shell {
+  background-image: none !important;
+  background-color: hsl(var(--background));
+}
+html.accessibility-plainBackgrounds .bg-gradient-accent {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+}
+html.accessibility-plainBackgrounds .bg-clip-text {
+  background-image: none !important;
+  color: hsl(var(--primary)) !important;
+  -webkit-text-fill-color: hsl(var(--primary));
+}
+html.accessibility-plainBackgrounds [class*="shadow"]:not(:focus-visible) {
+  box-shadow: none !important;
+}
+html.accessibility-plainBackgrounds * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html.accessibility-plainBackgrounds [aria-hidden][class*="blur-"],
+html.accessibility-plainBackgrounds [aria-hidden][class*="radial-gradient"] {
+  display: none;
+}
+
+/* These neutral surface overrides preserve each theme's primary hue. */
+html.accessibility-softerColors:not(.dark):not([class*="-dark"]) {
+  --background: 40 18% 94%;
+  --card: 40 16% 96%;
+  --popover: 40 16% 96%;
+  --muted: 40 14% 90%;
+}
+html.accessibility-softerColors {
+  --gradient-subtle: linear-gradient(hsl(var(--background)), hsl(var(--background)));
+  --gradient-accent: linear-gradient(135deg, color-mix(in srgb, hsl(var(--secondary)) 35%, hsl(var(--primary))), hsl(var(--primary)));
+}
+html.accessibility-softerColors.dark,
+html.accessibility-softerColors[class*="-dark"] {
+  --foreground: 210 12% 88%;
+  --card-foreground: 210 12% 88%;
+  --popover-foreground: 210 12% 88%;
+}
+/* Plain surfaces take precedence if both preferences are enabled. */
+html.accessibility-plainBackgrounds.accessibility-softerColors {
+  --gradient-subtle: none;
+  --gradient-accent: none;
+}
+html.accessibility-strongerContrast:not(.dark):not([class*="-dark"]) {
+  --foreground: 210 20% 12%;
+  --card-foreground: 210 20% 12%;
+  --popover-foreground: 210 20% 12%;
+  --muted-foreground: 210 15% 28%;
+  --border: 210 15% 42%;
+}
+html.accessibility-strongerContrast.dark,
+html.accessibility-strongerContrast[class*="-dark"] {
+  --primary-foreground: 210 15% 8%;
+  --foreground: 210 10% 98%;
+  --card-foreground: 210 10% 98%;
+  --popover-foreground: 210 10% 98%;
+  --muted-foreground: 210 12% 86%;
+  --border: 210 12% 65%;
+}
+html.accessibility-strongerContrast :is(button, input, select, textarea, [role="button"]) {
+  border-color: hsl(var(--border));
+}
+html.accessibility-strongerContrast .bg-gradient-accent {
+  background-image: none !important;
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+}
+html.accessibility-strongerContrast :is([aria-pressed="true"], [aria-selected="true"], [aria-checked="true"]) {
+  outline: 2px solid hsl(var(--foreground));
+  outline-offset: 2px;
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */

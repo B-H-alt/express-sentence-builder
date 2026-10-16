@@ -77,7 +77,7 @@ export const CategoryHome = ({ showWord, onSelectCategory }: CategoryHomeProps) 
             </div>
           ) : (
             <p className="mt-5 rounded-2xl bg-muted/50 px-4 py-8 text-center text-sm text-muted-foreground">
-              {language === "es" ? "Marca una tarjeta como favorita o úsala una vez para verla aquí." : "Favorite a card or use it once and it will appear here."}
+              {language === "es" ? "Aquí aparecen las tarjetas usadas y favoritas." : "Used and favorite cards appear here."}
             </p>
           )}
       </section>

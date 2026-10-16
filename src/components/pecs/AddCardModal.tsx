@@ -1,5 +1,5 @@
 // src/components/pecs/AddCardModal.tsx
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useCardStore } from "@/store/cardStore";
 import { X, UploadCloud, Image as ImageIcon, Sparkles, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import type { Card } from "@/pages/PecsApp";
 import { getAccessToken } from "@/lib/supabase";
 import { processImageUpload } from "@/lib/imageUpload";
 import { getApiUrl } from "@/lib/runtimeUrls";
+import { UnsavedChangesDialog } from "./UnsavedChangesDialog";
 
 interface AddCardModalProps {
   open: boolean;
@@ -20,7 +21,6 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose, card 
   const addCustomCard = useCardStore((s) => s.addCustomCard);
   const updateCustomCard = useCardStore((s) => s.updateCustomCard);
   const deleteCustomCard = useCardStore((s) => s.deleteCustomCard);
-  const currentLevel = useCardStore((s) => s.currentLevel);
 
   const [text, setText] = useState("");
   const [category, setCategory] = useState("people");
@@ -33,6 +33,25 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose, card 
   const [isGenerating, setIsGenerating] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [confirmClose, setConfirmClose] = useState(false);
+  const hasChanges = text.trim() !== (card?.text ?? "").trim() || category !== (card?.category ?? "people") || imageUrl !== (card?.imageUrl ?? card?.image ?? "") || Boolean(genPrompt.trim()) || isGenerating;
+  const requestClose = useCallback(() => {
+    if (hasChanges) setConfirmClose(true);
+    else onClose();
+  }, [hasChanges, onClose]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !event.defaultPrevented) {
+        event.preventDefault();
+        if (confirmClose) setConfirmClose(false);
+        else requestClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, confirmClose, requestClose]);
 
   const isEditing = Boolean(card);
 
@@ -46,6 +65,7 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose, card 
     setGenError(null);
     setIsDragging(false);
     setIsConfirmingDelete(false);
+    setConfirmClose(false);
   }, [open, card]);
 
   // IMPORTANT: keep this AFTER hooks so hook order never changes
@@ -66,6 +86,10 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose, card 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    saveCard();
+  };
+
+  const saveCard = () => {
     if (!text.trim()) return;
 
     const values = {
@@ -212,8 +236,8 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose, card 
 
   return (
     <>
-      <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed inset-0 z-[70] flex items-center justify-center px-4">
+      <div className="fixed inset-0 z-[110] bg-black/40 backdrop-blur-sm" onClick={requestClose} />
+      <div className="fixed inset-0 z-[120] flex items-center justify-center px-4" onClick={requestClose}>
         <form
           onSubmit={handleSubmit}
           className="relative w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto rounded-3xl bg-background border border-border/70 shadow-2xl p-6 space-y-4"
@@ -222,21 +246,14 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose, card 
           <button
             type="button"
             className="absolute right-3 top-3 rounded-full border border-border/60 p-1 hover:bg-muted transition-colors"
-            onClick={() => {
-              resetState();
-              onClose();
-            }}
+            aria-label="Close card editor"
+            onClick={requestClose}
           >
             <X className="w-4 h-4" />
           </button>
 
           <div className="space-y-1 pr-6">
             <h2 className="text-lg font-semibold">{isEditing ? "Edit custom card" : "Add custom card"}</h2>
-            <p className="text-xs text-muted-foreground">
-              {isEditing
-                ? "Update the card details or delete this custom card."
-                : `This card will be saved at Level ${currentLevel} and will appear with the other cards.`}
-            </p>
           </div>
 
           <div className="space-y-3">
@@ -351,7 +368,7 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose, card 
 
                   <p className="text-[11px] text-muted-foreground flex items-center gap-1">
                     <ImageIcon className="w-3 h-3" />
-                    You can upload from your device. Uploaded images are stored locally for this browser.
+                    Uploaded photos stay in this browser.
                   </p>
                 </>
               )}
@@ -371,7 +388,7 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose, card 
                     <div className="text-xs text-destructive">{genError}</div>
                   ) : (
                     <p className="text-[11px] text-muted-foreground">
-                      Tip: simple prompts work best. We enforce PECS-friendly style and “no text.”
+                      Describe one object or action.
                     </p>
                   )}
 
@@ -452,10 +469,7 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose, card 
                 type="button"
                 variant="ghost"
                 className="rounded-xl"
-                onClick={() => {
-                  resetState();
-                  onClose();
-                }}
+                onClick={requestClose}
               >
                 Cancel
               </Button>
@@ -466,6 +480,10 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose, card 
           </div>
         </form>
       </div>
+      <UnsavedChangesDialog open={confirmClose} onKeepEditing={() => setConfirmClose(false)}
+        onDiscard={() => { resetState(); setConfirmClose(false); onClose(); }}
+        onSave={() => { saveCard(); setConfirmClose(false); }} canSave={Boolean(text.trim()) && !isGenerating}
+        description={!text.trim() ? "Give your card a label before saving, or leave without saving it." : isGenerating ? "Your image is still being created. Keep editing to wait for it, or leave without saving this card." : "Your card edits have not been saved. Save them now, or leave without saving."} />
     </>
   );
 };

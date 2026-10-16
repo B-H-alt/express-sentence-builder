@@ -1,8 +1,8 @@
 // src/components/pecs/SettingsPanel.tsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useCardStore, vocabularyLevelCounts } from "@/store/cardStore";
-import { X, User, Plus, Layers, Upload, Trash2, Save, Leaf, Volume2, Palette, MessagesSquare, Moon, Sun } from "lucide-react";
+import { X, User, Plus, Layers, Save, Leaf, Volume2, Palette, MessagesSquare, Moon, Sun } from "lucide-react";
 import { AddCardModal } from "@/components/pecs/AddCardModal";
 import { Button } from "@/components/ui/button";
 import type { AppLanguage, CardDisplayAmount, CharacterGender, TextSize, VocabularyLevel } from "@/store/cardStore";
@@ -10,6 +10,9 @@ import { useTheme } from "next-themes";
 import { Slider } from "@/components/ui/slider";
 import { languageNames } from "@/lib/language";
 import { processImageUpload } from "@/lib/imageUpload";
+import { AccessibilitySettings } from "./AccessibilitySettings";
+import { ProfilePhotoCropper } from "./ProfilePhotoCropper";
+import { UnsavedChangesDialog } from "./UnsavedChangesDialog";
 
 interface SettingsPanelProps {
   open: boolean;
@@ -69,12 +72,34 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
   const setLanguage = useCardStore((s) => s.setLanguage);
 
   const [showAddCard, setShowAddCard] = useState(false);
-  const [activeSection, setActiveSection] = useState<"profile" | "display" | "cards">("profile");
+  const [activeSection, setActiveSection] = useState<"profile" | "display" | "cards" | "accessibility">("profile");
 
   const [draftName, setDraftName] = useState("Me");
   const [draftImage, setDraftImage] = useState<string | null>(null);
+  const [cropSource, setCropSource] = useState<string | null>(null);
   const [draftGender, setDraftGender] = useState<CharacterGender>("girl");
   const [draftLanguage, setDraftLanguage] = useState<AppLanguage>("en");
+  const [draftLevel, setDraftLevel] = useState<VocabularyLevel>(currentLevel);
+  const [levelSaved, setLevelSaved] = useState(false);
+  const [confirmClose, setConfirmClose] = useState(false);
+  const hasChanges =
+    (draftName.trim() || "Me") !== (userName?.trim() || "Me") ||
+    (draftImage ?? null) !== (userImage ?? null) ||
+    draftGender !== characterGender || draftLanguage !== language;
+  const requestClose = useCallback(() => {
+    if (hasChanges || draftLevel !== currentLevel || cropSource) setConfirmClose(true);
+    else onClose();
+  }, [hasChanges, draftLevel, currentLevel, cropSource, onClose]);
+
+  useEffect(() => {
+    setDraftLevel(currentLevel);
+  }, [open, currentLevel]);
+
+  useEffect(() => {
+    setLevelSaved(false);
+    setCropSource(null);
+    setConfirmClose(false);
+  }, [open]);
 
   const fileRef = useRef<HTMLInputElement | null>(null);
 
@@ -92,7 +117,11 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
 
     const previousOverflow = document.body.style.overflow;
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape" && !event.defaultPrevented && !showAddCard) {
+        event.preventDefault();
+        if (confirmClose) setConfirmClose(false);
+        else requestClose();
+      }
     };
 
     document.body.style.overflow = "hidden";
@@ -102,21 +131,16 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open, onClose]);
+  }, [open, requestClose, confirmClose, showAddCard]);
 
   if (!open) return null;
 
-  const hasChanges =
-    (draftName.trim() || "Me") !== (userName?.trim() || "Me") ||
-    (draftImage ?? null) !== (userImage ?? null) ||
-    draftGender !== characterGender ||
-    draftLanguage !== language;
-
   const handlePickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file) return;
     try {
-      setDraftImage(await processImageUpload(file));
+      setCropSource(await processImageUpload(file));
     } catch (error) {
       window.alert(error instanceof Error ? error.message : "That image could not be used.");
     }
@@ -126,11 +150,13 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
     updateUserProfile(draftName.trim() || "Me", draftImage);
     setCharacterGender(draftGender);
     setLanguage(draftLanguage);
-    onClose();
+    if (draftLevel !== currentLevel) setConfirmClose(true);
+    else onClose();
   };
 
   const handleRemovePhoto = () => {
     setDraftImage(null);
+    setCropSource(null);
     if (fileRef.current) fileRef.current.value = "";
   };
 
@@ -138,13 +164,13 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
     <>
       <div
         className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm"
-        onClick={onClose}
+        onClick={requestClose}
       />
 
       <div
         className="fixed inset-x-0 z-[90] flex items-center justify-center p-4"
         style={{ top: "var(--visual-top, 0px)", height: "var(--visual-height, 100dvh)" }}
-        onClick={onClose}
+        onClick={requestClose}
       >
         <div
           role="dialog"
@@ -156,13 +182,10 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
           <div className="flex shrink-0 items-center justify-between gap-4 border-b border-border/70 bg-background px-6 py-4 md:px-8">
             <div className="min-w-0">
               <h2 id="settings-title" className="text-xl font-semibold md:text-2xl">Settings</h2>
-              <p className="truncate text-sm text-muted-foreground">
-                Personalize Expressly for your learner.
-              </p>
             </div>
             <button
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border/60 hover:bg-muted transition-colors"
-              onClick={onClose}
+              onClick={requestClose}
               type="button"
               aria-label="Close settings"
             >
@@ -174,12 +197,13 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
             <div
               role="tablist"
               aria-label="Settings sections"
-              className="mb-6 grid grid-cols-3 gap-1 rounded-2xl border border-border/70 bg-muted/40 p-1.5"
+              className="mb-6 grid grid-cols-2 gap-1 rounded-2xl border border-border/70 bg-muted/40 p-1.5 sm:grid-cols-4"
             >
               {[
                 { id: "profile", label: "Profile", icon: User },
                 { id: "display", label: "Display", icon: Palette },
                 { id: "cards", label: "Cards & voice", icon: MessagesSquare },
+                { id: "accessibility", label: "Accessibility", icon: User },
               ].map((section) => {
                 const Icon = section.icon;
                 const selected = activeSection === section.id;
@@ -189,7 +213,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                     type="button"
                     role="tab"
                     aria-selected={selected}
-                    onClick={() => setActiveSection(section.id as "profile" | "display" | "cards")}
+                    onClick={() => setActiveSection(section.id as typeof activeSection)}
                     className={`flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 text-sm font-medium transition-colors ${
                       selected
                         ? "bg-background text-foreground shadow-sm ring-1 ring-border/60"
@@ -203,16 +227,17 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
               })}
             </div>
 
-            <div className={`grid gap-6 ${activeSection === "display" ? "md:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]" : "mx-auto max-w-2xl"}`}>
+            {activeSection === "accessibility" && <div className="mx-auto max-w-2xl"><AccessibilitySettings /></div>}
+            <div className={`${activeSection === "accessibility" ? "hidden" : "grid"} gap-6 ${activeSection === "display" ? "md:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]" : "mx-auto max-w-2xl"}`}>
             {/* Left column: Profile / Theme */}
-            <div className={`rounded-2xl border border-border/80 bg-muted/40 p-5 flex flex-col gap-5 ${activeSection === "cards" ? "hidden" : ""}`}>
+            <div className={`flex flex-col gap-6 ${activeSection === "profile" ? "py-1" : "rounded-2xl border border-border/80 bg-muted/40 p-5"} ${activeSection === "cards" ? "hidden" : ""}`}>
               {/* Profile */}
-              {activeSection === "profile" && <div className="flex flex-col items-center gap-3">
-                <div className="w-24 h-24 rounded-full bg-background shadow-inner border border-border/60 flex items-center justify-center overflow-hidden">
+              {activeSection === "profile" && <div className="flex items-center gap-5 pb-2">
+                <div className="h-20 w-20 shrink-0 rounded-full bg-muted border border-border flex items-center justify-center overflow-hidden">
                   {draftImage ? (
                     <img src={draftImage} alt="Profile" className="h-full w-full object-cover" />
                   ) : (
-                    <User className="w-10 h-10 text-muted-foreground" />
+                    <span className="text-2xl font-medium text-muted-foreground">{(draftName.trim() || "Me").charAt(0).toUpperCase()}</span>
                   )}
                 </div>
 
@@ -224,29 +249,37 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                   className="hidden"
                 />
 
-                <div className="flex items-center gap-2">
-                  <Button type="button" variant="outline" onClick={() => fileRef.current?.click()}>
-                    <Upload className="w-4 h-4 mr-2" />
-                    Change
+                <div className="min-w-0 space-y-2">
+                  <h3 className="text-sm font-semibold">Profile photo</h3>
+                  <div className="flex flex-wrap items-center gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
+                    Change photo
                   </Button>
+                  {draftImage && <Button type="button" variant="outline" size="sm" onClick={() => setCropSource(draftImage)}>Adjust crop</Button>}
 
                   <Button
                     type="button"
                     variant="outline"
+                    size="sm"
                     onClick={handleRemovePhoto}
                     disabled={!draftImage}
                   >
-                    <Trash2 className="w-4 h-4 mr-2" />
                     Remove
                   </Button>
                 </div>
+                </div>
               </div>}
+
+              {activeSection === "profile" && cropSource && <ProfilePhotoCropper key={cropSource} source={cropSource}
+                onApply={(photo) => { setDraftImage(photo); setCropSource(null); }} onCancel={() => setCropSource(null)} />}
 
               {/* Username */}
               {activeSection === "profile" && <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">Username</label>
+                <label htmlFor="learner-profile-name" className="text-sm font-semibold">Name</label>
                 <input
-                  className="w-full rounded-xl border border-border bg-background/70 px-3 py-2 text-sm text-foreground"
+                  id="learner-profile-name"
+                  autoComplete="nickname"
+                  className="h-11 w-full rounded-lg border border-border bg-background px-3 text-base text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                   value={draftName}
                   onChange={(e) => setDraftName(e.target.value)}
                   placeholder="Me"
@@ -254,32 +287,29 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
               </div>}
 
               {/* Card character */}
-              {activeSection === "profile" && <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">Card character</label>
-                <div className="grid grid-cols-3 gap-2">
+              {activeSection === "profile" && <div className="space-y-3">
+                <h3 className="text-sm font-semibold">Card character</h3>
+                <div className="grid grid-cols-2 gap-2">
                   {(["girl", "boy"] as CharacterGender[]).map((gender) => (
                     <button
                       key={gender}
                       type="button"
                       aria-pressed={draftGender === gender}
                       onClick={() => setDraftGender(gender)}
-                      className={`h-10 rounded-xl border text-sm font-medium capitalize transition-colors ${
+                      className={`h-11 rounded-lg border text-sm font-medium capitalize transition-colors ${
                         draftGender === gender
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-background/70 text-foreground hover:bg-muted"
+                          ? "border-primary bg-primary/5 text-primary ring-1 ring-primary"
+                          : "border-border bg-background text-foreground hover:bg-muted"
                       }`}
                     >
                       {gender}
                     </button>
                   ))}
                 </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Choose which character appears on applicable communication cards.
-                </p>
               </div>}
 
-              {activeSection === "profile" && <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">Language</label>
+              {activeSection === "profile" && <div className="space-y-3">
+                <h3 className="text-sm font-semibold">Language</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {(["en", "es"] as AppLanguage[]).map((option) => (
                     <button
@@ -287,18 +317,18 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                       type="button"
                       aria-pressed={draftLanguage === option}
                       onClick={() => setDraftLanguage(option)}
-                      className={`h-10 rounded-xl border text-sm font-medium transition-colors ${
+                      className={`h-11 rounded-lg border text-sm font-medium transition-colors ${
                         draftLanguage === option
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-background/70 text-foreground hover:bg-muted"
+                          ? "border-primary bg-primary/5 text-primary ring-1 ring-primary"
+                          : "border-border bg-background text-foreground hover:bg-muted"
                       }`}
                     >
                       {languageNames[option]}
                     </button>
                   ))}
                 </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Changes communication card words and spoken sentences.
+                <p className="text-xs text-muted-foreground">
+                  Card labels and speech.
                 </p>
               </div>}
 
@@ -307,13 +337,11 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-sm font-semibold">Color theme</h3>
-                    <p className="mt-1 text-xs text-muted-foreground">Choose the colors that feel most comfortable.</p>
                   </div>
                 </div>
                 <div className="flex items-center justify-between rounded-xl border border-border bg-background/70 p-3">
                   <div>
                     <h4 className="text-sm font-medium">Appearance</h4>
-                    <p className="mt-0.5 text-xs text-muted-foreground">Use any color theme in light or dark mode.</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
@@ -452,7 +480,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                       <div>
                         <h3 className="text-sm font-semibold">Calm mode</h3>
                         <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                          Fewer cards, more space, less movement, and no editing controls on the learner’s cards.
+                          Fewer cards and effects. Hides card editing controls.
                         </p>
                       </div>
                     </div>
@@ -480,7 +508,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                 <div className="rounded-xl border border-border bg-background/70 p-3">
                   <div>
                     <h3 className="text-sm font-semibold">Text size</h3>
-                    <p className="mt-1 text-xs text-muted-foreground">Make words throughout Expressly easier to read.</p>
                   </div>
                   <div className="mt-3 grid grid-cols-3 gap-2" aria-label="Text size">
                     {([
@@ -518,7 +545,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                   <h3 className="text-sm font-semibold">Vocabulary level</h3>
                 </div>
                 <p className="text-xs text-muted-foreground mb-2">
-                  Choose the available vocabulary. Card size controls how many cards appear at once. You can change levels at any time.
+                  Choose a level, then save.
                 </p>
 
                 <div className="space-y-1.5">
@@ -526,18 +553,19 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                     <button
                       key={opt.level}
                       type="button"
-                      onClick={() => setLevel(opt.level)}
+                      aria-pressed={draftLevel === opt.level}
+                      onClick={() => { setDraftLevel(opt.level); setLevelSaved(false); }}
                       className={`w-full text-left rounded-xl px-3 py-2 text-sm flex items-start gap-2 border transition-colors ${
-                        currentLevel === opt.level
+                        draftLevel === opt.level
                           ? "border-primary/70 bg-primary/5"
                           : "border-border hover:bg-muted/60"
                       }`}
                     >
                       <span className="mt-[2px] text-xs">
-                        {currentLevel === opt.level ? "✓" : "○"}
+                        {draftLevel === opt.level ? "✓" : "○"}
                       </span>
                       <span>
-                        <span className={`font-medium ${currentLevel === opt.level ? "text-primary" : ""}`}>
+                        <span className={`font-medium ${draftLevel === opt.level ? "text-primary" : ""}`}>
                           {opt.label}
                         </span>
                         <span className="block text-[11px] text-muted-foreground">
@@ -547,13 +575,28 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                     </button>
                   ))}
                 </div>
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
+                  <p role="status" className="text-xs text-muted-foreground">
+                    {draftLevel !== currentLevel
+                      ? `Current: Level ${currentLevel}. Change not saved.`
+                      : levelSaved ? `Level ${currentLevel} saved.` : `Current: Level ${currentLevel}`}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    {draftLevel !== currentLevel && <Button type="button" variant="ghost" size="sm"
+                      onClick={() => { setDraftLevel(currentLevel); setLevelSaved(false); }}>Cancel</Button>}
+                    <Button type="button" size="sm" disabled={draftLevel === currentLevel}
+                      onClick={() => { setLevel(draftLevel); setLevelSaved(true); }}>
+                      Save level
+                    </Button>
+                  </div>
+                </div>
               </div>}
 
               {activeSection === "display" && <div className="rounded-2xl border border-border/80 bg-muted/30 p-4 flex flex-col gap-3">
                 <div>
                   <h3 className="text-sm font-semibold">Card size</h3>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Larger cards show fewer choices at once. Page buttons appear when needed.
+                    Larger cards show fewer at once.
                   </p>
                 </div>
                 <div className="grid grid-cols-4 gap-2">
@@ -588,7 +631,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                   <Volume2 className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <h3 className="text-sm font-semibold">Voice</h3>
-                    <p className="text-xs text-muted-foreground">Choose a comfortable speaking pace and volume.</p>
                   </div>
                 </div>
 
@@ -638,9 +680,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                 <div className="flex items-center justify-between gap-2">
                   <div>
                     <h3 className="text-sm font-semibold">Add a custom card</h3>
-                    <p className="text-xs text-muted-foreground">
-                      Create your own picture card at the current level.
-                    </p>
                   </div>
                 </div>
 
@@ -653,7 +692,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                     <Plus className="w-7 h-7 text-primary-foreground" />
                   </div>
                   <span className="text-xs text-muted-foreground">
-                    Tap to add a new card (label, category, image URL)
+                    Add a card
                   </span>
                 </button>
               </div>}
@@ -663,16 +702,16 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
 
           <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border/70 bg-background px-6 py-4 md:px-8">
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="hidden sm:inline">{activeSection === "profile" ? "Save after changing the learner profile." : "Changes in this section save automatically."}</span>
+              <span className="hidden sm:inline">{activeSection === "profile" ? "Save to apply changes." : activeSection === "display" ? "Save level separately. Other changes auto-save." : "Changes auto-save."}</span>
               <a href="/privacy" target="_blank" rel="noreferrer" className="hover:text-foreground hover:underline">Privacy</a>
               <a href="/terms" target="_blank" rel="noreferrer" className="hover:text-foreground hover:underline">Terms</a>
             </div>
             <div className="ml-auto flex items-center gap-2">
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="outline" onClick={requestClose}>
                 Close
               </Button>
               {activeSection === "profile" && (
-                <Button type="button" onClick={handleSave} disabled={!hasChanges}>
+                <Button type="button" onClick={handleSave} disabled={!hasChanges || Boolean(cropSource)}>
                   <Save className="mr-2 h-4 w-4" />
                   Save profile
                 </Button>
@@ -682,6 +721,15 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
         </div>
 
         <AddCardModal open={showAddCard} onClose={() => setShowAddCard(false)} />
+        <UnsavedChangesDialog open={confirmClose} onKeepEditing={() => setConfirmClose(false)}
+          onDiscard={() => { setConfirmClose(false); onClose(); }} canSave={!cropSource}
+          description={cropSource ? "Finish or cancel your photo crop first, then save your profile. You can also leave without saving your edits." : "Your profile or level changes have not been saved. Save them now, or discard those edits."}
+          onSave={() => {
+            if (cropSource) return;
+            if (hasChanges) { updateUserProfile(draftName.trim() || "Me", draftImage); setCharacterGender(draftGender); setLanguage(draftLanguage); }
+            if (draftLevel !== currentLevel) setLevel(draftLevel);
+            setConfirmClose(false); onClose();
+          }} />
       </div>
     </>
   );
