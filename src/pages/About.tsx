@@ -27,12 +27,12 @@ const AboutPage = () => {
   const values = [
     {
       title: "Respect for users",
-      description: "We design for dignity, not simplification.",
+      description: "The person using the app chooses what to say.",
       icon: HeartHandshake,
     },
     {
-      title: "Clinical alignment",
-      description: "We build within established communication frameworks.",
+      title: "Support, not treatment",
+      description: "Expressly is a communication tool, not a replacement for professional care.",
       icon: Stethoscope,
     },
     {
@@ -42,16 +42,16 @@ const AboutPage = () => {
     },
     {
       title: "Access and equity",
-      description: "Communication tools should be affordable and widely deployable.",
+      description: "The basic board can be opened without an account.",
       icon: Scale,
     },
   ];
 
   const practicePoints = [
     { icon: Tablet, text: "Runs on standard tablets already used in classrooms and therapy settings" },
-    { icon: Workflow, text: "Preserves PECS sentence structure to minimize retraining" },
+    { icon: Workflow, text: "Tap picture cards to build a sentence" },
     { icon: Mic, text: "Digital sentence strips with spoken output" },
-    { icon: ImageIcon, text: "Enables real-time communication without pre-printing or laminating materials" },
+    { icon: ImageIcon, text: "Add cards without printing or laminating pictures" },
     { icon: Users, text: "Supports use across home, school, and therapy environments" },
   ];
 
@@ -70,7 +70,7 @@ const AboutPage = () => {
             <div>
               <h2 className="text-3xl md:text-4xl font-bold text-foreground">Expressly in practice</h2>
               <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
-                Expressly is designed for use in real environments, not controlled demonstrations.
+                The board can be used at home, at school, or during therapy.
               </p>
 
               <div className="mt-8 space-y-4">
@@ -92,13 +92,12 @@ const AboutPage = () => {
               <CardContent className="p-0">
                 <div className="p-6 md:p-8">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-semibold text-foreground">Real-world usage visuals</h3>
+                    <h3 className="text-xl font-semibold text-foreground">Where you can use it</h3>
                     <Badge className="bg-muted text-muted-foreground hover:bg-muted">Home • School • Therapy</Badge>
                   </div>
 
                   <p className="mt-3 text-muted-foreground leading-relaxed">
-                    These contexts are where communication needs to work immediately: classrooms, kitchens, and therapy
-                    spaces.
+                    Examples of settings where someone might use Expressly.
                   </p>
                 </div>
 

@@ -9,7 +9,7 @@ test("landing page opens the communication app", async ({ page }) => {
   await page.goto("/");
 
   await expect(page).toHaveTitle("Expressly | Communication Made Simple");
-  await expect(page.getByRole("heading", { name: "Say what you mean, one picture at a time." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "More ways to say what’s on your mind." })).toBeVisible();
   await expectNoHorizontalOverflow(page);
 
   await page.getByRole("link", { name: "Open Expressly" }).first().click();
@@ -19,7 +19,7 @@ test("landing page opens the communication app", async ({ page }) => {
 
 const publicPages = [
   { path: "/support", heading: "Help & Support" },
-  { path: "/about", heading: "Communication should not fail when it matters most." },
+  { path: "/about", heading: "About Expressly" },
   { path: "/privacy", heading: "Privacy Policy" },
   { path: "/terms", heading: "Terms of Use" },
 ];

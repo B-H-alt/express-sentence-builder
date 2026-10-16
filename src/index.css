@@ -468,6 +468,34 @@ All colors MUST be HSL.
 }
 
 @layer utilities {
+  /* Landing page only: one-time reveals, with no blur or continuous motion. */
+  .expressly-landing.landing-motion-ready [data-landing-reveal] {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 550ms ease-out, transform 650ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .expressly-landing.landing-motion-ready [data-landing-reveal].landing-visible {
+    opacity: 1;
+    transform: none;
+  }
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .expressly-landing a[href="/pecs-app"] {
+      transition: transform 180ms ease-out, background-color 180ms ease-out;
+    }
+    .expressly-landing a[href="/pecs-app"]:hover { transform: translateY(-2px); }
+    .expressly-landing a[href="/pecs-app"] svg { transition: transform 180ms ease-out; }
+    .expressly-landing a[href="/pecs-app"]:hover svg { transform: translateX(3px); }
+    .expressly-landing .landing-preview > div { transition: box-shadow 250ms ease-out; }
+    .expressly-landing .landing-preview:hover > div { box-shadow: 0 20px 54px -24px rgb(15 23 42 / 0.28); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .expressly-landing.landing-motion-ready [data-landing-reveal] {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+    .expressly-landing a[href="/pecs-app"]:hover { transform: none; }
+  }
   [data-reveal] {
     opacity: 0;
     transform: translateY(28px) scale(0.985);

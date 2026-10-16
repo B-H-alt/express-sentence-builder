@@ -37,7 +37,7 @@ const Support = () => (
     </header>
     <main className="mx-auto max-w-3xl px-6 py-12 md:py-16">
       <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Help & Support</h1>
-      <p className="mt-4 text-lg text-muted-foreground">A little help getting your message across.</p>
+      <p className="mt-4 text-lg text-muted-foreground">Getting started and fixing common problems.</p>
 
       <section aria-labelledby="start-heading" className="mt-10 border-b border-border pb-10">
         <h2 id="start-heading" className="text-xl font-semibold">Start with three steps</h2>

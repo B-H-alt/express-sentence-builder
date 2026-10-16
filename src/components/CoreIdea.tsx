@@ -13,14 +13,12 @@ const CoreIdea = () => {
             </Badge>
 
             <h1 className="font-inter font-bold text-3xl md:text-5xl text-foreground leading-tight">
-              Communication should not fail when it matters most.
+              About Expressly
             </h1>
 
             <p className="mt-6 font-inter font-medium text-lg text-muted-foreground leading-relaxed">
-              Expressly exists to ensure that communication does not fail when it matters most. We built an assistive
-              communication system for nonverbal and minimally verbal individuals who rely on visual language. Expressly
-              is designed to preserve clinically trusted PECS workflows while removing the barriers that prevent
-              real-time, spontaneous expression in daily life.
+              Expressly is an AAC app for people who use pictures to communicate. Tap cards to build a sentence,
+              then play it aloud or show it to someone.
             </p>
           </div>
 
@@ -29,13 +27,12 @@ const CoreIdea = () => {
               <CardContent className="p-6 md:p-8">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <div className="text-sm font-semibold text-muted-foreground">Core idea</div>
+                    <div className="text-sm font-semibold text-muted-foreground">The app</div>
                     <div className="mt-1 text-xl md:text-2xl font-bold text-foreground">
-                      PECS-aligned, real-time expression
+                      Picture cards and speech
                     </div>
                     <p className="mt-3 text-muted-foreground leading-relaxed">
-                      Learners select familiar picture cards, build sentences in a structured strip, and receive spoken
-                      output. Vocabulary can expand instantly while preserving predictability and cognitive safety.
+                      Use the included cards or add your own. Choose a vocabulary level and adjust how the board looks.
                     </p>
                   </div>
 
@@ -47,7 +44,7 @@ const CoreIdea = () => {
                 <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="rounded-2xl border border-border bg-background/60 p-4">
                     <div className="text-xs text-muted-foreground">Workflow</div>
-                    <div className="mt-1 font-semibold text-foreground">PECS-aligned</div>
+                    <div className="mt-1 font-semibold text-foreground">Tap to build</div>
                   </div>
                   <div className="rounded-2xl border border-border bg-background/60 p-4">
                     <div className="text-xs text-muted-foreground">Output</div>
@@ -55,7 +52,7 @@ const CoreIdea = () => {
                   </div>
                   <div className="rounded-2xl border border-border bg-background/60 p-4">
                     <div className="text-xs text-muted-foreground">Focus</div>
-                    <div className="mt-1 font-semibold text-foreground">Safety + Usability</div>
+                    <div className="mt-1 font-semibold text-foreground">Communication</div>
                   </div>
                 </div>
               </CardContent>

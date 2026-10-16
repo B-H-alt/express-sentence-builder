@@ -8,15 +8,11 @@ const Problem = () => {
       <div className="container mx-auto px-6">
         <div className="max-w-3xl">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-            The problem we’re addressing
+            When you need another card
           </h2>
           <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
-            Many nonverbal individuals rely on the Picture Exchange Communication System (PECS) to communicate. PECS is
-            evidence-based and widely used, but it breaks down when the right picture has not been prepared in advance.
-            When communication fails in the moment intent arises, the opportunity to communicate is often lost. This
-            creates frustration for learners and places a significant preparation burden on caregivers, educators, and
-            therapists. These breakdowns are not caused by lack of effort or ability. They are caused by systems that
-            cannot adapt in real time.
+            Printed picture cards take time to prepare and organize. Expressly lets you add a photo or create a new
+            picture card in the app, then use it alongside the included vocabulary.
           </p>
         </div>
 
@@ -38,7 +34,7 @@ const Problem = () => {
                 {[
                   "Vocabulary limited to what was prepared",
                   "Manual printing and organization",
-                  "Communication breaks when vocabulary is missing",
+                  "New words need new cards",
                 ].map((t) => (
                   <div key={t} className="flex items-start gap-3">
                     <div className="mt-1.5 h-2.5 w-2.5 rounded-full bg-muted-foreground/40" />
@@ -49,14 +45,14 @@ const Problem = () => {
 
               <div className="mt-8 rounded-2xl border border-border bg-muted/30 p-4">
                 <div className="text-sm text-muted-foreground">
-                  Moment of intent
+                  Adding a word
                 </div>
                 <div className="mt-1 flex items-center gap-2 text-foreground font-semibold">
-                  Intent arises
+                  Need a word
                   <ArrowRight className="h-4 w-4 text-muted-foreground" />
                   Card missing
                   <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                  Communication lost
+                  Prepare a card
                 </div>
               </div>
             </CardContent>
@@ -73,16 +69,16 @@ const Problem = () => {
                   Expressly
                 </h3>
                 <Badge className="bg-secondary text-white shadow-sm">
-                  Real-time continuity
+                  Digital cards
                 </Badge>
               </div>
 
               <div className="mt-6 space-y-4">
                 {[
-                  "Real-time visual symbol creation",
-                  "Expanding vocabulary within PECS rules",
+                  "Create a picture or upload a photo",
+                  "Add words to the included vocabulary",
                   "Digital sentence strips with spoken output",
-                  "Communication continues at the moment of intent",
+                  "Use new cards on the same board",
                 ].map((t) => (
                   <div key={t} className="flex items-start gap-3">
                     <CheckCircle2 className="mt-0.5 h-5 w-5 text-secondary" />
@@ -95,10 +91,10 @@ const Problem = () => {
 
               <div className="mt-8 rounded-2xl bg-gradient-to-br from-secondary/15 to-primary/15 p-4 border border-secondary/30">
                 <div className="text-sm text-muted-foreground">
-                  Moment of intent
+                  Using a card
                 </div>
                 <div className="mt-1 flex items-center gap-2 text-foreground font-semibold">
-                  Intent arises
+                  Choose cards
                   <ArrowRight className="h-4 w-4 text-muted-foreground" />
                   Build sentence
                   <ArrowRight className="h-4 w-4 text-muted-foreground" />

@@ -9,14 +9,10 @@ const Approach = () => {
         <div className="max-w-3xl">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground">Our approach</h2>
           <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
-            Expressly is a PECS-aligned assistive communication system that enables real-time sentence construction
-            using visual symbols. Learners select familiar picture cards, build sentences within a structured sentence
-            strip, and receive spoken language output.
+            Cards are grouped into categories. Tap a card to add it to a sentence, then choose whether to play it aloud.
           </p>
           <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
-            The system operates through a clinically constrained pipeline: user input → sentence construction logic →
-            visual and spoken output → learning insights over time. Vocabulary can be expanded instantly while
-            preserving visual consistency, predictability, and cognitive safety.
+            You can add cards for words that are missing and adjust the board in Settings.
           </p>
         </div>
 
@@ -28,19 +24,19 @@ const Approach = () => {
                   <Workflow className="h-6 w-6 text-secondary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-foreground">Clinically constrained pipeline</h3>
+                  <h3 className="text-xl font-semibold text-foreground">Using the board</h3>
                   <p className="text-muted-foreground">
-                    A predictable workflow that supports safety, clarity, and consistent learning.
+                    Choose words, put them together, and share your message.
                   </p>
                 </div>
               </div>
 
               <div className="mt-8 grid lg:grid-cols-4 gap-4">
                 {[
-                  { title: "User input", desc: "Learner selects familiar symbols.", icon: Users },
-                  { title: "Sentence logic", desc: "Rules-based structure aligned to PECS.", icon: Brain },
-                  { title: "Visual + spoken output", desc: "Sentence strip plus speech output.", icon: Mic },
-                  { title: "Learning insights", desc: "Patterns over time support growth.", icon: Sparkles },
+                  { title: "Choose cards", desc: "Browse categories or search for a word.", icon: Users },
+                  { title: "Build a sentence", desc: "Tap cards in the order you want.", icon: Brain },
+                  { title: "Speak", desc: "Play the sentence aloud.", icon: Mic },
+                  { title: "Review activity", desc: "View recorded activity in Parent Mode.", icon: Sparkles },
                 ].map((step, idx) => {
                   const Icon = step.icon;
                   return (

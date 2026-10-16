@@ -7,7 +7,7 @@ const Footer = () => (
         <img src="/handmade-logo.png" alt="" className="h-9 w-9 rounded-lg object-contain" />
         <div>
           <p className="font-semibold">Expressly</p>
-          <p className="text-sm text-muted-foreground">Picture-based communication, made simpler.</p>
+          <p className="text-sm text-muted-foreground">Picture based communication</p>
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-muted-foreground">
