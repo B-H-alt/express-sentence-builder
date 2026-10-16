@@ -269,6 +269,9 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({ open, onClose, card 
                 <option value="activities">Activities</option>
                 <option value="descriptive">Descriptive</option>
                 <option value="time">Time</option>
+                <option value="animals">Animals</option>
+                <option value="nature">Nature</option>
+                <option value="sports">Sports</option>
               </select>
             </div>
 

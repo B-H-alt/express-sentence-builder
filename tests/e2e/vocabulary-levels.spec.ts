@@ -9,7 +9,7 @@ test("levels are cumulative, counts are accurate, and legacy IDs stay intact", a
   const result = await page.evaluate(async (path) => {
     const { useCardStore, vocabularyLevelCounts } = await import(path);
     const state = useCardStore.getState();
-    const levels = [1, 2, 3].map((level) => {
+    const levels = [1, 2, 3, 4, 5].map((level) => {
       state.setLevel(level);
       return useCardStore.getState().getFilteredCards().map((card) => ({ id: card.id, text: card.text }));
     });
@@ -19,7 +19,8 @@ test("levels are cumulative, counts are accurate, and legacy IDs stay intact", a
   for (const card of result.levels[2].filter((card) => card.id.startsWith("l1-"))) {
     expect(result.levels[0]).toContainEqual(card);
   }
-  for (let level = 0; level < 3; level += 1) {
+  expect(result.levels.map((cards) => cards.length)).toEqual([65, 160, 196, 220, 244]);
+  for (let level = 0; level < 5; level += 1) {
     expect(result.levels[level].length).toBe(result.counts[level + 1]);
     if (level > 0) for (const card of result.levels[level - 1]) expect(result.levels[level]).toContainEqual(card);
   }

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { Card } from "@/pages/PecsApp";
+import { expandedVocabulary } from "@/lib/expandedVocabulary";
 
 // Import PECS images
 import momImg from "@/assets/pecs/mom.jpg";
@@ -186,7 +187,7 @@ import makeBed from "@/assets/pecs/makeBed.jpg";
 
 import { auditedMinimumLevels } from "@/lib/vocabularyLevels";
 
-export type VocabularyLevel = 1 | 2 | 3;
+export type VocabularyLevel = 1 | 2 | 3 | 4 | 5;
 export type CharacterGender = "girl" | "boy";
 export type CardDisplayAmount = 4 | 8 | 12 | "all";
 export type TextSize = "small" | "default" | "large";
@@ -508,9 +509,9 @@ const level3Cards: Card[] = [
 ];
 
 // The arrays above preserve historical order and IDs, not audited access levels.
-const allCards = level3Cards.map((card) => ({ ...card, level: auditedMinimumLevels[card.id] ?? card.level }));
+const allCards = [...level3Cards, ...expandedVocabulary].map((card) => ({ ...card, level: auditedMinimumLevels[card.id] ?? card.level }));
 export const vocabularyLevelCounts = Object.fromEntries(
-  [1, 2, 3].map((level) => [level, allCards.filter((card) => (card.level ?? 1) <= level).length])
+  [1, 2, 3, 4, 5].map((level) => [level, allCards.filter((card) => (card.level ?? 1) <= level).length])
 ) as Record<VocabularyLevel, number>;
 
 export const USER_CARD_ID = "expressly-user-card";

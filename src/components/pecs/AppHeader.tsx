@@ -47,6 +47,10 @@ export const AppHeader = ({
         return language === "es" ? "Nivel 2 (Intermedio)" : "Level 2 (Intermediate)";
       case 3:
         return language === "es" ? "Nivel 3 (Avanzado)" : "Level 3 (Advanced)";
+      case 4:
+        return language === "es" ? "Nivel 4 (Explorar)" : "Level 4 (Explore)";
+      case 5:
+        return language === "es" ? "Nivel 5 (Más intereses)" : "Level 5 (More interests)";
     }
   };
 

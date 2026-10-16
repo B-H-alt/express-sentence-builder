@@ -19,7 +19,9 @@ interface SettingsPanelProps {
 const levelOptions: { level: VocabularyLevel; label: string; subtitle: string }[] = [
   { level: 1, label: "Level 1 (Beginner)", subtitle: `Everyday needs and core words (${vocabularyLevelCounts[1]} built-in cards)` },
   { level: 2, label: "Level 2 (Intermediate)", subtitle: `Daily life and more choices (${vocabularyLevelCounts[2]} built-in cards)` },
-  { level: 3, label: "Level 3 (Advanced)", subtitle: `All current vocabulary (${vocabularyLevelCounts[3]} built-in cards)` },
+  { level: 3, label: "Level 3 (Advanced)", subtitle: `More conversation and daily activities (${vocabularyLevelCounts[3]} built-in cards)` },
+  { level: 4, label: "Level 4 (Explore)", subtitle: `Animals, nature and sports (${vocabularyLevelCounts[4]} built-in cards)` },
+  { level: 5, label: "Level 5 (More interests)", subtitle: `More animals, outdoors and equipment (${vocabularyLevelCounts[5]} built-in cards)` },
 ];
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) => {

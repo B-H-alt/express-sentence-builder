@@ -14,6 +14,9 @@ import {
   Search,
   X,
   MessageSquare,
+  PawPrint,
+  Leaf,
+  Trophy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCardStore } from "@/store/cardStore";
@@ -47,6 +50,9 @@ const additionalCategories = [
   { id: "food", label: "Food", icon: Utensils },
   { id: "descriptive", label: "Descriptive", icon: CircleEllipsis },
   { id: "time", label: "Time", icon: Clock },
+  { id: "animals", label: "Animals", icon: PawPrint },
+  { id: "nature", label: "Nature", icon: Leaf },
+  { id: "sports", label: "Sports", icon: Trophy },
 ];
 
 export const CategoryTabs = ({
@@ -62,8 +68,7 @@ export const CategoryTabs = ({
   const cards = useCardStore((state) => state.cards);
   const customCards = useCardStore((state) => state.customCards);
   const copy = appText[language];
-  // Clamp level to 1–3
-  const levelKey = Math.max(1, Math.min(3, currentLevel)) as 1 | 2 | 3;
+  const levelKey = Math.max(1, Math.min(5, currentLevel));
   const availableCategories = new Set([
     ...cards.filter((card) => (card.level ?? 1) <= levelKey),
     ...customCards,

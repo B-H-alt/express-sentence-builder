@@ -28,7 +28,10 @@ const categoryLabels: Record<string, string> = {
   social: "Social",
   food: "Food",
   descriptive: "Descriptions",
-  time: "Time"
+  time: "Time",
+  animals: "Animals",
+  nature: "Nature",
+  sports: "Sports"
 };
 
 // Stable props keep untouched cards out of the render path when one card is tapped.

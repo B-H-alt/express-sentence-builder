@@ -38,7 +38,7 @@ try {
   await context.addInitScript(() => {
     if (!localStorage.getItem('pecs-storage')) {
       localStorage.setItem('expressly-guide-seen', 'true');
-      localStorage.setItem('pecs-storage', JSON.stringify({ state: { onboardingComplete: true, userName: 'Offline Test', characterGender: 'girl', currentLevel: 3, showWords: true, language: 'en', volume: 0 }, version: 15 }));
+      localStorage.setItem('pecs-storage', JSON.stringify({ state: { onboardingComplete: true, userName: 'Offline Test', characterGender: 'girl', currentLevel: 5, showWords: true, language: 'en', volume: 0 }, version: 15 }));
     }
   });
   let page = await context.newPage();
@@ -61,6 +61,11 @@ try {
   await page.waitForFunction(() => Array.from(document.images).some((img) => img.alt === 'Mom' && img.complete && img.naturalWidth > 0));
   await mom.click();
   await page.getByRole('button', { name: 'Remove Mom from sentence' }).waitFor();
+  await search.fill('turtle');
+  await page.getByRole('button', { name: 'Add Turtle to sentence', exact: true }).waitFor();
+  await page.waitForFunction(() => Array.from(document.images).some((img) => img.alt === 'Turtle' && img.complete && img.naturalWidth > 0));
+  await page.getByRole('button', { name: 'Add Turtle to sentence', exact: true }).click();
+  await page.getByRole('button', { name: 'Remove Turtle from sentence' }).waitFor();
   await page.close();
   page = await context.newPage();
   await page.goto(`${origin}/pecs-app`);
