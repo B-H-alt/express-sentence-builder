@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { translateCardLabel } from "@/lib/language";
+import { useProtectedLearnerControls } from "./CaregiverProtection";
 
 const genderSpecificBodyCards = new Set(["l1-50", "l2-54", "l2-56", "l2-58"]);
 
@@ -45,6 +46,7 @@ export const PecsCard = ({
   const characterGender = useCardStore((state) => state.characterGender);
   const lowStimulationMode = useCardStore((state) => state.lowStimulationMode);
   const language = useCardStore((state) => state.language);
+  const protectedControls = useProtectedLearnerControls();
   const displayedLabel = translateCardLabel(card.text, language, characterGender);
   const existingImage = card.image || card.imageUrl;
   const genderImage =
@@ -61,7 +63,7 @@ export const PecsCard = ({
   };
 
   const handleLongPress = (e: React.TouchEvent | React.MouseEvent) => {
-    if (onFavorite && !inSentence) {
+    if (onFavorite && !inSentence && !protectedControls) {
       e.preventDefault();
       onFavorite();
     }
@@ -95,7 +97,7 @@ export const PecsCard = ({
       onContextMenu={handleLongPress}
     >
       {/* Favorite star */}
-      {!inSentence && onFavorite && !lowStimulationMode && (
+      {!inSentence && onFavorite && !lowStimulationMode && !protectedControls && (
         <button
           type="button"
           aria-label={isFavorite ? `Remove ${displayedLabel} from favorites` : `Add ${displayedLabel} to favorites`}
@@ -115,7 +117,7 @@ export const PecsCard = ({
       )}
 
       {/* Edit button for custom cards */}
-      {!inSentence && onEdit && !lowStimulationMode && (
+      {!inSentence && onEdit && !lowStimulationMode && !protectedControls && (
         <button
           type="button"
           aria-label={`Edit ${card.text}`}

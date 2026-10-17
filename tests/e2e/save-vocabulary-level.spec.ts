@@ -1,13 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { seedLearner, blockThirdPartyWidgets } from "./helpers";
+import { seedLearner, blockThirdPartyWidgets, openSettings, returnToBoard } from "./helpers";
 
 test("level changes need saving, can be cancelled, and confirm success", async ({ page }) => {
   await seedLearner(page);
   await blockThirdPartyWidgets(page);
   await page.goto("/pecs-app");
   const openDisplay = async () => {
-    await page.getByRole("button", { name: "Open Test Learner's learner profile", exact: true }).click();
-    await page.getByRole("menuitem", { name: "Profile & settings", exact: true }).click();
+    await openSettings(page);
     await page.getByRole("tab", { name: "Display", exact: true }).click();
   };
   const savedLevel = () => page.evaluate(() => JSON.parse(localStorage.getItem("pecs-storage")!).state.currentLevel);
@@ -34,6 +33,7 @@ test("level changes need saving, can be cancelled, and confirm success", async (
   await expect(page.getByRole("status").filter({ hasText: "Level 4 saved." })).toBeVisible();
   await expect(page.getByRole("button", { name: "Save level", exact: true })).toBeDisabled();
   await page.getByRole("button", { name: "Close settings", exact: true }).click();
+  await returnToBoard(page);
   await expect(page.getByText("Level 4 (Explore)", { exact: true })).toBeVisible();
   await openDisplay();
   await expect(explore).toHaveAttribute("aria-pressed", "true");

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { blockThirdPartyWidgets, expectNoHorizontalOverflow, seedLearner } from "./helpers";
+import { blockThirdPartyWidgets, expectNoHorizontalOverflow, seedLearner, openSettings, returnToBoard } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await blockThirdPartyWidgets(page);
@@ -19,7 +19,7 @@ test("a new learner can finish the short onboarding", async ({ page }) => {
 
   await page.reload();
   await expect(page.getByRole("heading", { name: "Let’s personalize Expressly" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Open Sam's learner profile" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Open caregiver area" })).toBeVisible();
 });
 
 test("a learner can find a card, add it, and clear the sentence", async ({ page }) => {
@@ -67,11 +67,11 @@ test("calm mode removes secondary card controls without blocking communication",
   await seedLearner(page);
   await page.goto("/pecs-app");
 
-  await page.getByRole("button", { name: "Open Test Learner's learner profile" }).click();
-  await page.getByRole("menuitem", { name: "Profile & settings" }).click();
+  await openSettings(page);
   await page.getByRole("tab", { name: "Display" }).click();
   await page.getByRole("switch", { name: "Calm mode" }).click();
   await page.getByRole("button", { name: "Close settings" }).click();
+  await returnToBoard(page);
 
   await page.getByRole("searchbox", { name: "Find a card" }).fill("eat");
   const eatCard = page.getByRole("button", { name: "Add Eat to sentence" });

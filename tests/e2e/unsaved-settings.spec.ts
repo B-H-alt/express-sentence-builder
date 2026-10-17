@@ -1,10 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { seedLearner, blockThirdPartyWidgets } from "./helpers";
+import { seedLearner, blockThirdPartyWidgets, openSettings, returnToBoard } from "./helpers";
 
 test("all settings exits guard drafts, keep editing preserves them, and save applies both sections", async ({ page }) => {
   await seedLearner(page); await blockThirdPartyWidgets(page); await page.goto("/pecs-app");
-  await page.getByRole("button", { name: "Open Test Learner's learner profile", exact: true }).click();
-  await page.getByRole("menuitem", { name: "Profile & settings", exact: true }).click();
+  await openSettings(page);
   await page.getByLabel("Name", { exact: true }).fill("New name");
   await page.getByRole("tab", { name: "Display", exact: true }).click();
   await page.getByRole("button", { name: /Level 4 \(Explore\)/ }).click();
@@ -30,8 +29,7 @@ test("all settings exits guard drafts, keep editing preserves them, and save app
 
 test("custom cards warn before discarding and save from the warning without closing settings", async ({ page }) => {
   await seedLearner(page); await blockThirdPartyWidgets(page); await page.goto("/pecs-app");
-  await page.getByRole("button", { name: "Open Test Learner's learner profile", exact: true }).click();
-  await page.getByRole("menuitem", { name: "Profile & settings", exact: true }).click();
+  await openSettings(page);
   await page.getByRole("tab", { name: "Cards & voice", exact: true }).click();
   await page.getByRole("button", { name: "Add a card", exact: true }).click();
   const label = page.getByPlaceholder(/e.g./).first();

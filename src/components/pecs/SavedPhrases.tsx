@@ -5,8 +5,10 @@ import { translateCardLabel } from "@/lib/language";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { SpeakNowBar } from "./SpeakNowBar";
+import { useProtectedLearnerControls } from "./CaregiverProtection";
 
 export const SavedPhrases = ({ onHome }: { onHome: () => void }) => {
+  const protectedControls = useProtectedLearnerControls();
   const phrases = useCardStore((state) => state.savedPhrases);
   const language = useCardStore((state) => state.language);
   const savePhrase = useCardStore((state) => state.savePhrase);
@@ -34,8 +36,8 @@ export const SavedPhrases = ({ onHome }: { onHome: () => void }) => {
           <h2 id="saved-phrases-title" className="text-lg font-semibold">{es ? "Frases guardadas" : "Saved phrases"}</h2>
         </div>
         <div className="flex items-center gap-2">
-          {visible.length > 0 && <Button variant="ghost" onClick={() => setManaging(!managing)}>{managing ? (es ? "Listo" : "Done") : (es ? "Organizar" : "Manage")}</Button>}
-          <Button variant="outline" onClick={openAdd}><Plus className="mr-2 h-4 w-4" />{es ? "Añadir frase" : "Add phrase"}</Button>
+          {!protectedControls && visible.length > 0 && <Button variant="ghost" onClick={() => setManaging(!managing)}>{managing ? (es ? "Listo" : "Done") : (es ? "Organizar" : "Manage")}</Button>}
+          {!protectedControls && <Button variant="outline" onClick={openAdd}><Plus className="mr-2 h-4 w-4" />{es ? "Añadir frase" : "Add phrase"}</Button>}
         </div>
       </div>
       <p className="mb-5 mt-4 text-sm text-muted-foreground">{es ? "Toca una frase para decirla. Se guarda en este dispositivo." : "Tap a phrase to speak. Saved on this device."}</p>
@@ -44,7 +46,7 @@ export const SavedPhrases = ({ onHome }: { onHome: () => void }) => {
           <p className="font-medium">{es ? "Guarda algo que dices a menudo." : "Keep something you say often."}</p>
           <p className="mt-2 text-sm text-muted-foreground">{es ? "Por ejemplo: Necesito un descanso." : "For example: I need a break."}</p>
         </div>
-      ) : managing ? (
+      ) : managing && !protectedControls ? (
         <ul className="space-y-2">
           {visible.map((phrase) => <li key={phrase.id} className="flex items-center justify-between gap-3 rounded-xl border border-border p-3">
             <span className="min-w-0 break-words [overflow-wrap:anywhere]">{phrase.text}</span>
@@ -53,7 +55,7 @@ export const SavedPhrases = ({ onHome }: { onHome: () => void }) => {
         </ul>
       ) : <SpeakNowBar phrases={visible.map((phrase) => phrase.text)} />}
 
-      <Dialog open={adding} onOpenChange={setAdding}>
+      <Dialog open={adding && !protectedControls} onOpenChange={setAdding}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{es ? "Añadir frase" : "Add phrase"}</DialogTitle>
@@ -77,7 +79,7 @@ export const SavedPhrases = ({ onHome }: { onHome: () => void }) => {
           </form>
         </DialogContent>
       </Dialog>
-      <Dialog open={Boolean(removing)} onOpenChange={(open) => { if (!open) setRemoving(null); }}>
+      <Dialog open={Boolean(removing) && !protectedControls} onOpenChange={(open) => { if (!open) setRemoving(null); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>{es ? "¿Eliminar esta frase?" : "Remove this phrase?"}</DialogTitle>

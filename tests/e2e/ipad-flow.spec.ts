@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { blockThirdPartyWidgets, expectNoHorizontalOverflow, seedLearner } from "./helpers";
+import { blockThirdPartyWidgets, expectNoHorizontalOverflow, seedLearner, openSettings, returnToBoard } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await blockThirdPartyWidgets(page);
@@ -20,10 +20,10 @@ test("the complete communication flow remains usable on iPad", async ({ page }) 
   await expect(page.getByRole("button", { name: "Remove Mom from sentence" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Finish|Done/ })).toBeVisible();
 
-  await page.getByRole("button", { name: "Open Test Learner's learner profile" }).click();
-  await page.getByRole("menuitem", { name: "Profile & settings" }).click();
+  await openSettings(page);
   await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
   await page.getByRole("button", { name: "Close settings" }).click();
+  await returnToBoard(page);
   await expect(page.getByRole("heading", { name: "Settings" })).toHaveCount(0);
   await expectNoHorizontalOverflow(page);
 });

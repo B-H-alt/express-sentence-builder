@@ -8,14 +8,13 @@ import { SavedPhrases } from "@/components/pecs/SavedPhrases";
 import { CategoryTabs } from "@/components/pecs/CategoryTabs";
 import { AppHeader } from "@/components/pecs/AppHeader";
 import { useCardStore } from "@/store/cardStore";
-import { SettingsPanel } from "@/components/pecs/SettingsPanel";
 import { ParentAccountDialog } from "@/components/pecs/ParentAccountDialog";
 import Onboarding from "@/components/pecs/Onboarding";
 import { SpeakNowBar } from "@/components/pecs/SpeakNowBar";
-import { FeedbackDialog } from "@/components/pecs/FeedbackDialog";
 import { AppGuideDialog } from "@/components/pecs/AppGuideDialog";
 import { useToast } from "@/hooks/use-toast";
-import { AccessibilityEffects } from "@/components/pecs/AccessibilitySettings";
+import { CommunicationPreferences } from "@/components/pecs/CommunicationPreferences";
+import { CaregiverProtectionContext, useCaregiverProtectionEnabled } from "@/components/pecs/CaregiverProtection";
 
 export interface Card {
   id: string;
@@ -29,8 +28,6 @@ export interface Card {
 
 const PecsApp = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("home");
-  const [showSettings, setShowSettings] = useState(false);
-  const [showFeedback, setShowFeedback] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const accountRequested = searchParams.get("account") === "sign-in";
@@ -47,23 +44,11 @@ const PecsApp = () => {
     setSearchParams(next, { replace: true });
   }, [searchParams, setSearchParams, toast]);
 
-  const { currentLevel, showWords, setShowWords, lowStimulationMode, textSize } = useCardStore(useShallow((state) => ({
+  const { currentLevel, showWords, setShowWords, lowStimulationMode } = useCardStore(useShallow((state) => ({
     currentLevel: state.currentLevel, showWords: state.showWords, setShowWords: state.setShowWords,
-    lowStimulationMode: state.lowStimulationMode, textSize: state.textSize,
+    lowStimulationMode: state.lowStimulationMode,
   })));
   const sentenceLength = useCardStore((state) => showGuide ? state.sentence.length : 0);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("low-stimulation", lowStimulationMode);
-    return () => document.documentElement.classList.remove("low-stimulation");
-  }, [lowStimulationMode]);
-
-  useEffect(() => {
-    document.documentElement.classList.remove("text-size-small", "text-size-large");
-    if (textSize !== "default") {
-      document.documentElement.classList.add(`text-size-${textSize}`);
-    }
-  }, [textSize]);
 
   useEffect(() => {
     if (accountRequested) setShowParentAccount(true);
@@ -166,7 +151,7 @@ const PecsApp = () => {
 
   return (
     <div className={`app-shell relative flex min-h-screen w-full flex-col overflow-x-hidden ${lowStimulationMode ? "bg-background" : "bg-[radial-gradient(160%_100%_at_50%_-10%,hsl(var(--background)/0.06)_0%,transparent_70%),radial-gradient(120%_80%_at_0%_100%,hsl(var(--accent)/0.10)_0%,transparent_70%),radial-gradient(120%_80%_at_100%_100%,hsl(var(--secondary)/0.10)_0%,transparent_70%),linear-gradient(180deg,hsl(var(--background))_0%,hsl(var(--background))_100%)]"}`}>
-      <AccessibilityEffects />
+      <CommunicationPreferences />
       {/* FIXED STACK */}
       <div
         ref={topBarRef}
@@ -183,11 +168,7 @@ const PecsApp = () => {
             showWord={showWords}
             onSetDisplayMode={setShowWords}
             currentLevel={currentLevel}
-            onOpenSettings={() => setShowSettings(true)}
-            onOpenParentDashboard={() => navigate("/parent")}
-            onOpenParentAccount={() => setShowParentAccount(true)}
-            onOpenFeedback={() => setShowFeedback(true)}
-            onOpenGuide={() => handleGuideChange(true)}
+            onOpenCaregiver={() => navigate("/caregiver")}
           />
         </div>
 
@@ -226,17 +207,9 @@ const PecsApp = () => {
         </div>
       </main>
 
-      <SettingsPanel
-        open={showSettings}
-        onClose={() => setShowSettings(false)}
-      />
       <ParentAccountDialog
         open={showParentAccount}
         onOpenChange={handleParentAccountChange}
-      />
-      <FeedbackDialog
-        open={showFeedback}
-        onOpenChange={setShowFeedback}
       />
       <AppGuideDialog
         open={showGuide}
@@ -247,4 +220,8 @@ const PecsApp = () => {
   );
 };
 
-export default PecsApp;
+const ProtectedPecsApp = () => {
+  const enabled = useCaregiverProtectionEnabled();
+  return <CaregiverProtectionContext.Provider value={enabled}><PecsApp /></CaregiverProtectionContext.Provider>;
+};
+export default ProtectedPecsApp;

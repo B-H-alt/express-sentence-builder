@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { seedLearner, blockThirdPartyWidgets } from "./helpers";
+import { seedLearner, blockThirdPartyWidgets, openSettings, returnToBoard } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await seedLearner(page); await blockThirdPartyWidgets(page); await page.goto("/pecs-app");
@@ -63,8 +63,7 @@ test("invalid, executable-image and over-quota restores leave the original board
 test("file selection previews without replacing and requires a safety download", async ({ page }) => {
   const backup = await page.evaluate(async () => (await import("/src/lib/accountDataExport.ts")).createExpresslyData());
   backup.learnerProfile.name = "Imported Learner";
-  await page.getByRole("button", { name: "Open Test Learner's learner profile", exact: true }).click();
-  await page.getByRole("menuitem", { name: "Profile & settings", exact: true }).click();
+  await openSettings(page);
   await page.getByText("Backup", { exact: true }).click();
   const file = { name: "backup.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(backup)) };
   await page.getByLabel("Choose Expressly backup").setInputFiles(file);
@@ -77,7 +76,8 @@ test("file selection previews without replacing and requires a safety download",
   await page.getByRole("button", { name: "Download current backup", exact: true }).click();
   expect((await download).suggestedFilename()).toMatch(/^expressly-data-/);
   await page.getByRole("button", { name: "Replace with backup", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Open Imported Learner's learner profile", exact: true })).toBeVisible();
+  await returnToBoard(page);
+  await expect(page.getByRole("button", { name: "Open caregiver area", exact: true })).toBeVisible();
 });
 
 test("older version-one exports without new preferences remain restorable", async ({ page }) => {

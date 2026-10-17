@@ -1,12 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { seedLearner, blockThirdPartyWidgets, expectNoHorizontalOverflow } from "./helpers";
+import { seedLearner, blockThirdPartyWidgets, expectNoHorizontalOverflow, openSettings, returnToBoard } from "./helpers";
 
 test("profile photo crop supports zoom, positioning, cancel and explicit profile saving", async ({ page }) => {
   await seedLearner(page);
   await blockThirdPartyWidgets(page);
   await page.goto("/pecs-app");
-  await page.getByRole("button", { name: "Open Test Learner's learner profile", exact: true }).click();
-  await page.getByRole("menuitem", { name: "Profile & settings", exact: true }).click();
+  await openSettings(page);
   // Deliberately non-square test photo with identifiable left/center/right regions.
   const photo = await page.evaluate(() => {
     const canvas = document.createElement("canvas"); canvas.width = 900; canvas.height = 300;

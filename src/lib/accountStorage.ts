@@ -1,4 +1,5 @@
 import { flushBoardInteractions, clearBoardInteractions } from "./boardPersistence";
+import { notifyPinChanged } from "./caregiverPin";
 
 const ACTIVE_DATA_KEY = "pecs-storage";
 const ACTIVE_PIN_KEY = "expressly-parent-pin-v1";
@@ -42,6 +43,7 @@ export const switchAccountStorage = (userId: string | null) => {
   if (nextPin) window.localStorage.setItem(ACTIVE_PIN_KEY, nextPin);
   else window.localStorage.removeItem(ACTIVE_PIN_KEY);
   window.localStorage.setItem(ACTIVE_SCOPE_KEY, nextScope);
+  notifyPinChanged();
   return true;
 };
 
@@ -57,5 +59,6 @@ export const clearAccountStorage = (userId: string) => {
     window.localStorage.removeItem(ACTIVE_DATA_KEY);
     window.localStorage.removeItem(ACTIVE_PIN_KEY);
     window.localStorage.setItem(ACTIVE_SCOPE_KEY, "guest");
+    notifyPinChanged();
   }
 };

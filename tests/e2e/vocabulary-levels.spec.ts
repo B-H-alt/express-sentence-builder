@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { seedLearner, blockThirdPartyWidgets } from "./helpers";
+import { seedLearner, blockThirdPartyWidgets, openSettings, returnToBoard } from "./helpers";
 
 test("levels are cumulative, counts are accurate, and legacy IDs stay intact", async ({ page }) => {
   await seedLearner(page);
@@ -50,13 +50,13 @@ test("promoted vocabulary has visible categories and accurate settings", async (
   await expect(page.getByRole("button", { name: "Add Snack to sentence", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Descriptive", exact: true }).click();
   await expect(page.getByRole("button", { name: "Add Quiet to sentence", exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Open Test Learner's learner profile", exact: true }).click();
-  await page.getByRole("menuitem", { name: "Profile & settings", exact: true }).click();
+  await openSettings(page);
   await page.getByRole("tab", { name: "Display", exact: true }).click();
   await expect(page.getByText(/Everyday needs and core words \(\d+ built-in cards\)/)).toBeVisible();
   await page.getByRole("button", { name: /Level 2 \(Intermediate\)/ }).click();
   await page.getByRole("button", { name: "Save level", exact: true }).click();
   await page.getByRole("button", { name: "Close settings", exact: true }).click();
+  await returnToBoard(page);
   await page.getByRole("button", { name: "Time", exact: true }).click();
   await expect(page.getByRole("button", { name: "Add Now to sentence", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Add Later to sentence", exact: true })).toBeVisible();

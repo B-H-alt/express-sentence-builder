@@ -1,12 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { seedLearner, blockThirdPartyWidgets, expectNoHorizontalOverflow } from "./helpers";
+import { seedLearner, blockThirdPartyWidgets, expectNoHorizontalOverflow, openSettings, returnToBoard } from "./helpers";
 
 test("accessibility is optional, persists, and resets without changing learner settings", async ({ page }) => {
   await seedLearner(page);
   await blockThirdPartyWidgets(page);
   await page.goto("/pecs-app");
-  await page.getByRole("button", { name: "Open Test Learner's learner profile", exact: true }).click();
-  await page.getByRole("menuitem", { name: "Profile & settings", exact: true }).click();
+  await openSettings(page);
   await page.getByRole("tab", { name: "Accessibility", exact: true }).click();
   for (const name of ["Reduce motion", "Plain backgrounds", "Softer colors", "Stronger contrast"]) {
     const control = page.getByRole("switch", { name, exact: true });

@@ -1,192 +1,48 @@
-// src/components/pecs/AppHeader.tsx
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { BookOpen, Settings, Image, Type, ArrowLeft, ChevronDown, LayoutDashboard, MessageSquareText, ShieldCheck } from "lucide-react";
+import { Settings, Image, Type, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
-import { useCardStore, VocabularyLevel } from "@/store/cardStore";
+import { useCardStore, type VocabularyLevel } from "@/store/cardStore";
+import { useProtectedLearnerControls } from "./CaregiverProtection";
 
 interface AppHeaderProps {
   showWord: boolean;
   onSetDisplayMode: (showWords: boolean) => void;
   currentLevel: VocabularyLevel;
-  onOpenSettings: () => void;
-  onOpenParentDashboard: () => void;
-  onOpenParentAccount: () => void;
-  onOpenFeedback: () => void;
-  onOpenGuide: () => void;
+  onOpenCaregiver: () => void;
 }
 
-export const AppHeader = ({
-  showWord,
-  onSetDisplayMode,
-  currentLevel,
-  onOpenSettings,
-  onOpenParentDashboard,
-  onOpenParentAccount,
-  onOpenFeedback,
-  onOpenGuide,
-}: AppHeaderProps) => {
-  const userName = useCardStore((state) => state.userName?.trim() || "Me");
-  const userImage = useCardStore((state) => state.userImage);
-  const language = useCardStore((state) => state.language);
-
-  const getLevelLabel = (level: VocabularyLevel) => {
-    switch (level) {
-      case 1:
-        return language === "es" ? "Nivel 1 (Principiante)" : "Level 1 (Beginner)";
-      case 2:
-        return language === "es" ? "Nivel 2 (Intermedio)" : "Level 2 (Intermediate)";
-      case 3:
-        return language === "es" ? "Nivel 3 (Avanzado)" : "Level 3 (Advanced)";
-      case 4:
-        return language === "es" ? "Nivel 4 (Explorar)" : "Level 4 (Explore)";
-      case 5:
-        return language === "es" ? "Nivel 5 (Más intereses)" : "Level 5 (More interests)";
-    }
-  };
-
-  const profileInitial = userName.charAt(0).toUpperCase();
-
-  return (
-    <header className="app-safe-header relative overflow-hidden border-b border-border bg-gradient-subtle px-3 py-2.5 sm:px-6">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 -top-24 h-48 bg-[radial-gradient(40%_60%_at_20%_0%,hsl(var(--accent)/0.22),transparent_60%),radial-gradient(40%_60%_at_80%_0%,hsl(var(--primary)/0.22),transparent_60%)] blur-2xl"
-      ></div>
-      <div className="container relative mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-2 sm:gap-3">
-        <div className="flex min-w-0 items-center gap-2 sm:gap-4">
-          {!Capacitor.isNativePlatform() && <Link to="/" aria-label="Return to Expressly website">
-            <Button variant="ghost" size="icon" className="rounded-xl">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-          </Link>}
-          <div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent sm:text-2xl">
-              Expressly
-            </h1>
-            <p className="truncate text-xs text-muted-foreground sm:text-sm">
-              {getLevelLabel(currentLevel)}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <div
-            className="flex items-center rounded-xl border border-border/80 bg-muted/70 p-1 shadow-sm"
-            role="group"
-            aria-label="Card display"
-          >
-            <button
-              type="button"
-              aria-pressed={!showWord}
-              onClick={() => onSetDisplayMode(false)}
-              className={`flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold transition-all sm:px-3 ${
-                !showWord
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Image className="h-4 w-4" />
-              <span className="hidden min-[390px]:inline">{language === "es" ? "Imágenes" : "Pictures"}</span>
-            </button>
-            <button
-              type="button"
-              aria-pressed={showWord}
-              onClick={() => onSetDisplayMode(true)}
-              className={`flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold transition-all sm:px-3 ${
-                showWord
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Type className="h-4 w-4" />
-              <span className="sm:hidden">+ {language === "es" ? "Palabras" : "Words"}</span>
-              <span className="hidden sm:inline">{language === "es" ? "Imágenes + palabras" : "Pictures + words"}</span>
-            </button>
-          </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="h-11 gap-2 rounded-xl px-2 pr-3 shadow-sm"
-                aria-label={`Open ${userName}'s learner profile`}
-              >
-                <Avatar className="h-8 w-8 border border-border">
-                  {userImage && <AvatarImage src={userImage} alt={`${userName}'s profile`} />}
-                  <AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">
-                    {profileInitial}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="hidden max-w-28 truncate text-sm font-semibold md:inline">
-                  {userName}
-                </span>
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-              </Button>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent align="end" className="w-64 rounded-xl p-2">
-              <DropdownMenuLabel className="flex items-center gap-3 px-2 py-2 font-normal">
-                <Avatar className="h-10 w-10 border border-border">
-                  {userImage && <AvatarImage src={userImage} alt="" />}
-                  <AvatarFallback className="bg-primary/10 font-semibold text-primary">
-                    {profileInitial}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="min-w-0">
-                  <span className="block truncate font-semibold text-foreground">{userName}</span>
-                  <span className="block text-xs text-muted-foreground">
-                    Learner profile · Level {currentLevel}
-                  </span>
-                </span>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer rounded-lg py-2.5" onSelect={onOpenSettings}>
-                <Settings className="mr-2 h-4 w-4" />
-                Profile & settings
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="cursor-pointer rounded-lg py-2.5"
-                onSelect={onOpenParentDashboard}
-              >
-                <LayoutDashboard className="mr-2 h-4 w-4" />
-                Parent dashboard
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="cursor-pointer rounded-lg py-2.5"
-                onSelect={onOpenParentAccount}
-              >
-                <ShieldCheck className="mr-2 h-4 w-4" />
-                Parent account
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="cursor-pointer rounded-lg py-2.5"
-                onSelect={onOpenGuide}
-              >
-                <BookOpen className="mr-2 h-4 w-4" />
-                How to use Expressly
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="cursor-pointer rounded-lg py-2.5"
-                onSelect={onOpenFeedback}
-              >
-                <MessageSquareText className="mr-2 h-4 w-4" />
-                Send feedback
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+export const AppHeader = ({ showWord, onSetDisplayMode, currentLevel, onOpenCaregiver }: AppHeaderProps) => {
+  const name = useCardStore(state => state.userName?.trim() || "Me");
+  const image = useCardStore(state => state.userImage);
+  const language = useCardStore(state => state.language);
+  const protectedControls = useProtectedLearnerControls();
+  const levels = language === "es"
+    ? ["Principiante", "Intermedio", "Avanzado", "Explorar", "Más intereses"]
+    : ["Beginner", "Intermediate", "Advanced", "Explore", "More interests"];
+  return <header className="app-safe-header relative overflow-hidden border-b border-border bg-gradient-subtle px-3 py-2.5 sm:px-6">
+    <div className="container relative mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-2 sm:gap-3">
+      <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+        {!Capacitor.isNativePlatform() && <Link to="/" aria-label="Return to Expressly website"><Button variant="ghost" size="icon" className="rounded-xl"><ArrowLeft className="h-5 w-5" /></Button></Link>}
+        <div><h1 className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-xl font-bold text-transparent sm:text-2xl">Expressly</h1>
+          <p className="truncate text-xs text-muted-foreground sm:text-sm">{language === "es" ? "Nivel" : "Level"} {currentLevel} ({levels[currentLevel - 1]})</p>
         </div>
       </div>
-    </header>
-  );
+      <div className="flex items-center gap-2">
+        {!protectedControls && <div role="group" aria-label="Card display" className="flex items-center rounded-xl border border-border/80 bg-muted/70 p-1 shadow-sm">
+          <button aria-pressed={!showWord} onClick={() => onSetDisplayMode(false)} className={`flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold sm:px-3 ${!showWord ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}>
+            <Image className="h-4 w-4" /><span className="hidden min-[390px]:inline">{language === "es" ? "Imágenes" : "Pictures"}</span>
+          </button>
+          <button aria-pressed={showWord} onClick={() => onSetDisplayMode(true)} className={`flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold sm:px-3 ${showWord ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground"}`}>
+            <Type className="h-4 w-4" /><span className="sm:hidden">+ {language === "es" ? "Palabras" : "Words"}</span><span className="hidden sm:inline">{language === "es" ? "Imágenes + palabras" : "Pictures + words"}</span>
+          </button>
+        </div>}
+        <Button variant="outline" className="h-11 gap-2 rounded-xl px-2 pr-3 shadow-sm" aria-label="Open caregiver area" onClick={onOpenCaregiver}>
+          <Avatar className="h-8 w-8 border border-border">{image && <AvatarImage src={image} alt="" />}<AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">{name.charAt(0).toUpperCase()}</AvatarFallback></Avatar>
+          <span className="hidden max-w-28 truncate text-sm font-semibold md:inline">{name}</span><Settings className="h-4 w-4 text-muted-foreground" />
+        </Button>
+      </div>
+    </div>
+  </header>;
 };

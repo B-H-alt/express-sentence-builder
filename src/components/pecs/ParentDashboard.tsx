@@ -13,53 +13,23 @@ import {
   Type,
   Eye,
   EyeOff,
+  ChevronRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useCardStore } from "@/store/cardStore";
+import { pinIsOptional, notifyPinChanged, PIN_STORAGE_KEY, readStoredPin, bytesToBase64, hashPin, type StoredPin } from "@/lib/caregiverPin";
+import { SettingsPanel } from "./SettingsPanel";
+import { ParentAccountDialog } from "./ParentAccountDialog";
+import { FeedbackDialog } from "./FeedbackDialog";
+import { SavedPhrases } from "./SavedPhrases";
+import { CommunicationPreferences } from "./CommunicationPreferences";
+import { CaregiverCards } from "./CaregiverCards";
 
-const PIN_STORAGE_KEY = "expressly-parent-pin-v1";
+export const ParentDashboard = () => <><CommunicationPreferences /><CaregiverPage /></>;
+
 const AUTO_LOCK_MS = 5 * 60 * 1000;
 
-type StoredPin = { salt: string; hash: string; version?: 1 | 2 };
-
-const bytesToBase64 = (bytes: Uint8Array) =>
-  btoa(String.fromCharCode(...bytes));
-
-const hashPin = async (pin: string, salt: string, version: 1 | 2 = 2) => {
-  if (version === 1) {
-    const data = new TextEncoder().encode(`${salt}:${pin}`);
-    const digest = await crypto.subtle.digest("SHA-256", data);
-    return bytesToBase64(new Uint8Array(digest));
-  }
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(pin),
-    "PBKDF2",
-    false,
-    ["deriveBits"],
-  );
-  const bits = await crypto.subtle.deriveBits(
-    {
-      name: "PBKDF2",
-      hash: "SHA-256",
-      salt: Uint8Array.from(atob(salt), (character) => character.charCodeAt(0)),
-      iterations: 210_000,
-    },
-    key,
-    256,
-  );
-  return bytesToBase64(new Uint8Array(bits));
-};
-
-const readStoredPin = (): StoredPin | null => {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(PIN_STORAGE_KEY) ?? "null") as StoredPin | null;
-    return parsed?.salt && parsed?.hash ? parsed : null;
-  } catch {
-    return null;
-  }
-};
 
 const formatActivityDate = (value: string) => {
   const date = new Date(value);
@@ -76,7 +46,7 @@ const percentChange = (current: number, previous: number) => {
   return Math.round(((current - previous) / previous) * 100);
 };
 
-export const ParentDashboard = () => {
+const CaregiverPage = () => {
   const navigate = useNavigate();
   const entries = useCardStore((state) => state.progressEntries);
   const clearProgress = useCardStore((state) => state.clearProgress);
@@ -85,7 +55,12 @@ export const ParentDashboard = () => {
   const toggleCategoryVisibility = useCardStore((state) => state.toggleCategoryVisibility);
   const userName = !savedName || savedName.toLocaleLowerCase() === "me" ? "Your learner" : savedName;
   const [storedPin, setStoredPin] = useState<StoredPin | null>(() => readStoredPin());
-  const [unlocked, setUnlocked] = useState(false);
+  const [unlocked, setUnlocked] = useState(() => pinIsOptional() && !readStoredPin());
+  const [section, setSection] = useState<"home" | "progress" | "phrases" | "cards">("home");
+  const [settings, setSettings] = useState(false);
+  const [account, setAccount] = useState(false);
+  const [feedback, setFeedback] = useState(false);
+  const [confirmDisable, setConfirmDisable] = useState(false);
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [error, setError] = useState("");
@@ -98,10 +73,25 @@ export const ParentDashboard = () => {
     setConfirmPin("");
     setError("");
     setUnlocked(false);
+    setSettings(false); setAccount(false); setFeedback(false); setSection("home"); setConfirmDisable(false);
   }, []);
 
   useEffect(() => {
-    if (!unlocked) return;
+    const refreshProtection = (event: Event) => {
+      if (event instanceof StorageEvent && event.key !== null && event.key !== PIN_STORAGE_KEY && event.key !== "expressly-active-account-scope-v1") return;
+      setStoredPin(readStoredPin());
+      lockDashboard();
+    };
+    window.addEventListener("storage", refreshProtection);
+    window.addEventListener("expressly-pin-changed", refreshProtection);
+    return () => {
+      window.removeEventListener("storage", refreshProtection);
+      window.removeEventListener("expressly-pin-changed", refreshProtection);
+    };
+  }, [lockDashboard]);
+
+  useEffect(() => {
+    if (!unlocked || !storedPin) return;
     const resetTimer = () => {
       if (lockTimer.current) window.clearTimeout(lockTimer.current);
       lockTimer.current = window.setTimeout(() => {
@@ -111,11 +101,14 @@ export const ParentDashboard = () => {
     const events = ["pointerdown", "keydown", "scroll"] as const;
     events.forEach((event) => window.addEventListener(event, resetTimer, { passive: true }));
     resetTimer();
+    const lockOnBackground = () => { if (document.hidden) lockDashboard(); };
+    document.addEventListener("visibilitychange", lockOnBackground);
     return () => {
       if (lockTimer.current) window.clearTimeout(lockTimer.current);
       events.forEach((event) => window.removeEventListener(event, resetTimer));
+      document.removeEventListener("visibilitychange", lockOnBackground);
     };
-  }, [lockDashboard, unlocked]);
+  }, [lockDashboard, unlocked, storedPin]);
 
   const handlePin = async (event: FormEvent) => {
     event.preventDefault();
@@ -130,11 +123,13 @@ export const ParentDashboard = () => {
 
     setBusy(true);
     setError("");
+    try {
     if (!storedPin) {
       const salt = bytesToBase64(crypto.getRandomValues(new Uint8Array(16)));
       const next: StoredPin = { salt, hash: await hashPin(pin, salt, 2), version: 2 };
       localStorage.setItem(PIN_STORAGE_KEY, JSON.stringify(next));
       setStoredPin(next);
+      notifyPinChanged();
       setUnlocked(true);
       setPin("");
       setConfirmPin("");
@@ -160,7 +155,11 @@ export const ParentDashboard = () => {
     }
     setUnlocked(true);
     setPin("");
-    setBusy(false);
+    } catch {
+      setError("Your PIN could not be saved or checked. Please try again.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const insights = useMemo(() => {
@@ -232,11 +231,11 @@ export const ParentDashboard = () => {
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
               <ShieldCheck className="h-6 w-6" />
             </div>
-            <h1 className="mt-5 text-2xl font-semibold">Parent Mode</h1>
+            <h1 className="mt-5 text-2xl font-semibold">Caregiver area</h1>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               {storedPin
-                ? "Enter the parent PIN to view progress and settings."
-                : "Create a parent PIN so the learner cannot open progress and settings by accident."}
+                ? "Enter your PIN to manage Expressly."
+                : "Add a PIN to keep settings out of learner mode."}
             </p>
             <form className="mt-6 space-y-4" onSubmit={handlePin}>
               <PinField label={storedPin ? "Parent PIN" : "Create PIN"} value={pin} onChange={setPin} />
@@ -244,16 +243,67 @@ export const ParentDashboard = () => {
               {error && <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
               <Button className="w-full" type="submit" disabled={busy}>
                 <KeyRound className="mr-2 h-4 w-4" />
-                {busy ? "Checking…" : storedPin ? "Open Parent Mode" : "Save PIN and continue"}
+                {busy ? "Checking…" : storedPin ? "Unlock caregiver area" : "Save PIN and continue"}
               </Button>
             </form>
-            <p className="mt-5 text-xs leading-5 text-muted-foreground">
-              The PIN is stored as a protected hash on this device. Parent Mode locks again after five minutes, when you leave, or when the page reloads.
-            </p>
+            {!storedPin && <Button variant="ghost" className="mt-3 w-full" onClick={() => {
+              try { localStorage.setItem(PIN_STORAGE_KEY, JSON.stringify({ disabled: true })); notifyPinChanged(); setUnlocked(true); }
+              catch { setError("This device could not save that choice."); }
+            }}>Continue without a PIN</Button>}
+            <p className="mt-5 text-xs leading-5 text-muted-foreground">The PIN prevents accidental changes on this device. It is separate from your account password.</p>
           </section>
         </div>
       </main>
     );
+  }
+
+  if (section !== "progress") {
+    return <main className="app-safe-top app-safe-bottom min-h-[100dvh] bg-muted/35">
+      <header className="border-b border-border/60 bg-background px-5 py-4">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3"><span className="text-xl font-bold tracking-tight text-primary">Expressly</span><span className="h-5 w-px bg-border" /><span className="text-sm font-medium text-muted-foreground">Caregiver area</span></div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={lockDashboard}>{storedPin ? "Lock" : "Add a PIN"}</Button>
+            <Button onClick={() => navigate("/pecs-app")}>Return to board</Button>
+          </div>
+        </div>
+      </header>
+      <div className="mx-auto max-w-5xl px-5 py-8 sm:py-12">
+        {section === "phrases" ? <SavedPhrases onHome={() => setSection("home")} /> : section === "cards" ? <CaregiverCards onHome={() => setSection("home")} /> : <>
+          <div className="mb-9 flex flex-wrap items-end justify-between gap-5">
+            <div><h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Caregiver area</h1><p className="mt-3 text-base text-muted-foreground">Manage Expressly on this device.</p></div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:gap-5">
+            {[
+              { label: "Settings", text: "Profile, display, voice and backups.", action: () => setSettings(true) },
+              { label: "Manage cards", text: "Favorites and custom cards.", action: () => setSection("cards") },
+              { label: "Parent dashboard", text: "Activity and category visibility.", action: () => setSection("progress") },
+              { label: "Saved phrases", text: "Keep everyday messages close.", action: () => setSection("phrases") },
+              { label: "Account", text: "Sign in or manage your account.", action: () => setAccount(true) },
+              { label: "Send feedback", text: "Report a problem or share an idea.", action: () => setFeedback(true) },
+            ].map(item => <button key={item.label} aria-label={item.label} onClick={item.action} className="group flex items-center gap-4 rounded-[22px] border border-border/60 bg-card p-5 text-left shadow-[0_2px_8px_-4px_rgba(0,0,0,0.12)] transition-colors hover:border-primary/30 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:p-6">
+              <span className="min-w-0 flex-1"><span className="block text-base font-semibold tracking-tight">{item.label}</span><span className="mt-1.5 block text-sm leading-5 text-muted-foreground">{item.text}</span></span><ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60 group-hover:text-primary" />
+            </button>)}
+          </div>
+          <section className="mt-7 rounded-[22px] border border-border/60 bg-card p-5 sm:p-6">
+            <h2 className="text-sm font-semibold">PIN protection {storedPin ? "on" : "off"}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{storedPin ? "Editing controls are hidden on the board. Locks when you leave or after five idle minutes." : "Use Expressly independently, or add a PIN to protect editing controls."}</p>
+            {storedPin && (confirmDisable ? <div className="mt-4 flex flex-wrap items-center gap-3">
+              <span className="text-sm">Allow changes without a PIN?</span>
+              <Button variant="outline" onClick={() => setConfirmDisable(false)}>Keep PIN</Button>
+              <Button variant="destructive" onClick={() => {
+                try { localStorage.setItem(PIN_STORAGE_KEY, JSON.stringify({ disabled: true })); setStoredPin(null); setConfirmDisable(false); notifyPinChanged(); setUnlocked(true); }
+                catch { setError("PIN protection could not be changed."); }
+              }}>Turn off protection</Button>
+            </div> : <Button variant="ghost" className="mt-3" onClick={() => setConfirmDisable(true)}>Turn off PIN</Button>)}
+            {error && <p role="alert" className="mt-3 text-sm text-destructive">{error}</p>}
+          </section>
+        </>}
+      </div>
+      <SettingsPanel open={settings} onClose={() => setSettings(false)} />
+      <ParentAccountDialog open={account} onOpenChange={setAccount} />
+      <FeedbackDialog open={feedback} onOpenChange={setFeedback} />
+    </main>;
   }
 
   const sentenceChange = percentChange(insights.thisWeek, insights.previousWeek);
@@ -274,9 +324,10 @@ export const ParentDashboard = () => {
             <h1 className="text-xl font-semibold sm:text-2xl">{userName}&apos;s progress</h1>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setSection("home")}>Caregiver area</Button>
             <Button variant="outline" onClick={lockDashboard}>
               <LockKeyhole className="mr-2 h-4 w-4" />
-              Lock
+              {storedPin ? "Lock" : "Add a PIN"}
             </Button>
             <Button onClick={() => navigate("/pecs-app")}>
               Learner mode
@@ -323,6 +374,7 @@ export const ParentDashboard = () => {
               ["actions", "Actions"], ["responses", "Responses"], ["activities", "Activities"],
               ["objects", "Objects"], ["places", "Places"], ["social", "Social"],
               ["food", "Food"], ["descriptive", "Describing"], ["time", "Time"],
+              ["animals", "Animals"], ["nature", "Nature"], ["sports", "Sports"],
             ].map(([id, label]) => {
               const visible = !hiddenCategories.includes(id);
               return (
@@ -428,10 +480,11 @@ export const ParentDashboard = () => {
 
 const PinField = ({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) => (
   <div className="space-y-2">
-    <label className="text-sm font-medium">{label}</label>
+    <label htmlFor={`caregiver-${label.replace(/ /g, "-").toLowerCase()}`} className="text-sm font-medium">{label}</label>
     <div className="relative">
       <LockKeyhole className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       <input
+        id={`caregiver-${label.replace(/ /g, "-").toLowerCase()}`}
         type="password"
         inputMode="numeric"
         autoComplete="one-time-code"

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { lazy, Suspense } from "react";
 import { Capacitor } from "@capacitor/core";
+import { AppLoadingScreen, AppWelcomePreview, NativeAppEntry } from "@/components/AppWelcome";
 
 import { useDeviceProfile } from "./hooks/useDeviceProfile";
 
@@ -38,11 +39,13 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-background text-sm font-medium text-muted-foreground">Loading Expressly…</div>}>
+          <Suspense fallback={<AppLoadingScreen />}>
             <Routes>
-              <Route path="/" element={Capacitor.isNativePlatform() ? <PecsApp /> : <Index />} />
-              <Route path="/pecs-app" element={<PecsApp />} />
+              <Route path="/" element={Capacitor.isNativePlatform() ? <NativeAppEntry><PecsApp /></NativeAppEntry> : <Index />} />
+              <Route path="/pecs-app" element={Capacitor.isNativePlatform() ? <NativeAppEntry><PecsApp /></NativeAppEntry> : <PecsApp />} />
+              <Route path="/welcome" element={<AppWelcomePreview />} />
               <Route path="/parent" element={<ParentDashboard />} />
+              <Route path="/caregiver" element={<ParentDashboard />} />
               <Route path="/about" element={<About />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />

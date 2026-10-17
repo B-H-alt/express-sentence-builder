@@ -33,3 +33,20 @@ export const expectNoHorizontalOverflow = async (page: Page) => {
 export const blockThirdPartyWidgets = async (page: Page) => {
   await page.route("https://challenges.cloudflare.com/**", (route) => route.abort());
 };
+
+export const openSettings = async (page: Page) => {
+  const entry = page.getByRole("button", { name: "Open caregiver area", exact: true });
+  if (new URL(page.url()).pathname === "/pecs-app") await entry.click();
+  const skipPin = page.getByRole("button", { name: "Continue without a PIN", exact: true });
+  await Promise.race([
+    skipPin.waitFor({ state: "visible" }),
+    page.getByRole("button", { name: "Settings", exact: true }).waitFor({ state: "visible" }),
+  ]);
+  if (await skipPin.isVisible()) await skipPin.click();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+};
+
+export const returnToBoard = async (page: Page) => {
+  await page.getByRole("button", { name: "Return to board", exact: true }).click();
+  await page.getByRole("searchbox", { name: "Find a card" }).waitFor();
+};

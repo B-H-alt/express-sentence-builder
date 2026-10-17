@@ -70,6 +70,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
   const characterGender = useCardStore((s) => s.characterGender);
   const setCharacterGender = useCardStore((s) => s.setCharacterGender);
   const language = useCardStore((s) => s.language);
+  const showWords = useCardStore(s => s.showWords);
+  const setShowWords = useCardStore(s => s.setShowWords);
   const setLanguage = useCardStore((s) => s.setLanguage);
 
   const [showAddCard, setShowAddCard] = useState(false);
@@ -338,6 +340,13 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
 
               {/* Theme */}
               {activeSection === "display" && <div className="space-y-3">
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold">Card labels</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button variant={!showWords ? "default" : "outline"} aria-pressed={!showWords} onClick={() => setShowWords(false)}>Pictures</Button>
+                    <Button variant={showWords ? "default" : "outline"} aria-pressed={showWords} onClick={() => setShowWords(true)}>Pictures + words</Button>
+                  </div>
+                </div>
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-sm font-semibold">Color theme</h3>
