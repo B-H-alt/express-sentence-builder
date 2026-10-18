@@ -468,6 +468,16 @@ All colors MUST be HSL.
 }
 
 @layer utilities {
+  /* Readable settings scale, without transforms or changing switch geometry. */
+  .settings-panel .text-sm {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+  .settings-panel .text-xs,
+  .settings-panel [class~="text-[11px]"] {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
   /* Landing page only: one-time reveals, with no blur or continuous motion. */
   .expressly-landing.landing-motion-ready [data-landing-reveal] {
     opacity: 0;

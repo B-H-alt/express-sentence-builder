@@ -8,7 +8,7 @@ import { useTheme } from "next-themes";
 import { languageNames } from "@/lib/language";
 import { processImageUpload } from "@/lib/imageUpload";
 
-type OnboardingPalette = "blue" | "warm" | "sage";
+type OnboardingPalette = "blue" | "warm" | "sage" | "lavender" | "rose";
 
 export default function Onboarding() {
   const completeOnboarding = useCardStore((s) => s.completeOnboarding);
@@ -269,11 +269,13 @@ export default function Onboarding() {
                 <div className="space-y-5">
                   <div>
                     <p className="mb-2 text-sm font-semibold text-foreground">Color theme</p>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid auto-rows-fr grid-cols-2 gap-2 sm:grid-cols-3">
                       {([
                         { value: "blue", label: "Blue", colors: ["#17358a", "#19b9c3", "#f4f7fb"] },
                         { value: "warm", label: "Warm", colors: ["#8b4d2b", "#4e7e6b", "#f5ead4"] },
                         { value: "sage", label: "Sage", colors: ["#496b51", "#b28b59", "#eef3eb"] },
+                        { value: "lavender", label: "Lavender", colors: ["#65558b", "#8b729c", "#f2eff7"] },
+                        { value: "rose", label: "Rose", colors: ["#915d73", "#ac7b75", "#faf0f3"] },
                       ] as const).map((option) => (
                         <button
                           key={option.value}

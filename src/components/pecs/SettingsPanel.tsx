@@ -182,7 +182,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
           role="dialog"
           aria-modal="true"
           aria-labelledby="settings-title"
-          className="relative flex h-[min(820px,90dvh)] max-h-full w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-border/60 bg-background shadow-2xl"
+          className="settings-panel relative flex h-[min(920px,94dvh)] max-h-full w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border/60 bg-background shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex shrink-0 items-center justify-between gap-4 border-b border-border/70 bg-background px-6 py-4 md:px-8">
@@ -246,9 +246,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
               })}
             </div>
             <div ref={contentRef} id="settings-content" role="tabpanel" aria-labelledby={`settings-tab-${activeSection}`} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6 sm:px-8 md:px-10">
-            <div className="mx-auto mb-7 max-w-2xl"><h3 className="text-2xl font-semibold tracking-tight">{activeSection === "profile" ? "Profile" : activeSection === "vocabulary" ? "Vocabulary" : activeSection === "display" ? "Display" : activeSection === "cards" ? "Cards & voice" : "Accessibility"}</h3></div>
-            {activeSection === "accessibility" && <div className="mx-auto max-w-2xl"><AccessibilitySettings /></div>}
-            <div className={`${activeSection === "accessibility" ? "hidden" : "grid"} mx-auto max-w-2xl gap-8`}>
+            <div className="mx-auto mb-7 max-w-3xl"><h3 className="text-2xl font-semibold tracking-tight">{activeSection === "profile" ? "Profile" : activeSection === "vocabulary" ? "Vocabulary" : activeSection === "display" ? "Display" : activeSection === "cards" ? "Cards & voice" : "Accessibility"}</h3></div>
+            {activeSection === "accessibility" && <div className="mx-auto max-w-3xl"><AccessibilitySettings /></div>}
+            <div className={`${activeSection === "accessibility" ? "hidden" : "grid"} mx-auto max-w-3xl gap-8`}>
             {/* Left column: Profile / Theme */}
             <div className={`flex flex-col gap-6 ${activeSection === "profile" ? "py-1" : ""} ${activeSection === "cards" || activeSection === "vocabulary" ? "hidden" : ""}`}>
               {/* Profile */}

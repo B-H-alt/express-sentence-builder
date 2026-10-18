@@ -4,6 +4,7 @@ import { blockThirdPartyWidgets, expectNoHorizontalOverflow } from "./helpers";
 test.beforeEach(async ({ page }) => {
   await blockThirdPartyWidgets(page);
   await page.addInitScript(() => {
+    localStorage.setItem("expressly-release-welcome-v1", "expressly-refresh-2026-10");
     if (!localStorage.getItem("pecs-storage")) {
       localStorage.setItem("expressly-guide-seen", "true");
       localStorage.setItem("pecs-storage", JSON.stringify({ version: 15, state: { onboardingComplete: true, userName: "Test", currentLevel: 1, language: "en", showWords: true } }));

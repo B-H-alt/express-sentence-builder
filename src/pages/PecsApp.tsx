@@ -15,6 +15,8 @@ import { AppGuideDialog } from "@/components/pecs/AppGuideDialog";
 import { useToast } from "@/hooks/use-toast";
 import { CommunicationPreferences } from "@/components/pecs/CommunicationPreferences";
 import { RemoteSettingsReceiver } from "@/components/pecs/RemoteSettingsReceiver";
+import { ReleaseWelcome } from "@/components/pecs/ReleaseWelcome";
+import { markReleaseWelcomeSeen } from "@/lib/releaseWelcome";
 import { CaregiverProtectionContext, useCaregiverProtectionEnabled } from "@/components/pecs/CaregiverProtection";
 
 export interface Card {
@@ -65,6 +67,11 @@ const PecsApp = () => {
   };
 
   const hasCompletedOnboarding = useCardStore((state) => state.onboardingComplete);
+  const returningAtEntry = useRef(hasCompletedOnboarding);
+  useEffect(() => {
+    // New learners already start with this release; don't announce an update later.
+    if (hasCompletedOnboarding && !returningAtEntry.current) markReleaseWelcomeSeen();
+  }, [hasCompletedOnboarding]);
 
   useEffect(() => {
     if (!hasCompletedOnboarding) return;
@@ -218,6 +225,7 @@ const PecsApp = () => {
         sentenceLength={sentenceLength}
         onOpenChange={handleGuideChange}
       />
+      <ReleaseWelcome eligible={returningAtEntry.current && !showGuide && !showParentAccount && sentenceLength === 0} />
     </div>
   );
 };

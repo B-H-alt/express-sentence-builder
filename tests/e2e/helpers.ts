@@ -1,7 +1,8 @@
 import { expect, type Page } from "@playwright/test";
 
-export const seedLearner = async (page: Page) => {
-  await page.addInitScript(() => {
+export const seedLearner = async (page: Page, options: { showReleaseWelcome?: boolean } = {}) => {
+  await page.addInitScript(({ showReleaseWelcome }) => {
+    if (!showReleaseWelcome) window.localStorage.setItem("expressly-release-welcome-v1", "expressly-refresh-2026-10");
     window.localStorage.setItem("expressly-guide-seen", "true");
     window.localStorage.setItem(
       "pecs-storage",
@@ -18,7 +19,7 @@ export const seedLearner = async (page: Page) => {
         version: 15,
       }),
     );
-  });
+  }, options);
 };
 
 export const expectNoHorizontalOverflow = async (page: Page) => {
