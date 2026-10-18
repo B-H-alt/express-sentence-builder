@@ -50,10 +50,10 @@ const Index = () => {
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-12 px-6 pb-12 md:gap-16 md:px-10">
           <div className="max-w-3xl text-center" data-landing-reveal>
             <p className="mb-5 text-sm font-semibold tracking-wide text-primary">Picture based communication</p>
-            <h1 className="text-5xl font-semibold leading-[1.08] tracking-[-0.045em] md:text-7xl">More ways to say what’s on your mind.</h1>
+            <h1 className="text-5xl font-medium leading-[1.08] tracking-[-0.045em] md:text-7xl">More ways to say what’s on your mind.</h1>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link to="/pecs-app" className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5">Open Expressly <ArrowRight className="h-4 w-4" /></Link>
-              <a href="#how-it-works" className="inline-flex items-center justify-center px-6 py-3.5 font-medium text-primary underline-offset-4 hover:underline">See how it works ↓</a>
+              <Link to="/pecs-app" className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 font-medium text-primary-foreground transition-transform hover:-translate-y-0.5">Open Expressly <ArrowRight className="h-4 w-4" /></Link>
+              <a href="#how-it-works" className="inline-flex items-center justify-center px-6 py-3.5 font-normal text-primary underline-offset-4 hover:underline">See how it works ↓</a>
             </div>
             <p className="mt-4 text-sm text-muted-foreground">Try the board without an account.</p>
           </div>
@@ -116,7 +116,7 @@ const Index = () => {
 
       <section className="mx-auto max-w-5xl px-6 py-16 text-center md:py-24" data-landing-reveal>
         <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">Try Expressly.</h2>
-        <Link to="/pecs-app" className="mt-9 inline-flex items-center gap-2 rounded-full bg-primary px-7 py-4 font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5">Open Expressly <ArrowRight className="h-4 w-4" /></Link>
+        <Link to="/pecs-app" className="mt-9 inline-flex items-center gap-2 rounded-full bg-primary px-7 py-4 font-medium text-primary-foreground transition-transform hover:-translate-y-0.5">Open Expressly <ArrowRight className="h-4 w-4" /></Link>
       </section>
     </main>
     <Footer />
