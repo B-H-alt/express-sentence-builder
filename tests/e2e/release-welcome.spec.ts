@@ -28,6 +28,9 @@ for (const theme of ["Lavender", "Rose"]) {
     await page.getByRole("button", { name: theme, exact: true }).click();
     await expectNoHorizontalOverflow(page);
     await page.getByRole("button", { name: "Start using Expressly", exact: true }).click();
+    await expect(page.getByRole("dialog", { name: "Expressly, refreshed." })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Skip", exact: true })).toHaveCount(0);
+    await page.getByRole("button", { name: "Explore Expressly", exact: true }).click();
     await page.getByRole("button", { name: "Skip", exact: true }).click();
     await expect(page.locator("html")).toHaveClass(new RegExp(theme.toLowerCase()));
     await expect(page.getByRole("dialog", { name: "Expressly, refreshed." })).toHaveCount(0);
@@ -48,4 +51,15 @@ test("settings use larger readable text without horizontal overflow", async ({ p
   await page.getByRole("tab", { name: "Vocabulary", exact: true }).click();
   await page.getByRole("button", { name: "Save level", exact: true }).scrollIntoViewIfNeeded();
   await expect(page.getByRole("button", { name: "Save level", exact: true })).toBeInViewport();
+});
+
+test("returning users see the welcome before an unseen tutorial", async ({ page }) => {
+  await seedLearner(page, { showReleaseWelcome: true });
+  await blockThirdPartyWidgets(page);
+  await page.addInitScript(() => localStorage.removeItem("expressly-guide-seen"));
+  await page.goto("/pecs-app");
+  await expect(page.getByRole("dialog", { name: "Expressly, refreshed." })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Skip", exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Not now", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Skip", exact: true })).toBeVisible();
 });

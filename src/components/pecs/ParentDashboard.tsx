@@ -340,7 +340,7 @@ const CaregiverPage = () => {
       <SettingsPanel open={settings} onClose={() => setSettings(false)} />
       <ParentAccountDialog open={account} onOpenChange={setAccount} />
       <FeedbackDialog open={feedback} onOpenChange={setFeedback} />
-      <ReleaseWelcome eligible={releaseWelcome} manual onDismiss={() => setReleaseWelcome(false)} />
+      <ReleaseWelcome eligible={releaseWelcome} manual audience="caregiver" onDismiss={() => setReleaseWelcome(false)} />
     </main>;
   }
 

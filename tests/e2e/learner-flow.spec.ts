@@ -12,6 +12,7 @@ test("a new learner can finish the short onboarding", async ({ page }) => {
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("button", { name: "Warm" }).click();
   await page.getByRole("button", { name: "Start using Expressly" }).click();
+  await page.getByRole("button", { name: "Explore Expressly", exact: true }).click();
   await page.getByRole("button", { name: "Skip" }).click();
 
   await expect(page.getByRole("heading", { name: "Expressly" })).toBeVisible();

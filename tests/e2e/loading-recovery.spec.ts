@@ -12,14 +12,28 @@ test("a failed page module shows a retry screen and preserves saved data", async
   await expect(page.getByRole("heading", { name: "More ways to say what’s on your mind." })).toBeVisible();
 });
 
+test("caregiver update dismissal does not dismiss the app welcome", async ({ page }) => {
+  await seedLearner(page, { showReleaseWelcome: true }); await blockThirdPartyWidgets(page);
+  await page.goto("/caregiver");
+  await page.getByRole("button", { name: "Continue without a PIN", exact: true }).click();
+  await page.getByRole("button", { name: "What’s new", exact: true }).click();
+  await page.getByRole("button", { name: "Got it", exact: true }).click();
+  expect(await page.evaluate(() => localStorage.getItem("expressly-release-welcome-v1"))).toBeNull();
+  await page.getByRole("button", { name: "Return to board", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Expressly, refreshed." })).toBeVisible();
+});
+
 test("the dismissed release welcome can be reopened without restarting the one-time announcement", async ({ page }) => {
   await seedLearner(page); await blockThirdPartyWidgets(page);
   await page.goto("/pecs-app"); await openSettings(page);
   await page.getByRole("button", { name: "Close settings", exact: true }).click();
   for (let i = 0; i < 2; i++) {
     await page.getByRole("button", { name: "What’s new", exact: true }).click();
-    await expect(page.getByRole("dialog", { name: "Expressly, refreshed." })).toBeVisible();
-    await page.getByRole("button", { name: "Not now", exact: true }).click();
+    const update = page.getByRole("dialog", { name: "What’s new for caregivers" });
+    await expect(update).toBeVisible();
+    await expect(update).toContainText("Board tools in one place");
+    await expect(update).not.toContainText("Five levels");
+    await page.getByRole("button", { name: "Got it", exact: true }).click();
   }
   await page.getByRole("button", { name: "Return to board", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Expressly, refreshed." })).toHaveCount(0);

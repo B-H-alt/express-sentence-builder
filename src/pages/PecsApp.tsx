@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CommunicationPreferences } from "@/components/pecs/CommunicationPreferences";
 import { RemoteSettingsReceiver } from "@/components/pecs/RemoteSettingsReceiver";
 import { ReleaseWelcome } from "@/components/pecs/ReleaseWelcome";
-import { markReleaseWelcomeSeen } from "@/lib/releaseWelcome";
+import { hasSeenReleaseWelcome } from "@/lib/releaseWelcome";
 import { registerOffline } from "@/lib/registerOffline";
 import { CaregiverProtectionContext, useCaregiverProtectionEnabled } from "@/components/pecs/CaregiverProtection";
 
@@ -69,20 +69,16 @@ const PecsApp = () => {
   };
 
   const hasCompletedOnboarding = useCardStore((state) => state.onboardingComplete);
-  const returningAtEntry = useRef(hasCompletedOnboarding);
-  useEffect(() => {
-    // New learners already start with this release; don't announce an update later.
-    if (hasCompletedOnboarding && !returningAtEntry.current) markReleaseWelcomeSeen();
-  }, [hasCompletedOnboarding]);
+  const [releasePending, setReleasePending] = useState(() => !hasSeenReleaseWelcome());
 
   useEffect(() => {
-    if (!hasCompletedOnboarding) return;
+    if (!hasCompletedOnboarding || releasePending) return;
     if (window.localStorage.getItem("expressly-guide-seen") !== "true") {
       setSearchQuery("");
       setSelectedCategory("actions");
       setShowGuide(true);
     }
-  }, [hasCompletedOnboarding]);
+  }, [hasCompletedOnboarding, releasePending]);
 
   const handleGuideChange = (open: boolean) => {
     if (open) {
@@ -227,7 +223,7 @@ const PecsApp = () => {
         sentenceLength={sentenceLength}
         onOpenChange={handleGuideChange}
       />
-      <ReleaseWelcome eligible={returningAtEntry.current && !showGuide && !showParentAccount && sentenceLength === 0} />
+      <ReleaseWelcome eligible={releasePending && !showParentAccount} onDismiss={() => setReleasePending(false)} />
     </div>
   );
 };
