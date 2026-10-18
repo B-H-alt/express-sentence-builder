@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { lazy, Suspense } from "react";
 import { Capacitor } from "@capacitor/core";
 import { AppLoadingScreen, AppWelcomePreview, NativeAppEntry } from "@/components/AppWelcome";
+import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 
 import { useDeviceProfile } from "./hooks/useDeviceProfile";
 
@@ -39,7 +40,7 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Suspense fallback={<AppLoadingScreen />}>
+          <AppErrorBoundary><Suspense fallback={<AppLoadingScreen />}>
             <Routes>
               <Route path="/" element={Capacitor.isNativePlatform() ? <NativeAppEntry><PecsApp /></NativeAppEntry> : <Index />} />
               <Route path="/pecs-app" element={Capacitor.isNativePlatform() ? <NativeAppEntry><PecsApp /></NativeAppEntry> : <PecsApp />} />
@@ -52,7 +53,7 @@ const App = () => {
               <Route path="/support" element={<Support />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </Suspense>
+          </Suspense></AppErrorBoundary>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

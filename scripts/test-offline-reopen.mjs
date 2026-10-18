@@ -7,10 +7,16 @@ import { chromium } from '@playwright/test';
 // Test built assets, not Vite's development server. No audio or paid API calls.
 const root = resolve('dist');
 let revision = 1;
+let stallNavigation = false;
+let serverError = false;
+let assetRequests = 0;
 const types = { '.js': 'text/javascript', '.css': 'text/css', '.html': 'text/html', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml' };
 const server = createServer(async (req, res) => {
   try {
     const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+    if (pathname.startsWith('/assets/')) assetRequests++;
+    if (pathname === '/pecs-app' && stallNavigation) return; // Deliberately hung network: SW must time out.
+    if (pathname === '/pecs-app' && serverError) { res.writeHead(503); res.end(); return; }
     if (pathname === '/unavailable-test-asset.js') { res.writeHead(503); res.end(); return; }
     if (pathname.startsWith('/api/')) {
       res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -36,13 +42,17 @@ const browser = await chromium.launch();
 try {
   const context = await browser.newContext();
   await context.addInitScript(() => {
+    localStorage.setItem('expressly-release-welcome-v1', 'expressly-refresh-2026-10');
     if (!localStorage.getItem('pecs-storage')) {
       localStorage.setItem('expressly-guide-seen', 'true');
       localStorage.setItem('pecs-storage', JSON.stringify({ state: { onboardingComplete: true, userName: 'Offline Test', characterGender: 'girl', currentLevel: 5, showWords: true, language: 'en', volume: 0 }, version: 15 }));
     }
   });
   let page = await context.newPage();
-  await page.goto(`${origin}/pecs-app`);
+  await page.goto(origin);
+  await page.getByRole('heading', { name: 'More ways to say what’s on your mind.' }).waitFor();
+  assert.equal(await page.evaluate(async () => (await navigator.serviceWorker.getRegistrations()).length), 0, 'Homepage does not install the full offline vocabulary');
+  await page.getByRole('link', { name: 'Open Expressly', exact: true }).first().click();
   await page.evaluate(async () => { await navigator.serviceWorker.ready; });
   await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
   const initialCaches = await page.evaluate(() => caches.keys());
@@ -73,11 +83,25 @@ try {
   console.log(`PASS: offline reload and closed-tab reopening, images, card selection, static-only cache (${entries.length} files).`);
 
   await context.setOffline(false);
+  stallNavigation = true;
+  const started = Date.now();
+  await page.reload({ waitUntil: 'domcontentloaded', timeout: 12_000 });
+  await page.getByRole('searchbox', { name: 'Find a card' }).waitFor();
+  assert(Date.now() - started < 10_000, 'Hung navigation falls back to prepared cache promptly');
+  stallNavigation = false;
+  serverError = true;
+  await page.reload();
+  await page.getByRole('searchbox', { name: 'Find a card' }).waitFor();
+  serverError = false;
+  console.log('PASS: stalled navigation and server errors fall back to the prepared app.');
+
+  const beforeUpdate = assetRequests;
   revision = 2;
   await page.evaluate(async () => { await (await navigator.serviceWorker.getRegistration()).update(); });
   await page.waitForFunction(async () => Boolean((await navigator.serviceWorker.getRegistration()).waiting));
   assert.deepEqual(await page.evaluate(() => caches.keys()), [initialCaches[0], `${initialCaches[0]}-test-update`]);
   assert.equal(await page.evaluate(() => navigator.serviceWorker.controller.state), 'activated');
+  assert.equal(assetRequests, beforeUpdate, 'Unchanged hashed assets are reused without redownloading during update');
   await page.close();
   page = await context.newPage();
   await page.goto(`${origin}/pecs-app`);
@@ -106,5 +130,6 @@ try {
   await context.close();
 } finally {
   await browser.close();
+  server.closeAllConnections();
   await new Promise((done) => server.close(done));
 }

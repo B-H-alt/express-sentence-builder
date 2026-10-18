@@ -4,15 +4,15 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import { hasSeenReleaseWelcome, markReleaseWelcomeSeen } from "@/lib/releaseWelcome";
 import { useCardStore } from "@/store/cardStore";
 
-export const ReleaseWelcome = ({ eligible }: { eligible: boolean }) => {
+export const ReleaseWelcome = ({ eligible, manual = false, onDismiss }: { eligible: boolean; manual?: boolean; onDismiss?: () => void }) => {
   const language = useCardStore(state => state.language);
   const es = language === "es";
   const [seen, setSeen] = useState(hasSeenReleaseWelcome);
   const [open, setOpen] = useState(false);
   useEffect(() => {
-    if (eligible && !seen && !hasSeenReleaseWelcome()) setOpen(true);
-  }, [eligible, seen]);
-  const dismiss = () => { markReleaseWelcomeSeen(); setSeen(true); setOpen(false); };
+    if (eligible && (manual || (!seen && !hasSeenReleaseWelcome()))) setOpen(true);
+  }, [eligible, seen, manual]);
+  const dismiss = () => { markReleaseWelcomeSeen(); setSeen(true); setOpen(false); onDismiss?.(); };
   return <Dialog open={open && eligible} onOpenChange={next => { if (!next) dismiss(); }}>
     <DialogContent className="w-[calc(100%_-_2rem)] max-w-lg gap-0 rounded-2xl p-6 sm:p-8">
       <p className="mb-5 text-sm font-semibold text-primary">Expressly</p>

@@ -17,6 +17,7 @@ import { CommunicationPreferences } from "@/components/pecs/CommunicationPrefere
 import { RemoteSettingsReceiver } from "@/components/pecs/RemoteSettingsReceiver";
 import { ReleaseWelcome } from "@/components/pecs/ReleaseWelcome";
 import { markReleaseWelcomeSeen } from "@/lib/releaseWelcome";
+import { registerOffline } from "@/lib/registerOffline";
 import { CaregiverProtectionContext, useCaregiverProtectionEnabled } from "@/components/pecs/CaregiverProtection";
 
 export interface Card {
@@ -30,6 +31,7 @@ export interface Card {
 }
 
 const PecsApp = () => {
+  useEffect(() => { registerOffline(); }, []);
   const [selectedCategory, setSelectedCategory] = useState<string>("home");
   const [showGuide, setShowGuide] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();

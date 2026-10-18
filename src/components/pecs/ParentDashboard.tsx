@@ -26,6 +26,7 @@ import { SavedPhrases } from "./SavedPhrases";
 import { CommunicationPreferences } from "./CommunicationPreferences";
 import { CaregiverCards } from "./CaregiverCards";
 import { ConnectedDevices } from "./ConnectedDevices";
+import { ReleaseWelcome } from "./ReleaseWelcome";
 
 export const ParentDashboard = () => <><CommunicationPreferences /><CaregiverPage /></>;
 
@@ -64,6 +65,7 @@ const CaregiverPage = () => {
   const [settings, setSettings] = useState(false);
   const [account, setAccount] = useState(false);
   const [feedback, setFeedback] = useState(false);
+  const [releaseWelcome, setReleaseWelcome] = useState(false);
   const [confirmDisable, setConfirmDisable] = useState(false);
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
@@ -81,7 +83,7 @@ const CaregiverPage = () => {
     setConfirmPin("");
     setError("");
     setUnlocked(false);
-    setSettings(false); setAccount(false); setFeedback(false); setSection("home"); setConfirmDisable(false);
+    setSettings(false); setAccount(false); setFeedback(false); setReleaseWelcome(false); setSection("home"); setConfirmDisable(false);
   }, []);
 
   useEffect(() => {
@@ -315,6 +317,7 @@ const CaregiverPage = () => {
                 <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
                   <CaregiverRow label="Account" onClick={() => setAccount(true)} />
                   <CaregiverRow label="Send feedback" onClick={() => setFeedback(true)} />
+                  <CaregiverRow label="What’s new" onClick={() => setReleaseWelcome(true)} />
                 </div>
               </section>
             </div>
@@ -337,6 +340,7 @@ const CaregiverPage = () => {
       <SettingsPanel open={settings} onClose={() => setSettings(false)} />
       <ParentAccountDialog open={account} onOpenChange={setAccount} />
       <FeedbackDialog open={feedback} onOpenChange={setFeedback} />
+      <ReleaseWelcome eligible={releaseWelcome} manual onDismiss={() => setReleaseWelcome(false)} />
     </main>;
   }
 
