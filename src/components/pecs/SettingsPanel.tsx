@@ -3,7 +3,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useCardStore, vocabularyLevelCounts } from "@/store/cardStore";
 import { Check, X } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { AddCardModal } from "@/components/pecs/AddCardModal";
 import { Button } from "@/components/ui/button";
 import type { AppLanguage, CardDisplayAmount, CharacterGender, TextSize, VocabularyLevel } from "@/store/cardStore";
@@ -15,6 +14,7 @@ import { AccessibilitySettings } from "./AccessibilitySettings";
 import { ProfilePhotoCropper } from "./ProfilePhotoCropper";
 import { UnsavedChangesDialog } from "./UnsavedChangesDialog";
 import { BoardBackupSettings } from "./BoardBackupSettings";
+import { DeviceVoiceTest } from "./DeviceVoiceTest";
 
 interface SettingsPanelProps {
   open: boolean;
@@ -30,7 +30,6 @@ const levelOptions: { level: VocabularyLevel; label: string; subtitle: string }[
 ];
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) => {
-  const isMobile = useIsMobile();
   const contentRef = useRef<HTMLDivElement>(null);
   const {
     currentLevel,
@@ -185,7 +184,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
           role="dialog"
           aria-modal="true"
           aria-labelledby="settings-title"
-          className="settings-panel relative flex h-[min(920px,94dvh)] max-h-full w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border/60 bg-background shadow-2xl"
+          className="settings-panel relative flex h-[min(920px,94dvh)] max-h-full w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border/60 bg-background shadow-2xl max-sm:h-full"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex shrink-0 items-center justify-between gap-4 border-b border-border/70 bg-background px-6 py-4 md:px-8">
@@ -206,8 +205,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
             <div
               role="tablist"
               aria-label="Settings sections"
-              aria-orientation={isMobile ? "horizontal" : "vertical"}
-              className="flex shrink-0 gap-1 overflow-x-auto border-b border-border/60 bg-muted/30 p-3 md:w-48 md:flex-col md:gap-1 md:overflow-y-auto md:border-b-0 md:border-r md:p-4"
+              aria-orientation="vertical"
+              className="grid shrink-0 grid-cols-2 gap-1 border-b border-border/60 bg-muted/30 p-2 md:flex md:w-48 md:flex-col md:gap-1 md:overflow-y-auto md:border-b-0 md:border-r md:p-4"
             >
               {[
                 { id: "profile", label: "Profile" },
@@ -228,8 +227,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                     tabIndex={selected ? 0 : -1}
                     onClick={event => { setActiveSection(section.id as typeof activeSection); contentRef.current?.scrollTo({ top: 0 }); event.currentTarget.scrollIntoView({ block: "nearest", inline: "nearest" }); }}
                     onKeyDown={event => {
-                      const previous = isMobile ? "ArrowLeft" : "ArrowUp";
-                      const next = isMobile ? "ArrowRight" : "ArrowDown";
+                      const previous = "ArrowUp";
+                      const next = "ArrowDown";
                       if (![previous, next, "Home", "End"].includes(event.key)) return;
                       event.preventDefault();
                       const tabs = Array.from(event.currentTarget.parentElement!.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
@@ -700,6 +699,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                     className="mt-2"
                   />
                 </label>
+                <DeviceVoiceTest />
               </div>}
 
               {activeSection === "cards" && <div className="rounded-2xl border border-border/80 bg-muted/30 p-4 flex flex-col justify-between gap-3">

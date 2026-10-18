@@ -46,7 +46,11 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const loginPending = useRef(false);
 
-  const openSignedInApp = () => window.location.replace("/pecs-app?account=signed-in");
+  const openSignedInApp = () => window.location.replace(
+    ["/caregiver", "/parent"].includes(window.location.pathname)
+      ? "/caregiver"
+      : "/pecs-app?account=signed-in"
+  );
 
   useEffect(() => {
     if (!isCloudAccountConfigured) return;

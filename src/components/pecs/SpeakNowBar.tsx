@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import { getAccessToken } from "@/lib/supabase";
 import { getApiUrl } from "@/lib/runtimeUrls";
 import { playAudioToEnd } from "@/utils/play-audio";
+import { speakDeviceText, stopDeviceSpeech } from "@/utils/device-speech";
 
 const quickMessages = [
   { text: "Yes", icon: MessageCircle },
@@ -34,16 +35,20 @@ export const SpeakNowBar = ({ phrases }: { phrases?: string[] }) => {
     sequence.current += 1;
     pending.current?.abort();
     playback.current?.pause();
-    window.speechSynthesis?.cancel();
+    stopDeviceSpeech();
   }, []);
 
   const speak = async (text: string) => {
     const current = ++sequence.current;
     pending.current?.abort();
     playback.current?.pause();
-    window.speechSynthesis?.cancel();
+    stopDeviceSpeech();
     const controller = new AbortController();
     pending.current = controller;
+    if (speechVolume <= 0) {
+      toast({ title: language === "es" ? "Volumen silenciado" : "Expressly volume is muted", description: language === "es" ? "Sube el volumen en Ajustes." : "Raise it in Settings, Cards & voice." });
+      return;
+    }
     if (navigator.onLine) {
       try {
         const token = await getAccessToken();
@@ -52,14 +57,17 @@ export const SpeakNowBar = ({ phrases }: { phrases?: string[] }) => {
           const key = `${language}:${text}`;
           let blob = clips.current.get(key);
           if (!blob) {
-            const response = await fetch(getApiUrl("/api/speak"), {
+            const timer = setTimeout(() => controller.abort(new DOMException("Voice request timed out.", "TimeoutError")), 12_000);
+            try {
+              const response = await fetch(getApiUrl("/api/speak"), {
               method: "POST",
               headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
               body: JSON.stringify({ text }),
               signal: controller.signal,
-            });
-            if (!response.ok || !response.headers.get("content-type")?.startsWith("audio/")) throw new Error("Enhanced voice unavailable");
-            blob = await response.blob();
+              });
+              if (!response.ok || !response.headers.get("content-type")?.startsWith("audio/")) throw new Error("Enhanced voice unavailable");
+              blob = await response.blob();
+            } finally { clearTimeout(timer); }
             if (current !== sequence.current) return;
             if (clips.current.size >= 14) clips.current.clear();
             clips.current.set(key, blob);
@@ -77,25 +85,18 @@ export const SpeakNowBar = ({ phrases }: { phrases?: string[] }) => {
           return;
         }
       } catch {
-        if (current !== sequence.current || controller.signal.aborted) return;
+        if (current !== sequence.current || (controller.signal.aborted && controller.signal.reason?.name !== "TimeoutError")) return;
         toast({ title: language === "es" ? "Usando la voz del dispositivo" : "Using device voice" });
       }
     }
     if (current !== sequence.current) return;
-    const unavailable = () => toast({ title: language === "es" ? "Voz no disponible" : "Device voice unavailable", description: language === "es" ? "Puedes mostrar tu mensaje." : "You can still show your message." });
-    if (!("speechSynthesis" in window)) { unavailable(); return; }
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = language === "es" ? "es-US" : "en-US";
-    const voices = window.speechSynthesis.getVoices();
-    const localVoice = voices.find((voice) => voice.localService && voice.lang.toLowerCase().startsWith(language));
-    if (localVoice) utterance.voice = localVoice;
-    if (!navigator.onLine && voices.length > 0 && !localVoice) { unavailable(); return; }
-    utterance.rate = speechRate;
-    utterance.volume = speechVolume;
-    utterance.onend = () => { if (current === sequence.current) recordQuickPhrase(text); };
-    utterance.onerror = () => { if (current === sequence.current) unavailable(); };
-    window.speechSynthesis.speak(utterance);
+    try {
+      await speakDeviceText(text, language, speechRate, speechVolume);
+      if (current === sequence.current) recordQuickPhrase(text);
+    } catch (error) {
+      if (current !== sequence.current || (error instanceof DOMException && error.name === "AbortError")) return;
+      toast({ title: language === "es" ? "Voz no disponible" : "Device voice unavailable", description: language === "es" ? "Revisa el volumen y la salida de audio." : error instanceof Error ? error.message : "Check your volume and sound output." });
+    }
   };
 
   return (
@@ -105,7 +106,6 @@ export const SpeakNowBar = ({ phrases }: { phrases?: string[] }) => {
     >
       <div className="flex items-center gap-3">
         {!phrases && <div className="flex shrink-0 items-center gap-1.5 px-1 text-primary">
-          <Volume2 className="h-4 w-4" aria-hidden="true" />
           <span id="speak-now-title" className="text-sm font-semibold text-foreground">
             {copy.speakNow}
           </span>

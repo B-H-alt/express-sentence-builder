@@ -4,10 +4,9 @@ import { seedLearner, openSettings, blockThirdPartyWidgets, expectNoHorizontalOv
 test("settings navigation supports keyboard and keeps the active section visible", async ({page}) => {
   await seedLearner(page); await blockThirdPartyWidgets(page);
   await page.goto("/pecs-app"); await openSettings(page);
-  const mobile=(page.viewportSize()?.width??1280)<768;
-  await expect(page.getByRole("tablist",{name:"Settings sections"})).toHaveAttribute("aria-orientation",mobile?"horizontal":"vertical");
+  await expect(page.getByRole("tablist",{name:"Settings sections"})).toHaveAttribute("aria-orientation","vertical");
   await page.getByRole("tab",{name:"Profile",exact:true}).focus();
-  await page.keyboard.press(mobile?"ArrowRight":"ArrowDown");
+  await page.keyboard.press("ArrowDown");
   await expect(page.getByRole("tab",{name:"Vocabulary",exact:true})).toHaveAttribute("aria-selected","true");
   await expect(page.getByRole("tabpanel",{name:"Vocabulary",exact:true})).toBeVisible();
   await expect(page.getByRole("button",{name:"Save level",exact:true})).toBeVisible();

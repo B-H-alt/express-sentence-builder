@@ -98,6 +98,8 @@ export const CardGrid = ({ selectedCategory, showWord, onSelectCategory, searchQ
   const handleCardClick = useCallback((card: Card) => {
     const label = translateCardLabel(card.text, language, characterGender);
     selectCard({ ...card, text: label });
+    const input = document.activeElement;
+    if (input instanceof HTMLInputElement && input.type === "search") input.blur();
     setAnnouncement((current) => ({
       id: current.id + 1,
       text: language === "es" ? `Se agregó ${label} a la oración` : `Added ${label} to the sentence`,

@@ -249,7 +249,7 @@ interface CardStore {
   selectCard: (card: Card) => void;
   removeFromSentence: (index: number) => void;
   clearSentence: () => void;
-  completeSentence: () => ProgressEntry | null;
+  completeSentence: (options?: { keepSentence?: boolean }) => ProgressEntry | null;
   clearProgress: () => void;
   recordQuickPhrase: (text: string) => void;
 
@@ -587,7 +587,7 @@ export const useCardStore = create<CardStore>()(
 
       clearSentence: () => set({ sentence: [] }),
 
-      completeSentence: () => {
+      completeSentence: (options) => {
         const state = get();
         if (state.sentence.length === 0) return null;
 
@@ -607,7 +607,7 @@ export const useCardStore = create<CardStore>()(
 
         set((current) => ({
           progressEntries: [entry, ...current.progressEntries].slice(0, 500),
-          sentence: [],
+          sentence: options?.keepSentence ? current.sentence : [],
         }));
 
         return entry;

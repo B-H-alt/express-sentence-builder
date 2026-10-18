@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { seedLearner, blockThirdPartyWidgets } from "./helpers";
 
-test("landing sign-in opens the app and updates the account button", async ({ page }) => {
+for (const caregiver of [false, true]) test(caregiver ? "caregiver password sign-in stays in the caregiver area" : "landing sign-in opens the app and updates the account button", async ({ page }) => {
   await blockThirdPartyWidgets(page);
   await seedLearner(page);
   const user = {
@@ -17,13 +17,23 @@ test("landing sign-in opens the app and updates the account button", async ({ pa
       ? { access_token: token, refresh_token: "test-refresh", token_type: "bearer", expires_in: 3600, user }
       : { user, ...user } });
   });
-  await page.goto("/");
+  await page.goto(caregiver ? "/caregiver" : "/");
   const mobile = (page.viewportSize()?.width ?? 1280) < 768;
-  if (mobile) await page.getByRole("button", { name: "Open menu", exact: true }).click();
-  await page.getByRole("button", { name: mobile ? "Sign in to your account" : "Sign in", exact: true }).click();
+  if (caregiver) {
+    await page.getByRole("button", { name: "Continue without a PIN", exact: true }).click();
+    await page.getByRole("button", { name: "Account", exact: true }).click();
+  } else {
+    if (mobile) await page.getByRole("button", { name: "Open menu", exact: true }).click();
+    await page.getByRole("button", { name: mobile ? "Sign in to your account" : "Sign in", exact: true }).click();
+  }
   await page.getByPlaceholder("parent@example.com").fill("test@example.com");
   await page.getByPlaceholder("Password", { exact: true }).fill("Test-password-123!");
   await page.getByRole("dialog").getByRole("button", { name: "Sign in", exact: true }).click();
+  if (caregiver) {
+    await expect(page).toHaveURL(/\/caregiver$/);
+    await expect(page.getByRole("heading", { name: "Caregiver area", exact: true })).toBeVisible();
+    return;
+  }
   await expect(page).toHaveURL(/\/pecs-app(?:\?|$)/);
   // Route changes before the lazy-loaded communication screen is ready.
   await page.getByRole("searchbox", { name: "Find a card" }).waitFor();

@@ -46,9 +46,10 @@ for (const speechWorks of [true, false]) {
     const apiRequests: string[] = [];
     page.on("request", (request) => { if (request.url().includes("/api/")) apiRequests.push(request.url()); });
     await context.setOffline(true);
-    await page.getByRole("button", { name: "Speak", exact: true }).click();
+    await page.getByRole("button", { name: "Speak sentence", exact: true }).click();
     if (speechWorks) {
-      await expect(page.getByRole("button", { name: "Remove Eat from sentence" })).toHaveCount(0);
+      await expect(page.getByRole("button", { name: "Remove Eat from sentence" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Speak sentence", exact: true })).toBeVisible();
     } else {
       await expect(page.getByText("Speech couldn't play", { exact: true })).toBeVisible();
       await expect(page.getByRole("button", { name: "Remove Eat from sentence" })).toBeVisible();

@@ -12,6 +12,7 @@ import { getAccessToken } from "@/lib/supabase";
 import { getApiUrl } from "@/lib/runtimeUrls";
 import { appText, translateCardLabel } from "@/lib/language";
 import { playAudioToEnd } from "@/utils/play-audio";
+import { speakDeviceText, stopDeviceSpeech } from "@/utils/device-speech";
 
 interface SentenceBuilderProps {
   showWord: boolean;
@@ -50,6 +51,9 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
   const copy = appText[language];
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const speechRequest = useRef<AbortController | null>(null);
+  const speechSequence = useRef(0);
+  const recordedSentence = useRef<Card[] | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
   const [composedText, setComposedText] = useState("");
@@ -128,87 +132,86 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
     }
   };
 
-  const speakWithWebAPI = async (text: string) => {
-    return new Promise<void>((resolve, reject) => {
-      if (!("speechSynthesis" in window)) return reject(new Error("Device speech is unavailable."));
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = language === "es" ? "es-US" : "en-US";
-      const voices = window.speechSynthesis.getVoices();
-      const localVoice = voices.find((voice) => voice.localService && voice.lang.toLowerCase().startsWith(language));
-      if (localVoice) utterance.voice = localVoice;
-      if (!navigator.onLine && voices.length > 0 && !localVoice) {
-        reject(new Error("No installed voice for this language."));
-        return;
-      }
-      utterance.rate = speechRate;
-      utterance.volume = speechVolume;
-      utterance.onend = () => resolve();
-      utterance.onerror = () => reject(new Error("Device speech could not finish."));
-      window.speechSynthesis.speak(utterance);
-    });
-  };
+  const speakWithWebAPI = (text: string) => speakDeviceText(text, language, speechRate, speechVolume);
 
-  const speakWithElevenLabs = async (text: string) => {
+  const speakWithElevenLabs = async (text: string, sequence: number) => {
     const accessToken = await getAccessToken();
+    if (speechSequence.current !== sequence) throw new DOMException("Playback stopped.", "AbortError");
     if (!accessToken) throw new Error("Sign in required for enhanced voice");
-    const res = await fetch(getApiUrl("/api/speak"), {
+    const controller = new AbortController();
+    speechRequest.current = controller;
+    const timer = setTimeout(() => controller.abort(new DOMException("Voice request timed out.", "TimeoutError")), 12_000);
+    let blob: Blob;
+    try {
+      const res = await fetch(getApiUrl("/api/speak"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({ text }),
-    });
-    if (!res.ok) {
-      const msg = await res.text().catch(() => "");
-      throw new Error(`ElevenLabs error (${res.status}): ${msg || res.statusText}`);
-    }
-    if (!res.headers.get("content-type")?.startsWith("audio/")) {
-      throw new Error("Enhanced voice endpoint did not return audio. Use the server-enabled preview or deployed app.");
-    }
-    const blob = await res.blob();
+      signal: controller.signal,
+      });
+      if (!res.ok) throw new Error(`Enhanced voice unavailable (${res.status}).`);
+      if (!res.headers.get("content-type")?.startsWith("audio/")) throw new Error("Enhanced voice endpoint did not return audio.");
+      blob = await res.blob();
+    } finally { clearTimeout(timer); }
+    if (speechSequence.current !== sequence) throw new DOMException("Playback stopped.", "AbortError");
     await playBlob(blob);
   };
 
   const stopAudio = () => {
+    speechSequence.current += 1;
+    speechRequest.current?.abort();
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
-    if ("speechSynthesis" in window && window.speechSynthesis.speaking) {
-      window.speechSynthesis.cancel();
-    }
+    stopDeviceSpeech();
     setIsSpeaking(false);
   };
 
-  const speakText = async (spoken: string) => {
+  useEffect(() => () => {
+    speechSequence.current += 1;
+    speechRequest.current?.abort();
+    audioRef.current?.pause();
+    stopDeviceSpeech();
+  }, []);
+
+  const speakText = async (spoken: string, sequence: number) => {
     setIsSpeaking(true);
     try {
+      if (speechVolume <= 0) throw new Error("Expressly volume is muted. Raise it in Cards & voice.");
       if (!navigator.onLine) {
         await speakWithWebAPI(spoken);
       } else {
         try {
-          await speakWithElevenLabs(spoken);
+          await speakWithElevenLabs(spoken, sequence);
         } catch (error) {
-          if (error instanceof DOMException && error.name === "AbortError") return false;
+          if (speechSequence.current !== sequence) return false;
           await speakWithWebAPI(spoken);
           toast({ title: "Using device voice" });
         }
       }
-      return true;
-    } catch {
+      return speechSequence.current === sequence;
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return false;
       toast({
         title: language === "es" ? "No se pudo hablar" : "Speech couldn't play",
-        description: language === "es" ? "Tus tarjetas siguen aquí. Puedes mostrar tu mensaje." : "Your cards are still here. You can show your message instead.",
+        description: language === "es" ? "Revisa el volumen y la salida de audio. Tus tarjetas siguen aquí." : error instanceof Error ? error.message : "Check your volume and sound output. Your cards are still here.",
       });
       return false;
     } finally {
-      setIsSpeaking(false);
+      if (speechSequence.current === sequence) setIsSpeaking(false);
     }
   };
 
   const saveCurrentSentence = () => {
     stopAudio();
+    if (recordedSentence.current === useCardStore.getState().sentence) {
+      clearSentence();
+      return true;
+    }
     const completed = completeSentence();
     return Boolean(completed);
   };
@@ -237,12 +240,16 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
   };
 
   const handleSpeak = async () => {
+    const sequence = ++speechSequence.current;
     const sourceSentence = useCardStore.getState().sentence;
     const spoken = await resolveSentence();
-    if (!spoken) return;
+    if (!spoken || speechSequence.current !== sequence) return;
     setShowComposed(true);
-    const played = await speakText(spoken);
-    if (played && useCardStore.getState().sentence === sourceSentence) saveCurrentSentence();
+    const played = await speakText(spoken, sequence);
+    if (played && useCardStore.getState().sentence === sourceSentence && recordedSentence.current !== sourceSentence) {
+      completeSentence({ keepSentence: true });
+      recordedSentence.current = sourceSentence;
+    }
   };
 
   return (
@@ -291,7 +298,7 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
           </label>}
           {sentence.length > 0 && (
             <>
-              <Button size="sm" onClick={handleFinish} className="rounded-xl" disabled={isComposing}>
+              <Button size="sm" variant="outline" onClick={handleFinish} className="rounded-xl" disabled={isComposing}>
                 {isComposing ? (
                   <Loader2 className="w-4 h-4 mr-1 animate-spin" />
                 ) : (
@@ -303,7 +310,7 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
               {!isSpeaking ? (
                 <Button
                   size="sm"
-                  variant="outline"
+                  variant="default"
                   onClick={handleSpeak}
                   className="rounded-xl"
                   disabled={isComposing}
@@ -313,7 +320,7 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
                   ) : (
                     <Volume2 className="w-4 h-4 mr-1" />
                   )}
-                  {copy.speak}
+                  {language === "es" ? "Leer frase" : "Speak sentence"}
                 </Button>
               ) : (
                 <Button size="sm" variant="secondary" onClick={stopAudio} className="rounded-xl">

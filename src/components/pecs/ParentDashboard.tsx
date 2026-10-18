@@ -27,6 +27,7 @@ import { CommunicationPreferences } from "./CommunicationPreferences";
 import { CaregiverCards } from "./CaregiverCards";
 import { ConnectedDevices } from "./ConnectedDevices";
 import { ReleaseWelcome } from "./ReleaseWelcome";
+import { CaregiverTour, caregiverTourSeen } from "./CaregiverTour";
 
 export const ParentDashboard = () => <><CommunicationPreferences /><CaregiverPage /></>;
 
@@ -66,6 +67,7 @@ const CaregiverPage = () => {
   const [account, setAccount] = useState(false);
   const [feedback, setFeedback] = useState(false);
   const [releaseWelcome, setReleaseWelcome] = useState(false);
+  const [showTour, setShowTour] = useState(() => !caregiverTourSeen());
   const [confirmDisable, setConfirmDisable] = useState(false);
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
@@ -281,14 +283,15 @@ const CaregiverPage = () => {
       <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-12">
         {section === "phrases" ? <SavedPhrases onHome={() => setSection("home")} showHomeButton={false} /> : section === "cards" ? <CaregiverCards onHome={() => setSection("home")} /> : section === "devices" ? <ConnectedDevices onHome={() => setSection("home")} /> : <>
           <div className="mb-8 sm:mb-10">
-            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Caregiver area</h1>
+            <div className="flex flex-wrap items-center justify-between gap-3"><h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Caregiver area</h1><Button variant="outline" onClick={() => setShowTour(true)}>Quick tour</Button></div>
           </div>
+          {showTour && <CaregiverTour onClose={() => setShowTour(false)} />}
           <section aria-label="Current learner" className="mb-9 flex flex-wrap items-center gap-x-6 gap-y-4 rounded-2xl bg-primary/[0.055] px-5 py-5 sm:px-6">
             <div className="flex min-w-0 flex-1 items-center gap-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-background text-xl font-medium text-primary">
                 {profileImage ? <img src={profileImage} alt="" className="h-full w-full object-cover" /> : (savedName && savedName.toLowerCase() !== "me" ? savedName[0].toUpperCase() : "E")}
               </div>
-              <div className="min-w-0"><p className="break-words text-lg font-semibold tracking-tight">{userName}</p><p className="mt-0.5 text-xs text-muted-foreground">This device</p></div>
+              <div className="min-w-0"><p className="break-words text-lg font-semibold tracking-tight">{userName}</p><p className="mt-0.5 text-xs text-muted-foreground">This device · not a remote board</p></div>
             </div>
             <dl className="flex flex-wrap gap-x-8 gap-y-3 max-sm:w-full max-sm:pl-[72px]">
               <div><dt className="text-xs text-muted-foreground">Vocabulary</dt><dd className="mt-1 text-sm font-medium">Level {currentLevel}</dd></div>

@@ -37,10 +37,11 @@ const Navbar = () => {
           <img src="/handmade-logo.png" alt="" className="h-10 w-10 rounded-xl object-contain" />
           <span className="text-xl font-semibold tracking-tight">Expressly</span>
         </Link>
-        <div className="hidden items-center gap-8 md:flex">
+        <div className="hidden items-center gap-6 lg:flex">
           <a href="#how-it-works" className="text-sm font-medium text-muted-foreground hover:text-foreground">How it works</a>
           <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground">Features</a>
           <Link to="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground">About</Link>
+          <Link to="/caregiver" className="text-sm font-medium text-muted-foreground hover:text-foreground">Caregiver</Link>
           <Link to="/pecs-app" className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">Open app</Link>
           <button
             type="button"
@@ -51,16 +52,17 @@ const Navbar = () => {
             {signedIn ? "My account" : "Sign in"}
           </button>
         </div>
-        <button type="button" aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen((value) => !value)} className="rounded-xl border border-border p-2 md:hidden">
+        <button type="button" aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen((value) => !value)} className="rounded-xl border border-border p-2 lg:hidden">
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </nav>
       {open && (
-        <div className="border-t border-border bg-background px-6 py-5 md:hidden">
+        <div className="border-t border-border bg-background px-6 py-5 lg:hidden">
           <div className="mx-auto flex max-w-7xl flex-col gap-4">
             <a href="#how-it-works" onClick={() => setOpen(false)} className="font-medium">How it works</a>
             <a href="#features" onClick={() => setOpen(false)} className="font-medium">Features</a>
             <Link to="/about" onClick={() => setOpen(false)} className="font-medium">About</Link>
+            <Link to="/caregiver" onClick={() => setOpen(false)} className="font-medium">Caregiver area</Link>
             <button
               type="button"
               onClick={() => {

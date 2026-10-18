@@ -92,6 +92,13 @@ export const PecsCard = ({
       tabIndex={onClick ? 0 : undefined}
       aria-label={onClick ? `Add ${displayedLabel} to sentence` : undefined}
       onDragStart={handleDragStart}
+      onPointerDown={(event) => {
+        // Keep the search keyboard/layout stable until the card's click commits.
+        // Do not select on pointer-down: a swipe must never add a card.
+        if (onClick && event.pointerType !== "mouse" &&
+            document.activeElement?.matches('input[type="search"]') &&
+            !(event.target as Element).closest("button")) event.preventDefault();
+      }}
       onClick={onClick}
       onKeyDown={handleKeyDown}
       onContextMenu={handleLongPress}
