@@ -122,8 +122,8 @@ const CaregiverPage = () => {
 
   const handlePin = async (event: FormEvent) => {
     event.preventDefault();
-    if (!/^\d{4,6}$/.test(pin)) {
-      setError("Use a 4 to 6 digit PIN.");
+    if (!(storedPin ? /^\d{4,6}$/ : /^\d{4}$/).test(pin)) {
+      setError(storedPin ? "Enter your existing PIN." : "Use exactly 4 digits (numbers only).");
       return;
     }
     if (!storedPin && pin !== confirmPin) {
@@ -245,10 +245,10 @@ const CaregiverPage = () => {
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               {storedPin
                 ? "Enter your PIN to manage Expressly."
-                : "Add a PIN to keep settings out of learner mode."}
+                : "Choose a 4-digit PIN to protect settings."}
             </p>
             <form className="mt-6 space-y-4" onSubmit={handlePin}>
-              <PinField label={storedPin ? "Parent PIN" : "Create PIN"} value={pin} onChange={setPin} />
+              <PinField label={storedPin ? "Parent PIN" : "Create PIN"} value={pin} onChange={setPin} allowLegacy={Boolean(storedPin)} />
               {!storedPin && <PinField label="Confirm PIN" value={confirmPin} onChange={setConfirmPin} />}
               {error && <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
               <Button className="w-full" type="submit" disabled={busy}>
@@ -523,7 +523,7 @@ const CaregiverRow = ({ label, text, onClick, featured = false }: { label: strin
   </button>
 );
 
-const PinField = ({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) => (
+const PinField = ({ label, value, onChange, allowLegacy = false }: { label: string; value: string; onChange: (value: string) => void; allowLegacy?: boolean }) => (
   <div className="space-y-2">
     <label htmlFor={`caregiver-${label.replace(/ /g, "-").toLowerCase()}`} className="text-sm font-medium">{label}</label>
     <div className="relative">
@@ -533,14 +533,18 @@ const PinField = ({ label, value, onChange }: { label: string; value: string; on
         type="password"
         inputMode="numeric"
         autoComplete="one-time-code"
-        pattern="[0-9]{4,6}"
-        maxLength={6}
+        pattern={allowLegacy ? "[0-9]{4,6}" : "[0-9]{4}"}
+        maxLength={allowLegacy ? 6 : 4}
+        minLength={4}
+        placeholder="4 digits"
+        aria-describedby={`caregiver-${label.replace(/ /g, "-").toLowerCase()}-format`}
         required
         value={value}
         onChange={(event) => onChange(event.target.value.replace(/\D/g, ""))}
         className="h-12 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-lg tracking-[0.35em] outline-none focus:ring-2 focus:ring-ring"
       />
     </div>
+    <p id={`caregiver-${label.replace(/ /g, "-").toLowerCase()}-format`} className="text-xs text-muted-foreground">{allowLegacy ? "4 digits. Existing 5–6 digit PINs still work." : "4 digits · Numbers only"}</p>
   </div>
 );
 

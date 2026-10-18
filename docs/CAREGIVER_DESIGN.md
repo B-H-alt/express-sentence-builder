@@ -34,4 +34,6 @@ Verification: typecheck and all 16 focused caregiver tests passed, including scr
 
 ## Release checkpoint
 
+October 18 PIN format clarification: new PINs and confirmation require exactly four numeric digits. Creation copy, placeholder and associated field hint state the format. Existing 4–6 digit PINs remain accepted at unlock to avoid locking out previous users. Hashing, storage and lock behavior are unchanged. Typecheck and 16 focused desktop/mobile tests passed, including legacy six-digit unlocking. Local only until approved for push.
+
 October 17, 2026: final production build, typecheck and all 146 launch tests passed before committing the settings/caregiver release. Includes equal-sized Settings row, persistent return navigation and removal of the redundant caregiver Saved phrases Home button. No Together/social/game/learning experiment is included. Connected-device SQL remains unapplied to the live project; committing its source does not activate that service. Local native signing changes and screenshot artifacts are excluded.
