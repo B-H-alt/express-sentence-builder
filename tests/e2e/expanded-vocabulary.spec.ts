@@ -31,7 +31,7 @@ test("level controls reveal topics without changing Home, and survive reload", a
   await blockThirdPartyWidgets(page);
   await page.goto("/pecs-app");
   await openSettings(page);
-  await page.getByRole("tab", { name: "Display", exact: true }).click();
+  await page.getByRole("tab", { name: "Vocabulary", exact: true }).click();
   await page.getByRole("button", { name: /Level 4 \(Explore\)/ }).click();
   await page.getByRole("button", { name: "Save level", exact: true }).click();
   await page.getByRole("button", { name: "Close settings", exact: true }).click();
@@ -49,7 +49,7 @@ test("level controls reveal topics without changing Home, and survive reload", a
   await fresh.goto("/pecs-app");
   await expect(fresh.getByText("Level 4 (Explore)", { exact: true })).toBeVisible();
   await openSettings(fresh);
-  await fresh.getByRole("tab", { name: "Display", exact: true }).click();
+  await fresh.getByRole("tab", { name: "Vocabulary", exact: true }).click();
   await fresh.getByRole("button", { name: /Level 5 \(More interests\)/ }).click();
   await fresh.getByRole("button", { name: "Save level", exact: true }).click();
   await fresh.getByRole("button", { name: "Close settings", exact: true }).click();

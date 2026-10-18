@@ -25,6 +25,7 @@ import { FeedbackDialog } from "./FeedbackDialog";
 import { SavedPhrases } from "./SavedPhrases";
 import { CommunicationPreferences } from "./CommunicationPreferences";
 import { CaregiverCards } from "./CaregiverCards";
+import { ConnectedDevices } from "./ConnectedDevices";
 
 export const ParentDashboard = () => <><CommunicationPreferences /><CaregiverPage /></>;
 
@@ -51,12 +52,15 @@ const CaregiverPage = () => {
   const entries = useCardStore((state) => state.progressEntries);
   const clearProgress = useCardStore((state) => state.clearProgress);
   const savedName = useCardStore((state) => state.userName?.trim() || "");
+  const profileImage = useCardStore((state) => state.userImage);
+  const currentLevel = useCardStore((state) => state.currentLevel);
+  const calmMode = useCardStore((state) => state.lowStimulationMode);
   const hiddenCategories = useCardStore((state) => state.hiddenCategories);
   const toggleCategoryVisibility = useCardStore((state) => state.toggleCategoryVisibility);
   const userName = !savedName || savedName.toLocaleLowerCase() === "me" ? "Your learner" : savedName;
   const [storedPin, setStoredPin] = useState<StoredPin | null>(() => readStoredPin());
   const [unlocked, setUnlocked] = useState(() => pinIsOptional() && !readStoredPin());
-  const [section, setSection] = useState<"home" | "progress" | "phrases" | "cards">("home");
+  const [section, setSection] = useState<"home" | "progress" | "phrases" | "cards" | "devices">("home");
   const [settings, setSettings] = useState(false);
   const [account, setAccount] = useState(false);
   const [feedback, setFeedback] = useState(false);
@@ -67,6 +71,10 @@ const CaregiverPage = () => {
   const [busy, setBusy] = useState(false);
   const [isConfirmingClear, setIsConfirmingClear] = useState(false);
   const lockTimer = useRef<number | undefined>();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [section]);
 
   const lockDashboard = useCallback(() => {
     setPin("");
@@ -258,34 +266,60 @@ const CaregiverPage = () => {
   }
 
   if (section !== "progress") {
-    return <main className="app-safe-top app-safe-bottom min-h-[100dvh] bg-muted/35">
-      <header className="border-b border-border/60 bg-background px-5 py-4">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3"><span className="text-xl font-bold tracking-tight text-primary">Expressly</span><span className="h-5 w-px bg-border" /><span className="text-sm font-medium text-muted-foreground">Caregiver area</span></div>
-          <div className="flex gap-2">
+    return <main className="app-safe-top app-safe-bottom min-h-[100dvh] bg-muted/25">
+      <header className="sticky top-0 z-20 border-b border-border/50 bg-background px-5 py-4">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
+          {section === "home" ? <div className="flex items-center gap-3"><span className="text-xl font-bold tracking-tight text-primary">Expressly</span><span className="h-4 w-px bg-border" /><span className="text-sm text-muted-foreground">Caregiver</span></div> : <Button variant="outline" onClick={() => setSection("home")}><ArrowLeft aria-hidden="true" className="mr-2 h-4 w-4" />Caregiver area</Button>}
+          <div className="flex gap-2 max-sm:w-full max-sm:[&>button]:flex-1">
             <Button variant="outline" onClick={lockDashboard}>{storedPin ? "Lock" : "Add a PIN"}</Button>
             <Button onClick={() => navigate("/pecs-app")}>Return to board</Button>
           </div>
         </div>
       </header>
-      <div className="mx-auto max-w-5xl px-5 py-8 sm:py-12">
-        {section === "phrases" ? <SavedPhrases onHome={() => setSection("home")} /> : section === "cards" ? <CaregiverCards onHome={() => setSection("home")} /> : <>
-          <div className="mb-9 flex flex-wrap items-end justify-between gap-5">
-            <div><h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Caregiver area</h1><p className="mt-3 text-base text-muted-foreground">Manage Expressly on this device.</p></div>
+      <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-12">
+        {section === "phrases" ? <SavedPhrases onHome={() => setSection("home")} showHomeButton={false} /> : section === "cards" ? <CaregiverCards onHome={() => setSection("home")} /> : section === "devices" ? <ConnectedDevices onHome={() => setSection("home")} /> : <>
+          <div className="mb-8 sm:mb-10">
+            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Caregiver area</h1>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:gap-5">
-            {[
-              { label: "Settings", text: "Profile, display, voice and backups.", action: () => setSettings(true) },
-              { label: "Manage cards", text: "Favorites and custom cards.", action: () => setSection("cards") },
-              { label: "Parent dashboard", text: "Activity and category visibility.", action: () => setSection("progress") },
-              { label: "Saved phrases", text: "Keep everyday messages close.", action: () => setSection("phrases") },
-              { label: "Account", text: "Sign in or manage your account.", action: () => setAccount(true) },
-              { label: "Send feedback", text: "Report a problem or share an idea.", action: () => setFeedback(true) },
-            ].map(item => <button key={item.label} aria-label={item.label} onClick={item.action} className="group flex items-center gap-4 rounded-[22px] border border-border/60 bg-card p-5 text-left shadow-[0_2px_8px_-4px_rgba(0,0,0,0.12)] transition-colors hover:border-primary/30 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:p-6">
-              <span className="min-w-0 flex-1"><span className="block text-base font-semibold tracking-tight">{item.label}</span><span className="mt-1.5 block text-sm leading-5 text-muted-foreground">{item.text}</span></span><ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60 group-hover:text-primary" />
-            </button>)}
+          <section aria-label="Current learner" className="mb-9 flex flex-wrap items-center gap-x-6 gap-y-4 rounded-2xl bg-primary/[0.055] px-5 py-5 sm:px-6">
+            <div className="flex min-w-0 flex-1 items-center gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-background text-xl font-medium text-primary">
+                {profileImage ? <img src={profileImage} alt="" className="h-full w-full object-cover" /> : (savedName && savedName.toLowerCase() !== "me" ? savedName[0].toUpperCase() : "E")}
+              </div>
+              <div className="min-w-0"><p className="break-words text-lg font-semibold tracking-tight">{userName}</p><p className="mt-0.5 text-xs text-muted-foreground">This device</p></div>
+            </div>
+            <dl className="flex flex-wrap gap-x-8 gap-y-3 max-sm:w-full max-sm:pl-[72px]">
+              <div><dt className="text-xs text-muted-foreground">Vocabulary</dt><dd className="mt-1 text-sm font-medium">Level {currentLevel}</dd></div>
+              <div><dt className="text-xs text-muted-foreground">Calm mode</dt><dd className="mt-1 text-sm font-medium">{calmMode ? "On" : "Off"}</dd></div>
+            </dl>
+          </section>
+          <div className="grid items-start gap-8 lg:grid-cols-[1.25fr_1fr] lg:gap-10">
+            <section aria-labelledby="caregiver-board-heading">
+              <h2 id="caregiver-board-heading" className="mb-3 text-sm font-semibold">Your board</h2>
+              <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
+                <CaregiverRow label="Settings" text="Profile, vocabulary, display and voice." onClick={() => setSettings(true)} featured />
+                <CaregiverRow label="Manage cards" text="Favorites and custom cards." onClick={() => setSection("cards")} />
+                <CaregiverRow label="Saved phrases" text="Everyday messages, ready to use." onClick={() => setSection("phrases")} />
+              </div>
+            </section>
+            <div className="space-y-7">
+              <section aria-labelledby="caregiver-activity-heading">
+                <h2 id="caregiver-activity-heading" className="mb-3 text-sm font-semibold">Activity & devices</h2>
+                <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
+                  <CaregiverRow label="Parent dashboard" text="Saved activity and category visibility." onClick={() => setSection("progress")} />
+                  <CaregiverRow label="Connected devices" text="Link a device for remote adjustments." onClick={() => setSection("devices")} />
+                </div>
+              </section>
+              <section aria-labelledby="caregiver-account-heading">
+                <h2 id="caregiver-account-heading" className="mb-3 text-sm font-semibold">Account & support</h2>
+                <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
+                  <CaregiverRow label="Account" onClick={() => setAccount(true)} />
+                  <CaregiverRow label="Send feedback" onClick={() => setFeedback(true)} />
+                </div>
+              </section>
+            </div>
           </div>
-          <section className="mt-7 rounded-[22px] border border-border/60 bg-card p-5 sm:p-6">
+          <section className="mt-10 border-t border-border/60 pt-6">
             <h2 className="text-sm font-semibold">PIN protection {storedPin ? "on" : "off"}</h2>
             <p className="mt-2 text-sm text-muted-foreground">{storedPin ? "Editing controls are hidden on the board. Locks when you leave or after five idle minutes." : "Use Expressly independently, or add a PIN to protect editing controls."}</p>
             {storedPin && (confirmDisable ? <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -317,14 +351,14 @@ const CaregiverPage = () => {
 
   return (
     <main className="min-h-screen bg-background">
-      <header className="sticky top-0 z-20 border-b border-border/70 bg-background/95 px-4 py-3 backdrop-blur sm:px-6">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
+      <header className="sticky top-0 z-20 border-b border-border/70 bg-background px-4 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-secondary">Parent Mode</p>
             <h1 className="text-xl font-semibold sm:text-2xl">{userName}&apos;s progress</h1>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setSection("home")}>Caregiver area</Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => setSection("home")}><ArrowLeft aria-hidden="true" className="mr-2 h-4 w-4" />Caregiver area</Button>
             <Button variant="outline" onClick={lockDashboard}>
               <LockKeyhole className="mr-2 h-4 w-4" />
               {storedPin ? "Lock" : "Add a PIN"}
@@ -477,6 +511,13 @@ const CaregiverPage = () => {
     </main>
   );
 };
+
+const CaregiverRow = ({ label, text, onClick, featured = false }: { label: string; text?: string; onClick: () => void; featured?: boolean }) => (
+  <button type="button" aria-label={label} onClick={onClick} className="group flex min-h-14 w-full items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-muted/40 focus-visible:relative focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring [&+button]:border-t [&+button]:border-border/50 sm:px-6">
+    <span className="min-w-0 flex-1"><span className={`block text-[15px] font-medium tracking-tight ${featured ? "text-primary" : ""}`}>{label}</span>{text && <span className="mt-1 block text-sm leading-5 text-muted-foreground">{text}</span>}</span>
+    <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground/60 group-hover:text-foreground" />
+  </button>
+);
 
 const PinField = ({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) => (
   <div className="space-y-2">

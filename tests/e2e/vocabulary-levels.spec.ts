@@ -51,7 +51,7 @@ test("promoted vocabulary has visible categories and accurate settings", async (
   await page.getByRole("button", { name: "Descriptive", exact: true }).click();
   await expect(page.getByRole("button", { name: "Add Quiet to sentence", exact: true })).toBeVisible();
   await openSettings(page);
-  await page.getByRole("tab", { name: "Display", exact: true }).click();
+  await page.getByRole("tab", { name: "Vocabulary", exact: true }).click();
   await expect(page.getByText(/Everyday needs and core words \(\d+ built-in cards\)/)).toBeVisible();
   await page.getByRole("button", { name: /Level 2 \(Intermediate\)/ }).click();
   await page.getByRole("button", { name: "Save level", exact: true }).click();

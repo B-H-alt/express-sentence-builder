@@ -5,7 +5,7 @@ test("all settings exits guard drafts, keep editing preserves them, and save app
   await seedLearner(page); await blockThirdPartyWidgets(page); await page.goto("/pecs-app");
   await openSettings(page);
   await page.getByLabel("Name", { exact: true }).fill("New name");
-  await page.getByRole("tab", { name: "Display", exact: true }).click();
+  await page.getByRole("tab", { name: "Vocabulary", exact: true }).click();
   await page.getByRole("button", { name: /Level 4 \(Explore\)/ }).click();
   for (const exit of ["x", "close", "escape", "outside"]) {
     if (exit === "x") await page.getByRole("button", { name: "Close settings", exact: true }).click();

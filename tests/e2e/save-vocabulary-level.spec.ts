@@ -7,7 +7,7 @@ test("level changes need saving, can be cancelled, and confirm success", async (
   await page.goto("/pecs-app");
   const openDisplay = async () => {
     await openSettings(page);
-    await page.getByRole("tab", { name: "Display", exact: true }).click();
+    await page.getByRole("tab", { name: "Vocabulary", exact: true }).click();
   };
   const savedLevel = () => page.evaluate(() => JSON.parse(localStorage.getItem("pecs-storage")!).state.currentLevel);
   await openDisplay();

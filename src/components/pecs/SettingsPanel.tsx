@@ -2,7 +2,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useCardStore, vocabularyLevelCounts } from "@/store/cardStore";
-import { X, User, Plus, Layers, Save, Leaf, Volume2, Palette, MessagesSquare, Moon, Sun } from "lucide-react";
+import { X } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { AddCardModal } from "@/components/pecs/AddCardModal";
 import { Button } from "@/components/ui/button";
 import type { AppLanguage, CardDisplayAmount, CharacterGender, TextSize, VocabularyLevel } from "@/store/cardStore";
@@ -29,6 +30,8 @@ const levelOptions: { level: VocabularyLevel; label: string; subtitle: string }[
 ];
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) => {
+  const isMobile = useIsMobile();
+  const contentRef = useRef<HTMLDivElement>(null);
   const {
     currentLevel,
     setLevel,
@@ -75,7 +78,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
   const setLanguage = useCardStore((s) => s.setLanguage);
 
   const [showAddCard, setShowAddCard] = useState(false);
-  const [activeSection, setActiveSection] = useState<"profile" | "display" | "cards" | "accessibility">("profile");
+  const [activeSection, setActiveSection] = useState<"profile" | "vocabulary" | "display" | "cards" | "accessibility">("profile");
 
   const [draftName, setDraftName] = useState("Me");
   const [draftImage, setDraftImage] = useState<string | null>(null);
@@ -179,7 +182,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
           role="dialog"
           aria-modal="true"
           aria-labelledby="settings-title"
-          className="relative flex max-h-full w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-border/60 bg-background shadow-2xl"
+          className="relative flex h-[min(820px,90dvh)] max-h-full w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-border/60 bg-background shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex shrink-0 items-center justify-between gap-4 border-b border-border/70 bg-background px-6 py-4 md:px-8">
@@ -196,44 +199,58 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
             </button>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 md:p-8">
+          <div className="flex min-h-0 flex-1 flex-col md:flex-row">
             <div
               role="tablist"
               aria-label="Settings sections"
-              className="mb-6 grid grid-cols-2 gap-1 rounded-2xl border border-border/70 bg-muted/40 p-1.5 sm:grid-cols-4"
+              aria-orientation={isMobile ? "horizontal" : "vertical"}
+              className="flex shrink-0 gap-1 overflow-x-auto border-b border-border/60 bg-muted/30 p-3 md:w-48 md:flex-col md:gap-1 md:overflow-y-auto md:border-b-0 md:border-r md:p-4"
             >
               {[
-                { id: "profile", label: "Profile", icon: User },
-                { id: "display", label: "Display", icon: Palette },
-                { id: "cards", label: "Cards & voice", icon: MessagesSquare },
-                { id: "accessibility", label: "Accessibility", icon: User },
+                { id: "profile", label: "Profile" },
+                { id: "vocabulary", label: "Vocabulary" },
+                { id: "display", label: "Display" },
+                { id: "cards", label: "Cards & voice" },
+                { id: "accessibility", label: "Accessibility" },
               ].map((section) => {
-                const Icon = section.icon;
                 const selected = activeSection === section.id;
                 return (
                   <button
                     key={section.id}
                     type="button"
                     role="tab"
+                    id={`settings-tab-${section.id}`}
+                    aria-controls="settings-content"
                     aria-selected={selected}
-                    onClick={() => setActiveSection(section.id as typeof activeSection)}
-                    className={`flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 text-sm font-medium transition-colors ${
+                    tabIndex={selected ? 0 : -1}
+                    onClick={event => { setActiveSection(section.id as typeof activeSection); contentRef.current?.scrollTo({ top: 0 }); event.currentTarget.scrollIntoView({ block: "nearest", inline: "nearest" }); }}
+                    onKeyDown={event => {
+                      const previous = isMobile ? "ArrowLeft" : "ArrowUp";
+                      const next = isMobile ? "ArrowRight" : "ArrowDown";
+                      if (![previous, next, "Home", "End"].includes(event.key)) return;
+                      event.preventDefault();
+                      const tabs = Array.from(event.currentTarget.parentElement!.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+                      const index = tabs.indexOf(event.currentTarget);
+                      const target = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : (index + (event.key === next ? 1 : -1) + tabs.length) % tabs.length;
+                      tabs[target].focus(); tabs[target].click();
+                    }}
+                    className={`flex min-h-11 shrink-0 items-center justify-center rounded-lg px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:justify-start ${
                       selected
-                        ? "bg-background text-foreground shadow-sm ring-1 ring-border/60"
+                        ? "bg-primary/10 text-primary"
                         : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
                     }`}
                   >
-                    <Icon className="h-4 w-4 shrink-0" />
                     <span className="truncate">{section.label}</span>
                   </button>
                 );
               })}
             </div>
-
+            <div ref={contentRef} id="settings-content" role="tabpanel" aria-labelledby={`settings-tab-${activeSection}`} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6 sm:px-8 md:px-10">
+            <div className="mx-auto mb-7 max-w-2xl"><h3 className="text-2xl font-semibold tracking-tight">{activeSection === "profile" ? "Profile" : activeSection === "vocabulary" ? "Vocabulary" : activeSection === "display" ? "Display" : activeSection === "cards" ? "Cards & voice" : "Accessibility"}</h3></div>
             {activeSection === "accessibility" && <div className="mx-auto max-w-2xl"><AccessibilitySettings /></div>}
-            <div className={`${activeSection === "accessibility" ? "hidden" : "grid"} gap-6 ${activeSection === "display" ? "md:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]" : "mx-auto max-w-2xl"}`}>
+            <div className={`${activeSection === "accessibility" ? "hidden" : "grid"} mx-auto max-w-2xl gap-8`}>
             {/* Left column: Profile / Theme */}
-            <div className={`flex flex-col gap-6 ${activeSection === "profile" ? "py-1" : "rounded-2xl border border-border/80 bg-muted/40 p-5"} ${activeSection === "cards" ? "hidden" : ""}`}>
+            <div className={`flex flex-col gap-6 ${activeSection === "profile" ? "py-1" : ""} ${activeSection === "cards" || activeSection === "vocabulary" ? "hidden" : ""}`}>
               {/* Profile */}
               {activeSection === "profile" && <div className="flex items-center gap-5 pb-2">
                 <div className="h-20 w-20 shrink-0 rounded-full bg-muted border border-border flex items-center justify-center overflow-hidden">
@@ -365,8 +382,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                       }`}
                       aria-label="Use light mode"
                     >
-                      <Sun className="h-4 w-4" aria-hidden="true" />
-                      <span className="hidden sm:inline">Light</span>
+                      <span>Light</span>
                     </button>
                     <button
                       type="button"
@@ -392,8 +408,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                       }`}
                       aria-label="Use dark mode"
                     >
-                      <Moon className="h-4 w-4" aria-hidden="true" />
-                      <span className="hidden sm:inline">Dark</span>
+                      <span>Dark</span>
                     </button>
                   </div>
                 </div>
@@ -487,9 +502,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                 <div className="rounded-xl border border-border bg-background/70 p-3">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex min-w-0 gap-3">
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                        <Leaf className="h-4 w-4" />
-                      </span>
                       <div>
                         <h3 className="text-sm font-semibold">Calm mode</h3>
                         <p className="mt-1 text-xs leading-5 text-muted-foreground">
@@ -552,9 +564,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
 
             {/* Right column: Level + Add Card */}
             <div className={`flex flex-col gap-4 ${activeSection === "profile" ? "hidden" : ""}`}>
-              {activeSection === "display" && <div className="rounded-2xl border border-border/80 bg-muted/30 p-4 flex flex-col gap-3">
+              {activeSection === "vocabulary" && <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <Layers className="w-4 h-4 text-muted-foreground" />
                   <h3 className="text-sm font-semibold">Vocabulary level</h3>
                 </div>
                 <p className="text-xs text-muted-foreground mb-2">
@@ -641,7 +652,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
 
               {activeSection === "cards" && <div className="rounded-2xl border border-border/80 bg-muted/30 p-4 flex flex-col gap-4">
                 <div className="flex items-center gap-2">
-                  <Volume2 className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <h3 className="text-sm font-semibold">Voice</h3>
                   </div>
@@ -699,23 +709,21 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
                 <button
                   type="button"
                   onClick={() => setShowAddCard(true)}
-                  className="mt-2 w-full rounded-2xl border border-dashed border-primary/40 bg-primary/5 py-6 flex flex-col items-center justify-center gap-3 hover:bg-primary/10 transition-colors"
+                  className="mt-2 inline-flex min-h-11 items-center justify-center rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
                 >
-                  <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center">
-                    <Plus className="w-7 h-7 text-primary-foreground" />
-                  </div>
-                  <span className="text-xs text-muted-foreground">
+                  <span>
                     Add a card
                   </span>
                 </button>
               </div>}
             </div>
             </div>
+            </div>
           </div>
 
           <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border/70 bg-background px-6 py-4 md:px-8">
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="hidden sm:inline">{activeSection === "profile" ? "Save to apply changes." : activeSection === "display" ? "Save level separately. Other changes auto-save." : "Changes auto-save."}</span>
+              <span className="hidden sm:inline">{activeSection === "profile" ? "Save to apply changes." : activeSection === "vocabulary" ? "Save to apply a new level." : "Changes auto-save."}</span>
               <a href="/privacy" target="_blank" rel="noreferrer" className="hover:text-foreground hover:underline">Privacy</a>
               <a href="/terms" target="_blank" rel="noreferrer" className="hover:text-foreground hover:underline">Terms</a>
             </div>
@@ -725,7 +733,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
               </Button>
               {activeSection === "profile" && (
                 <Button type="button" onClick={handleSave} disabled={!hasChanges || Boolean(cropSource)}>
-                  <Save className="mr-2 h-4 w-4" />
                   Save profile
                 </Button>
               )}

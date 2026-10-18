@@ -14,6 +14,7 @@ import { SpeakNowBar } from "@/components/pecs/SpeakNowBar";
 import { AppGuideDialog } from "@/components/pecs/AppGuideDialog";
 import { useToast } from "@/hooks/use-toast";
 import { CommunicationPreferences } from "@/components/pecs/CommunicationPreferences";
+import { RemoteSettingsReceiver } from "@/components/pecs/RemoteSettingsReceiver";
 import { CaregiverProtectionContext, useCaregiverProtectionEnabled } from "@/components/pecs/CaregiverProtection";
 
 export interface Card {
@@ -152,6 +153,7 @@ const PecsApp = () => {
   return (
     <div className={`app-shell relative flex min-h-screen w-full flex-col overflow-x-hidden ${lowStimulationMode ? "bg-background" : "bg-[radial-gradient(160%_100%_at_50%_-10%,hsl(var(--background)/0.06)_0%,transparent_70%),radial-gradient(120%_80%_at_0%_100%,hsl(var(--accent)/0.10)_0%,transparent_70%),radial-gradient(120%_80%_at_100%_100%,hsl(var(--secondary)/0.10)_0%,transparent_70%),linear-gradient(180deg,hsl(var(--background))_0%,hsl(var(--background))_100%)]"}`}>
       <CommunicationPreferences />
+      <RemoteSettingsReceiver />
       {/* FIXED STACK */}
       <div
         ref={topBarRef}

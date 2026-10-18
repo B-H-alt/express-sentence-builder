@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { SpeakNowBar } from "./SpeakNowBar";
 import { useProtectedLearnerControls } from "./CaregiverProtection";
 
-export const SavedPhrases = ({ onHome }: { onHome: () => void }) => {
+export const SavedPhrases = ({ onHome, showHomeButton = true }: { onHome: () => void; showHomeButton?: boolean }) => {
   const protectedControls = useProtectedLearnerControls();
   const phrases = useCardStore((state) => state.savedPhrases);
   const language = useCardStore((state) => state.language);
@@ -32,7 +32,7 @@ export const SavedPhrases = ({ onHome }: { onHome: () => void }) => {
     <section className="rounded-2xl border border-border bg-card p-4 sm:p-5" aria-labelledby="saved-phrases-title">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={onHome}><ArrowLeft className="mr-2 h-4 w-4" />{es ? "Inicio" : "Home"}</Button>
+          {showHomeButton && <Button variant="outline" onClick={onHome}><ArrowLeft className="mr-2 h-4 w-4" />{es ? "Inicio" : "Home"}</Button>}
           <h2 id="saved-phrases-title" className="text-lg font-semibold">{es ? "Frases guardadas" : "Saved phrases"}</h2>
         </div>
         <div className="flex items-center gap-2">
