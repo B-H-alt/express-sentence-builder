@@ -23,6 +23,8 @@ No production deployment, database change or native installation is part of this
 
 ## Verification
 
+October 18 refinement: Save profile now stays in Settings, shows a checkmark with Saved, and resets that confirmation when the profile is edited again. Pending vocabulary edits remain unsaved and are still guarded on explicit close. Save changes from an exit confirmation retains its explicit save-and-exit behavior. The PIN field no longer has a letter-spaced placeholder; the associated format hint below remains. Typecheck and all 12 focused profile/crop/PIN/unsaved-change tests passed. Local only until push approval.
+
 - Typecheck and production build passed. Lint: zero errors, seven existing fast-refresh warnings.
 - Full launch regression suite: 142 passed, including desktop, mobile and emulated iPad portrait/landscape flows. Runs were executed alone to avoid shared report-directory collisions.
 - Added settings navigation, keyboard, viewport and footer visibility coverage. Updated level tests to use the new Vocabulary section.

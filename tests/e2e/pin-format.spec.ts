@@ -8,6 +8,7 @@ test("new PINs clearly require exactly four numeric digits", async ({ page }) =>
   const confirm = page.getByLabel("Confirm PIN", { exact: true });
   await expect(pin).toHaveAttribute("maxlength", "4");
   await expect(pin).toHaveAttribute("pattern", "[0-9]{4}");
+  await expect(pin).not.toHaveAttribute("placeholder");
   await expect(pin).toHaveAccessibleDescription("4 digits · Numbers only");
   await pin.fill("123456"); await expect(pin).toHaveValue("1234");
   await pin.fill("12ab"); await expect(pin).toHaveValue("12");

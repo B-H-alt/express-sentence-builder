@@ -2,7 +2,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useCardStore, vocabularyLevelCounts } from "@/store/cardStore";
-import { X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AddCardModal } from "@/components/pecs/AddCardModal";
 import { Button } from "@/components/ui/button";
@@ -87,6 +87,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
   const [draftLanguage, setDraftLanguage] = useState<AppLanguage>("en");
   const [draftLevel, setDraftLevel] = useState<VocabularyLevel>(currentLevel);
   const [levelSaved, setLevelSaved] = useState(false);
+  const [profileSaved, setProfileSaved] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
   const hasChanges =
     (draftName.trim() || "Me") !== (userName?.trim() || "Me") ||
@@ -103,9 +104,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
 
   useEffect(() => {
     setLevelSaved(false);
+    setProfileSaved(false);
     setCropSource(null);
     setConfirmClose(false);
   }, [open]);
+
+  useEffect(() => { if (hasChanges) setProfileSaved(false); }, [hasChanges]);
 
   const fileRef = useRef<HTMLInputElement | null>(null);
 
@@ -156,8 +160,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
     updateUserProfile(draftName.trim() || "Me", draftImage);
     setCharacterGender(draftGender);
     setLanguage(draftLanguage);
-    if (draftLevel !== currentLevel) setConfirmClose(true);
-    else onClose();
+    setProfileSaved(true);
   };
 
   const handleRemovePhoto = () => {
@@ -733,9 +736,10 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
               </Button>
               {activeSection === "profile" && (
                 <Button type="button" onClick={handleSave} disabled={!hasChanges || Boolean(cropSource)}>
-                  Save profile
+                  {profileSaved ? <><Check className="h-4 w-4" aria-hidden="true" />Saved</> : "Save profile"}
                 </Button>
               )}
+              {profileSaved && <span role="status" className="sr-only">Profile saved.</span>}
             </div>
           </div>
         </div>

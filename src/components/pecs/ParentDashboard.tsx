@@ -536,7 +536,6 @@ const PinField = ({ label, value, onChange, allowLegacy = false }: { label: stri
         pattern={allowLegacy ? "[0-9]{4,6}" : "[0-9]{4}"}
         maxLength={allowLegacy ? 6 : 4}
         minLength={4}
-        placeholder="4 digits"
         aria-describedby={`caregiver-${label.replace(/ /g, "-").toLowerCase()}-format`}
         required
         value={value}
