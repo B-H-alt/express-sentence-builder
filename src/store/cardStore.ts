@@ -27,6 +27,7 @@ import comeImg from "@/assets/pecs/come.jpg";
 import wantImg from "@/assets/pecs/want.jpg";
 import needImg from "@/assets/pecs/need.jpg";
 import finishedImg from "@/assets/pecs/finished.jpg";
+import sleepImg from "@/assets/pecs/boy/core-sleep.jpg";
 import yesImg from "@/assets/pecs/yes.jpg";
 import noImg from "@/assets/pecs/no.jpg";
 import maybeImg from "@/assets/pecs/maybe.jpg";
@@ -315,6 +316,7 @@ const level1Cards: Card[] = [
   { id: "l1-19", text: "Want", category: "actions", usage: 0, level: 1, image: wantImg },
   { id: "l1-20", text: "Need", category: "actions", usage: 0, level: 1, image: needImg },
   { id: "l1-21", text: "Finished", category: "actions", usage: 0, level: 1, image: finishedImg },
+  { id: "core-sleep", text: "Sleep", category: "actions", usage: 0, level: 1, image: sleepImg },
 
   // Responses
   { id: "l1-22", text: "Yes", category: "responses", usage: 0, level: 1, image: yesImg },

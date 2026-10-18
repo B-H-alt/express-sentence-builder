@@ -40,7 +40,7 @@ const spanishCardLabels: Record<string, string> = {
   "Sandwich": "Sándwich", "Say": "Decir", "Scared": "Asustado", "School": "Escuela",
   "See": "Ver", "She": "Ella", "Shoes": "Zapatos", "Shower": "Ducharse", "Silly": "Juguetón",
   "Sing": "Cantar", "Sister": "Hermana", "Sit": "Sentarse", "Slow": "Lento",
-  "Small": "Pequeño", "Snack": "Merienda", "Sorry": "Lo siento", "Soup": "Sopa",
+  "Sleep": "Dormir", "Small": "Pequeño", "Snack": "Merienda", "Sorry": "Lo siento", "Soup": "Sopa",
   "Stand": "Pararse", "Stomach": "Estómago", "Stop": "Alto", "Store": "Tienda",
   "Surprised": "Sorprendido", "Table": "Mesa", "Tablet": "Tableta", "Take": "Tomar",
   "Talk": "Hablar", "Teacher": "Maestro", "Teeth": "Dientes", "Tell": "Contar",

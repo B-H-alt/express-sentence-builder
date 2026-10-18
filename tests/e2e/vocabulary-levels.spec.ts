@@ -19,7 +19,7 @@ test("levels are cumulative, counts are accurate, and legacy IDs stay intact", a
   for (const card of result.levels[2].filter((card) => card.id.startsWith("l1-"))) {
     expect(result.levels[0]).toContainEqual(card);
   }
-  expect(result.levels.map((cards) => cards.length)).toEqual([65, 160, 196, 220, 244]);
+  expect(result.levels.map((cards) => cards.length)).toEqual([66, 161, 197, 221, 245]);
   for (let level = 0; level < 5; level += 1) {
     expect(result.levels[level].length).toBe(result.counts[level + 1]);
     if (level > 0) for (const card of result.levels[level - 1]) expect(result.levels[level]).toContainEqual(card);
