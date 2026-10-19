@@ -46,18 +46,18 @@ const Index = () => {
   <div ref={landing} className="expressly-landing min-h-screen bg-background text-foreground">
     <Navbar />
     <main>
-      <section className="overflow-hidden pt-32 md:pt-40">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-12 px-6 pb-12 md:gap-16 md:px-10">
-          <div className="max-w-3xl text-center" data-landing-reveal>
-            <p className="mb-5 text-sm font-semibold tracking-wide text-primary">Picture based communication</p>
-            <h1 className="text-5xl font-medium leading-[1.08] tracking-[-0.045em] md:text-7xl">More ways to say what’s on your mind.</h1>
-            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+      <section aria-labelledby="landing-headline" className="overflow-hidden pt-32 pb-12 sm:pb-16 lg:pt-40 lg:pb-24">
+        <div className="mx-auto grid max-w-[1440px] items-center gap-10 px-6 sm:gap-12 md:grid-cols-[0.85fr_1.25fr] md:gap-8 md:px-10 lg:gap-12 xl:gap-20 xl:px-16">
+          <div className="min-w-0 max-w-xl text-left" data-landing-reveal>
+            <p className="mb-5 text-sm font-medium text-muted-foreground">Picture based communication</p>
+            <h1 id="landing-headline" className="max-w-[13ch] text-5xl font-medium leading-[1.08] tracking-[-0.045em] sm:text-6xl md:text-5xl lg:text-[3.5rem] xl:text-[4.25rem]">More ways to say what’s on your mind.</h1>
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-5">
               <Link to="/pecs-app" className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 font-medium text-primary-foreground transition-transform hover:-translate-y-0.5">Open Expressly <ArrowRight className="h-4 w-4" /></Link>
-              <a href="#how-it-works" className="inline-flex items-center justify-center px-6 py-3.5 font-normal text-primary underline-offset-4 hover:underline">See how it works ↓</a>
+              <a href="#how-it-works" className="inline-flex min-h-11 items-center font-normal text-primary underline-offset-4 hover:underline">See how it works ↓</a>
             </div>
             <p className="mt-4 text-sm text-muted-foreground">Try the board without an account.</p>
           </div>
-          <div className="landing-preview w-full" data-landing-reveal>
+          <div className="landing-preview min-w-0 w-full" data-landing-reveal>
             <div className="overflow-hidden rounded-2xl border border-border bg-muted/30 p-1.5 shadow-[0_16px_48px_-24px_rgba(15,23,42,0.22)] md:p-2.5">
               <img src="/pecs-screenshot.png" alt="Expressly picture cards and sentence builder" className="w-full rounded-xl" fetchPriority="high" />
             </div>
