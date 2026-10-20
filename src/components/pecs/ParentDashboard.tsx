@@ -1,18 +1,9 @@
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
-  BarChart3,
-  Clock3,
   KeyRound,
   LockKeyhole,
-  MessageSquareText,
   ShieldCheck,
-  Sparkles,
-  Trash2,
-  TrendingUp,
-  Type,
-  Eye,
-  EyeOff,
   ChevronRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -28,37 +19,20 @@ import { CaregiverCards } from "./CaregiverCards";
 import { ConnectedDevices } from "./ConnectedDevices";
 import { ReleaseWelcome } from "./ReleaseWelcome";
 import { CaregiverTour, caregiverTourSeen } from "./CaregiverTour";
+import { ActivityDashboard } from "./ActivityDashboard";
 
 export const ParentDashboard = () => <><CommunicationPreferences /><CaregiverPage /></>;
 
 const AUTO_LOCK_MS = 5 * 60 * 1000;
 
 
-const formatActivityDate = (value: string) => {
-  const date = new Date(value);
-  const today = new Date();
-  return new Intl.DateTimeFormat(undefined, {
-    ...(date.toDateString() === today.toDateString() ? {} : { month: "short", day: "numeric" }),
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(date);
-};
-
-const percentChange = (current: number, previous: number) => {
-  if (previous === 0) return current > 0 ? 100 : 0;
-  return Math.round(((current - previous) / previous) * 100);
-};
 
 const CaregiverPage = () => {
   const navigate = useNavigate();
-  const entries = useCardStore((state) => state.progressEntries);
-  const clearProgress = useCardStore((state) => state.clearProgress);
   const savedName = useCardStore((state) => state.userName?.trim() || "");
   const profileImage = useCardStore((state) => state.userImage);
   const currentLevel = useCardStore((state) => state.currentLevel);
   const calmMode = useCardStore((state) => state.lowStimulationMode);
-  const hiddenCategories = useCardStore((state) => state.hiddenCategories);
-  const toggleCategoryVisibility = useCardStore((state) => state.toggleCategoryVisibility);
   const userName = !savedName || savedName.toLocaleLowerCase() === "me" ? "Your learner" : savedName;
   const [storedPin, setStoredPin] = useState<StoredPin | null>(() => readStoredPin());
   const [unlocked, setUnlocked] = useState(() => pinIsOptional() && !readStoredPin());
@@ -73,7 +47,6 @@ const CaregiverPage = () => {
   const [confirmPin, setConfirmPin] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [isConfirmingClear, setIsConfirmingClear] = useState(false);
   const lockTimer = useRef<number | undefined>();
 
   useEffect(() => {
@@ -174,62 +147,6 @@ const CaregiverPage = () => {
     }
   };
 
-  const insights = useMemo(() => {
-    const now = Date.now();
-    const day = 24 * 60 * 60 * 1000;
-    const thisWeekEntries = entries.filter((entry) => new Date(entry.completedAt).getTime() >= now - 7 * day);
-    const previousWeekEntries = entries.filter((entry) => {
-      const time = new Date(entry.completedAt).getTime();
-      return time >= now - 14 * day && time < now - 7 * day;
-    });
-    const average = (items: typeof entries) =>
-      items.length ? items.reduce((sum, entry) => sum + entry.wordCount, 0) / items.length : 0;
-
-    const phraseCounts = new Map<string, { label: string; count: number }>();
-    const previousWords = new Set(
-      entries
-        .filter((entry) => new Date(entry.completedAt).getTime() < now - 7 * day)
-        .flatMap((entry) => entry.cardLabels.map((label) => label.toLocaleLowerCase()))
-    );
-    const newWords = new Set<string>();
-    entries.forEach((entry) => {
-      entry.cardLabels.forEach((label) => {
-        const key = label.toLocaleLowerCase();
-        const current = phraseCounts.get(key);
-        phraseCounts.set(key, { label, count: (current?.count ?? 0) + 1 });
-        if (new Date(entry.completedAt).getTime() >= now - 7 * day && !previousWords.has(key)) newWords.add(label);
-      });
-    });
-
-    const daily = Array.from({ length: 7 }, (_, index) => {
-      const start = new Date();
-      start.setHours(0, 0, 0, 0);
-      start.setDate(start.getDate() - (6 - index));
-      const end = start.getTime() + day;
-      return {
-        label: new Intl.DateTimeFormat(undefined, { weekday: "narrow" }).format(start),
-        count: entries.filter((entry) => {
-          const time = new Date(entry.completedAt).getTime();
-          return time >= start.getTime() && time < end;
-        }).length,
-      };
-    });
-
-    return {
-      totalWords: entries.reduce((sum, entry) => sum + entry.wordCount, 0),
-      uniqueWords: phraseCounts.size,
-      thisWeek: thisWeekEntries.length,
-      previousWeek: previousWeekEntries.length,
-      averageLength: average(entries),
-      thisWeekAverage: average(thisWeekEntries),
-      previousWeekAverage: average(previousWeekEntries),
-      newWords: Array.from(newWords).slice(0, 8),
-      topPhrases: Array.from(phraseCounts.values())
-        .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
-        .slice(0, 5),
-      daily,
-    };
-  }, [entries]);
 
   if (!unlocked) {
     return (
@@ -347,176 +264,7 @@ const CaregiverPage = () => {
     </main>;
   }
 
-  const sentenceChange = percentChange(insights.thisWeek, insights.previousWeek);
-  const averageDifference = insights.thisWeekAverage - insights.previousWeekAverage;
-  const summary = entries.length < 2
-    ? `${userName}'s activity will become more useful after a few saved sentences.`
-    : `${userName} made ${insights.thisWeek} ${insights.thisWeek === 1 ? "sentence" : "sentences"} this week. ${insights.previousWeek > 0 ? `That is ${Math.abs(sentenceChange)}% ${sentenceChange >= 0 ? "more" : "fewer"} than the previous week.` : "This is the first week with enough recent activity to begin a comparison."} ${averageDifference > 0.15 ? `Average sentence length increased by ${averageDifference.toFixed(1)} words.` : averageDifference < -0.15 ? `Average sentence length decreased by ${Math.abs(averageDifference).toFixed(1)} words.` : "Average sentence length is steady."}`;
-
-  const maximumDaily = Math.max(1, ...insights.daily.map((day) => day.count));
-  const largestPhraseCount = insights.topPhrases[0]?.count ?? 1;
-
-  return (
-    <main className="min-h-screen bg-background">
-      <header className="sticky top-0 z-20 border-b border-border/70 bg-background px-4 py-3 sm:px-6">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-secondary">Parent Mode</p>
-            <h1 className="text-xl font-semibold sm:text-2xl">{userName}&apos;s progress</h1>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => setSection("home")}><ArrowLeft aria-hidden="true" className="mr-2 h-4 w-4" />Caregiver area</Button>
-            <Button variant="outline" onClick={lockDashboard}>
-              <LockKeyhole className="mr-2 h-4 w-4" />
-              {storedPin ? "Lock" : "Add a PIN"}
-            </Button>
-            <Button onClick={() => navigate("/pecs-app")}>
-              Learner mode
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
-        <section className="rounded-2xl border border-secondary/20 bg-secondary/5 p-5 sm:p-6">
-          <div className="flex items-start gap-3">
-            <Sparkles className="mt-1 h-5 w-5 shrink-0 text-secondary" />
-            <div>
-              <p className="leading-7">{summary}</p>
-              <p className="mt-2 text-xs text-muted-foreground">
-                This reflects saved Expressly sentences only. It is not an assessment or diagnosis.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <Metric label="Sentences this week" value={insights.thisWeek} icon={MessageSquareText} />
-          <Metric label="Average sentence length" value={insights.averageLength ? insights.averageLength.toFixed(1) : "0"} icon={BarChart3} />
-          <Metric label="Different words used" value={insights.uniqueWords} icon={Type} />
-          <Metric label="New words this week" value={insights.newWords.length} icon={TrendingUp} />
-        </section>
-
-        <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
-          <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-start">
-            <div>
-              <h2 className="font-semibold">Categories shown to the learner</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Hide groups that are not useful right now. Their cards stay safe and can be shown again anytime.
-              </p>
-            </div>
-            <span className="shrink-0 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-              Parent controlled
-            </span>
-          </div>
-          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-            {[
-              ["people", "People"], ["body", "Body"], ["feelings", "Feelings"],
-              ["actions", "Actions"], ["responses", "Responses"], ["activities", "Activities"],
-              ["objects", "Objects"], ["places", "Places"], ["social", "Social"],
-              ["food", "Food"], ["descriptive", "Describing"], ["time", "Time"],
-              ["animals", "Animals"], ["nature", "Nature"], ["sports", "Sports"],
-            ].map(([id, label]) => {
-              const visible = !hiddenCategories.includes(id);
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  aria-pressed={visible}
-                  onClick={() => toggleCategoryVisibility(id)}
-                  className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 text-left text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                    visible
-                      ? "border-primary/35 bg-primary/5 text-foreground"
-                      : "border-border bg-muted/50 text-muted-foreground"
-                  }`}
-                >
-                  {visible ? <Eye className="h-4 w-4 text-primary" /> : <EyeOff className="h-4 w-4" />}
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="grid gap-6 lg:grid-cols-2">
-          <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
-            <div className="flex items-center gap-2">
-              <Clock3 className="h-4 w-4 text-secondary" />
-              <h2 className="font-semibold">Last 7 days</h2>
-            </div>
-            <div className="mt-6 grid h-40 grid-cols-7 items-end gap-2">
-              {insights.daily.map((day, index) => (
-                <div key={`${day.label}-${index}`} className="flex h-full flex-col items-center justify-end gap-2">
-                  <span className="text-xs font-medium text-muted-foreground">{day.count || ""}</span>
-                  <div className="w-full rounded-t-lg bg-secondary/80" style={{ height: `${Math.max(day.count ? 12 : 3, (day.count / maximumDaily) * 100)}%` }} />
-                  <span className="text-xs text-muted-foreground">{day.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
-            <h2 className="font-semibold">Words used most</h2>
-            {insights.topPhrases.length ? (
-              <div className="mt-5 space-y-4">
-                {insights.topPhrases.map((phrase) => (
-                  <div key={phrase.label}>
-                    <div className="mb-1.5 flex justify-between gap-3 text-sm">
-                      <span className="truncate font-medium">{phrase.label}</span>
-                      <span className="text-muted-foreground">{phrase.count}×</span>
-                    </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-muted">
-                      <div className="h-full rounded-full bg-secondary" style={{ width: `${Math.max(12, (phrase.count / largestPhraseCount) * 100)}%` }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : <EmptyState>Frequently used words will appear after sentences are saved.</EmptyState>}
-          </div>
-        </section>
-
-        <section className="grid gap-6 lg:grid-cols-2">
-          <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
-            <h2 className="font-semibold">New words this week</h2>
-            {insights.newWords.length ? (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {insights.newWords.map((word) => <span key={word} className="rounded-full bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary">{word}</span>)}
-              </div>
-            ) : <EmptyState>New vocabulary will appear here as it is used.</EmptyState>}
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
-            <h2 className="font-semibold">Recent sentences</h2>
-            {entries.length ? (
-              <div className="mt-4 divide-y divide-border">
-                {entries.slice(0, 6).map((entry) => (
-                  <div key={entry.id} className="py-3 first:pt-0 last:pb-0">
-                    <p className="font-medium leading-6">{entry.sentenceText}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{entry.wordCount} {entry.wordCount === 1 ? "word" : "words"} · {formatActivityDate(entry.completedAt)}</p>
-                  </div>
-                ))}
-              </div>
-            ) : <EmptyState>Tap Done after building a sentence to save it here.</EmptyState>}
-          </div>
-        </section>
-
-        <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-4">
-          {entries.length > 0 && (isConfirmingClear ? (
-            <div className="flex flex-wrap items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Clear all saved activity?</span>
-              <Button size="sm" variant="ghost" onClick={() => setIsConfirmingClear(false)}>Keep it</Button>
-              <Button size="sm" variant="destructive" onClick={() => { clearProgress(); setIsConfirmingClear(false); }}>Clear</Button>
-            </div>
-          ) : (
-            <Button size="sm" variant="ghost" className="text-muted-foreground" onClick={() => setIsConfirmingClear(true)}>
-              <Trash2 className="mr-2 h-4 w-4" />
-              Clear activity
-            </Button>
-          ))}
-          <p className="ml-auto text-xs text-muted-foreground">Progress is still stored on this device until account sync is added.</p>
-        </footer>
-      </div>
-    </main>
-  );
+  return <ActivityDashboard name={userName} onBack={() => setSection("home")} onBoard={() => navigate("/pecs-app")} onLock={lockDashboard} hasPin={Boolean(storedPin)} />;
 };
 
 const CaregiverRow = ({ label, text, onClick, featured = false }: { label: string; text?: string; onClick: () => void; featured?: boolean }) => (
@@ -525,7 +273,6 @@ const CaregiverRow = ({ label, text, onClick, featured = false }: { label: strin
     <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground/60 group-hover:text-foreground" />
   </button>
 );
-
 const PinField = ({ label, value, onChange, allowLegacy = false }: { label: string; value: string; onChange: (value: string) => void; allowLegacy?: boolean }) => (
   <div className="space-y-2">
     <label htmlFor={`caregiver-${label.replace(/ /g, "-").toLowerCase()}`} className="text-sm font-medium">{label}</label>
@@ -548,16 +295,4 @@ const PinField = ({ label, value, onChange, allowLegacy = false }: { label: stri
     </div>
     <p id={`caregiver-${label.replace(/ /g, "-").toLowerCase()}-format`} className="text-xs text-muted-foreground">{allowLegacy ? "4 digits. Existing 5–6 digit PINs still work." : "4 digits · Numbers only"}</p>
   </div>
-);
-
-const Metric = ({ label, value, icon: Icon }: { label: string; value: string | number; icon: typeof BarChart3 }) => (
-  <div className="rounded-2xl border border-border bg-card p-4 sm:p-5">
-    <Icon className="h-4 w-4 text-secondary" />
-    <p className="mt-4 text-2xl font-semibold tracking-tight sm:text-3xl">{value}</p>
-    <p className="mt-1 text-sm text-muted-foreground">{label}</p>
-  </div>
-);
-
-const EmptyState = ({ children }: { children: string }) => (
-  <p className="mt-4 text-sm leading-6 text-muted-foreground">{children}</p>
 );
