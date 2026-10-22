@@ -25,8 +25,8 @@ const Privacy = () => (
         title: "Where information is stored",
         content: (
           <>
-            <p>Many learner settings, custom cards, and progress records are currently stored on the device being used. Parent account records, access rights, and feature-use counts are stored with Supabase.</p>
-            <p>Device-only information may be lost if browser data is cleared or the device is replaced. Expressly will update this policy before enabling broader cloud synchronization.</p>
+            <p>Learner settings, deliberately saved phrases, custom cards, and activity dates and counts are stored on the device being used. Sentence text and selected card order stay in page memory and are discarded when the page is refreshed or closed. Previously stored sentence details are removed when the updated app opens. Parent account records, access rights, and feature-use counts are stored with Supabase.</p>
+            <p>Device storage is not encrypted by Expressly. Anyone with access to the browser profile may be able to read saved device data. Device-only information may be lost if browser data is cleared or the device is replaced. Expressly will update this policy before enabling broader cloud synchronization.</p>
           </>
         ),
       },
@@ -36,7 +36,7 @@ const Privacy = () => (
           <ul className="list-disc space-y-2 pl-5">
             <li>Supabase provides parent authentication and protected account records.</li>
             <li>Google Gemini receives selected card words only when grammar correction is requested.</li>
-            <li>ElevenLabs receives sentence text only when enhanced voice is requested.</li>
+            <li>ElevenLabs receives sentence text only when enhanced voice is requested. Expressly streams the resulting audio and does not keep replay recordings.</li>
             <li>Replicate receives a written image prompt only when custom image generation is requested.</li>
             <li>Cloudflare Turnstile and Supabase receive security information used to prevent automated account abuse.</li>
           </ul>
@@ -56,7 +56,7 @@ const Privacy = () => (
       },
       {
         title: "Retention and security",
-        content: <p>Expressly keeps information only while it is needed to provide and secure the service. Protected server features require authentication, private database records use account-level access rules, and private service keys are kept off the user's device. No online service can promise absolute security.</p>,
+        content: <p>Cloud feature providers may retain submitted content under their own terms and account settings. Expressly does not promise zero retention by these providers. Expressly keeps information only while it is needed to provide and secure the service. Protected server features require authentication, private database records use account-level access rules, and private service keys are kept off the user's device. No online service can promise absolute security.</p>,
       },
       {
         title: "Tracking signals",

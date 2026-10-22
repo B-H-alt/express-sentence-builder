@@ -33,17 +33,18 @@ test("streamed MP3 starts before the final audio arrives; buffered playback wait
           }, 1_200);
         },
       }), { headers: { "Content-Type": "audio/mpeg" } });
-      let blob: Blob;
+      let receivedBytes: number;
       try {
-        if (streaming) blob = await playSpeechResponse(response, audio, controller.signal, () => { downloadFinished = performance.now() - startedAt; });
+        if (streaming) receivedBytes = await playSpeechResponse(response, audio, controller.signal, () => { downloadFinished = performance.now() - startedAt; });
         else {
-          blob = await response.blob();
+          const blob = await response.blob();
+          receivedBytes = blob.size;
           downloadFinished = performance.now() - startedAt;
           const url = URL.createObjectURL(blob);
           audio.src = url;
           try { await playAudioToEnd(audio); } finally { URL.revokeObjectURL(url); }
         }
-        return { firstPlay, downloadFinished, bytes: blob.size };
+        return { firstPlay, downloadFinished, bytes: receivedBytes, retainedSource: audio.getAttribute("src") };
       } finally { clearTimeout(safety); audio.pause(); }
     };
     return { previous: await run(false), streaming: await run(true), supportsMp3Stream: MediaSource.isTypeSupported("audio/mpeg") };
@@ -53,6 +54,7 @@ test("streamed MP3 starts before the final audio arrives; buffered playback wait
   expect(result.streaming.firstPlay).toBeLessThan(result.streaming.downloadFinished);
   expect(result.previous.firstPlay).toBeGreaterThanOrEqual(result.previous.downloadFinished);
   expect(result.streaming.bytes).toBe(result.previous.bytes);
+  expect(result.streaming.retainedSource).toBeNull();
   await testInfo.attach("speech-start-timing", { body: JSON.stringify(result, null, 2), contentType: "application/json" });
   console.log("Controlled audio-start measurement:", JSON.stringify(result));
 });
@@ -71,7 +73,7 @@ test("unsupported browsers retain complete-clip playback", async ({ page }) => {
     let downloaded = false;
     try {
       const clip = await playSpeechResponse(new Response("test-audio"), audio as unknown as HTMLAudioElement, new AbortController().signal, () => { downloaded = true; });
-      return { downloaded, size: clip.size };
+      return { downloaded, size: clip };
     } finally { Object.defineProperty(window, "MediaSource", { configurable: true, value: original }); }
   });
   expect(result).toEqual({ downloaded: true, size: 10 });

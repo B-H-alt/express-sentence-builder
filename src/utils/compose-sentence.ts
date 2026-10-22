@@ -1,10 +1,10 @@
+import { onPrivateSessionChange, privateSessionRevision } from "@/lib/privateSession";
 // src/utils/compose-sentence.ts
 import { getAccessToken } from "@/lib/supabase";
 import { getApiUrl } from "@/lib/runtimeUrls";
 import type { AppLanguage } from "@/store/cardStore";
 import { correctOfflineGrammar } from "./offline-grammar";
 
-const compositionCache = new Map<string, string>();
 export type SentenceTense = "past" | "present" | "future";
 export type CompositionIssue = "sign_in_required" | "email_not_confirmed" | "rate_limited" | "unavailable" | "offline";
 export type CompositionResult = { sentence: string; issue?: CompositionIssue; source?: "offline_rules" };
@@ -20,23 +20,25 @@ export async function composeSentence(input: { tokens?: string[]; text?: string;
 
   const tense = input.tense ?? "present";
   const language = input.language ?? "en";
-  const cacheKey = `${language}:${tense}:${tokens.toLocaleLowerCase()}`;
-  const cached = compositionCache.get(cacheKey);
-  if (cached !== undefined) return { sentence: cached };
+  const sessionRevision = privateSessionRevision();
   if (!navigator.onLine) {
     const sentence = correctOfflineGrammar(inputLabels, tense, language);
     return { sentence, issue: "offline", ...(sentence ? { source: "offline_rules" as const } : {}) };
   }
 
   let timeout: number | undefined;
+  let unsubscribe: (() => void) | undefined;
   try {
     const accessToken = await getAccessToken();
+    if (sessionRevision !== privateSessionRevision()) throw new DOMException("Account changed.", "AbortError");
     if (!accessToken) return { sentence: "", issue: "sign_in_required" };
 
     const controller = new AbortController();
+    unsubscribe = onPrivateSessionChange(() => controller.abort());
     timeout = window.setTimeout(() => controller.abort(), 12_000);
     const response = await fetch(getApiUrl("/api/compose"), {
       method: "POST",
+      cache: "no-store",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
@@ -60,16 +62,14 @@ export async function composeSentence(input: { tokens?: string[]; text?: string;
 
     // Avoid echoing unchanged text
     const result = output.toLowerCase() === tokens.toLowerCase() ? "" : output;
-    if (compositionCache.size >= 100) {
-      const oldestKey = compositionCache.keys().next().value;
-      if (oldestKey) compositionCache.delete(oldestKey);
-    }
-    compositionCache.set(cacheKey, result);
+    if (sessionRevision !== privateSessionRevision()) throw new DOMException("Account changed.", "AbortError");
     return { sentence: result };
   } catch (error) {
-    console.error("[composeSentence] Error:", error);
+    if (error instanceof DOMException && error.name === "AbortError") throw error;
+    console.error("Grammar request failed");
     return { sentence: "", issue: "unavailable" };
   } finally {
+    unsubscribe?.();
     if (timeout !== undefined) window.clearTimeout(timeout);
   }
 }

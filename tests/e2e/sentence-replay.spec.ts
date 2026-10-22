@@ -38,7 +38,7 @@ test("sentence can be spoken repeatedly without rebuilding or duplicate activity
   expect(await entries()).toBe(1);
 });
 
-test("enhanced sentence replay reuses corrected text and audio without another provider request", async ({ page }) => {
+test("enhanced replay retains no audio and records activity only once", async ({ page }) => {
   await seedLearner(page);
   await blockThirdPartyWidgets(page);
   const user = { id: "11111111-1111-4111-8111-111111111111", aud: "authenticated", role: "authenticated", email: "test@example.com", app_metadata: {}, user_metadata: {}, created_at: new Date().toISOString() };
@@ -79,6 +79,37 @@ test("enhanced sentence replay reuses corrected text and audio without another p
     await expect(page.getByRole("button", { name: "Speak sentence", exact: true })).toBeVisible();
   }
   expect(grammarRequests).toBe(1);
-  expect(voiceRequests).toBe(1);
   expect(await page.evaluate(async () => (await import("/src/store/cardStore.ts")).useCardStore.getState().progressEntries.length)).toBe(1);
+  expect(voiceRequests).toBe(3);
+  // Routine token refresh for the same account must not erase an active message.
+  expect(await page.evaluate(async () => {
+    const { getSupabase } = await import("/src/lib/supabase.ts");
+    return !(await (await getSupabase())!.auth.refreshSession()).error;
+  })).toBe(true);
+  await expect(page.getByRole("button", { name: "Remove Sleep from sentence", exact: true })).toBeVisible();
+  // Leave a grammar request pending while signing out. Its result must never speak.
+  let releaseGrammar: () => void = () => {};
+  const grammarHeld = new Promise<void>(resolve => { releaseGrammar = resolve; });
+  await page.route("**/api/compose", async route => {
+    await grammarHeld;
+    await route.fulfill({ json: { sentence: "PRIVATE_STALE_RESULT" } }).catch(() => {});
+  });
+  await page.getByRole("button", { name: "Remove Sleep from sentence", exact: true }).click();
+  await page.getByRole("button", { name: "Add Sleep to sentence", exact: true }).click();
+  await Promise.all([
+    page.waitForRequest(request => request.url().endsWith("/api/compose")),
+    page.getByRole("button", { name: "Speak sentence", exact: true }).click(),
+  ]);
+  // Exercise the actual Supabase sign-out event, not just the cleanup helper.
+  await page.evaluate(() => {
+    void import("/src/lib/supabase.ts").then(async ({ getSupabase }) => {
+      const { onPrivateSessionChange } = await import("/src/lib/privateSession.ts");
+      onPrivateSessionChange(() => sessionStorage.setItem("privacy-signout-cleaned", "yes"));
+      await (await getSupabase())!.auth.signOut({ scope: "local" });
+    });
+  });
+  await expect.poll(() => page.evaluate(() => sessionStorage.getItem("privacy-signout-cleaned"))).toBe("yes");
+  releaseGrammar();
+  await expect(page.getByText("PRIVATE_STALE_RESULT", { exact: true })).toHaveCount(0);
+  expect(voiceRequests).toBe(3);
 });

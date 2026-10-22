@@ -1,3 +1,4 @@
+import { activityCountsOnly } from "./sentencePrivacy";
 import { useCardStore } from "@/store/cardStore";
 
 interface ExportAccount {
@@ -36,7 +37,7 @@ export const createExpresslyData = (account?: ExportAccount) => {
     },
     favorites: state.favorites,
     savedPhrases: state.savedPhrases,
-    recentCards: state.recentCardIds,
+    recentCards: [],
     customCards: state.customCards.map((card) => ({
       id: card.id,
       text: card.text,
@@ -46,12 +47,8 @@ export const createExpresslyData = (account?: ExportAccount) => {
       usage: card.usage,
       level: card.level ?? null,
     })),
-    currentSentence: state.sentence.map((card) => ({
-      id: card.id,
-      text: card.text,
-      category: card.category,
-    })),
-    progressHistory: state.progressEntries,
+    currentSentence: [],
+    progressHistory: activityCountsOnly(state.progressEntries),
     cardUsage: Object.fromEntries(state.cards.map(card => [card.id, card.usage])),
   };
   return data;

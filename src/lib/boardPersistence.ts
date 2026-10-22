@@ -1,3 +1,4 @@
+import { scrubStoredSentences, withoutSentenceDetails } from "./sentencePrivacy";
 import type { PersistStorage, StorageValue } from "zustand/middleware";
 
 type BoardState = Record<string, unknown>;
@@ -6,10 +7,9 @@ const KEY = "pecs-storage";
 const JOURNAL = "pecs-interactions-v1";
 const SCOPE = "expressly-active-account-scope-v1";
 const hotKeys = new Set(["sentence", "cardUsage", "recentCardIds", "customCards"]);
+if (typeof localStorage !== "undefined") scrubStoredSentences();
 let previous: BoardState | null = null;
 let revision: string | null = null;
-let builtinIds = new Set<string>();
-export const registerBuiltinCardIds = (ids: string[]) => { builtinIds = new Set(ids); };
 const legacyRevision = (raw: string) => {
   let hash = 2166136261;
   for (let index = 0; index < raw.length; index++) hash = Math.imul(hash ^ raw.charCodeAt(index), 16777619);
@@ -55,21 +55,18 @@ export const boardPersistence: PersistStorage<BoardState> = {
       Object.keys(state).every(key => hotKeys.has(key) || state[key] === previous![key]) &&
       sameCardContent((state.customCards ?? []) as StoredCard[], (previous.customCards ?? []) as StoredCard[]);
     if (interactionOnly) {
-      const customIds = new Set(((state.customCards ?? []) as StoredCard[]).map(card => card.id));
-      // Small, synchronous durable writes. No timers and no lost last taps on close.
+      // Persist aggregate use only; the selected sentence and card order stay in memory.
       localStorage.setItem(JOURNAL, JSON.stringify({
         version: 1, baseRevision: revision, scope: localStorage.getItem(SCOPE),
-        sentence: ((state.sentence ?? []) as StoredCard[]).map(card => builtinIds.has(card.id) || customIds.has(card.id)
-          ? { id: card.id, text: card.text }
-          : card),
-        cardUsage: state.cardUsage, recentCardIds: state.recentCardIds,
+        sentence: [],
+        cardUsage: state.cardUsage, recentCardIds: [],
         customUsage: Object.fromEntries(((state.customCards ?? []) as StoredCard[]).map(card => [card.id, card.usage])),
       }));
     } else {
-      // Profile, photos, cards, settings and completed activity save in full immediately.
+      // Preserve profile/settings and activity counts without sentence details.
       const nextRevision = typeof crypto.randomUUID === "function" ? crypto.randomUUID()
         : Array.from(crypto.getRandomValues(new Uint32Array(4)), value => value.toString(16)).join("-");
-      localStorage.setItem(name, JSON.stringify({ ...value, boardRevision: nextRevision }));
+      localStorage.setItem(name, JSON.stringify({ ...value, state: withoutSentenceDetails(state), boardRevision: nextRevision }));
       revision = nextRevision;
       if (name === KEY) localStorage.removeItem(JOURNAL);
     }
@@ -86,7 +83,7 @@ export const boardPersistence: PersistStorage<BoardState> = {
 export const flushBoardInteractions = () => {
   if (!localStorage.getItem(JOURNAL)) return;
   const value = read(KEY);
-  if (value) localStorage.setItem(KEY, JSON.stringify(value));
+  if (value) localStorage.setItem(KEY, JSON.stringify({ ...value, state: withoutSentenceDetails(value.state) }));
   localStorage.removeItem(JOURNAL);
   previous = null;
 };

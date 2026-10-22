@@ -101,10 +101,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     }
 
     res.status(200).json({ ok: true, sentence });
-  } catch (error) {
-    console.error("Grammar composition failed", {
-      message: error instanceof Error ? error.message : "Unknown error",
-    });
+  } catch {
+    // Provider exceptions can contain submitted text; never put them in application logs.
+    console.error("Grammar composition failed");
     res.status(502).json({ ok: false, error: "Grammar service failed." });
   }
 }

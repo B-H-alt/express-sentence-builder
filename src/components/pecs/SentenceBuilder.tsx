@@ -1,3 +1,4 @@
+import { onPrivateSessionChange, privateSessionRevision } from "@/lib/privateSession";
 // src/components/SentenceBuilder.tsx
 import { memo, useEffect, useRef, useState } from "react";
 import type { Card } from "@/pages/PecsApp";
@@ -11,7 +12,6 @@ import { composeSentence, type SentenceTense } from "@/utils/compose-sentence";
 import { getAccessToken } from "@/lib/supabase";
 import { getApiUrl } from "@/lib/runtimeUrls";
 import { appText, translateCardLabel } from "@/lib/language";
-import { playAudioToEnd } from "@/utils/play-audio";
 import { speakDeviceText, stopDeviceSpeech } from "@/utils/device-speech";
 import { PartialSpeechError, playSpeechResponse } from "@/utils/stream-speech";
 
@@ -54,8 +54,6 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const speechRequest = useRef<AbortController | null>(null);
   const speechSequence = useRef(0);
-  const voiceClips = useRef(new Map<string, Blob>());
-  const voiceSession = useRef<string | null>(null);
   const recordedSentence = useRef<Card[] | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
@@ -85,9 +83,11 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
     const sourceKey = `${language}:${tense}:${raw}`;
     if (composedSource === sourceKey && composedText) return composedText;
 
+    const sessionRevision = privateSessionRevision();
     setIsComposing(true);
     try {
       const result = await composeSentence({ tokens: getSentenceTokens(), tense, language });
+      if (sessionRevision !== privateSessionRevision()) return "";
       const improved = result.sentence.trim();
       const finalText = improved || raw;
       setUsedOriginalWords(!improved);
@@ -110,7 +110,8 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
       setComposedSource(sourceKey);
       return finalText;
     } catch (error) {
-      console.error("Failed to compose sentence:", error);
+      if (sessionRevision !== privateSessionRevision()) return "";
+      console.error("Failed to compose sentence");
       setComposedText(raw);
       setComposedSource(sourceKey);
       setUsedOriginalWords(true);
@@ -121,47 +122,19 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
     }
   };
 
-  const playBlob = async (blob: Blob) => {
-    if (!audioRef.current) audioRef.current = new Audio();
-    const url = URL.createObjectURL(blob);
-    audioRef.current.src = url;
-    audioRef.current.playbackRate = speechRate;
-    audioRef.current.preservesPitch = true;
-    audioRef.current.volume = speechVolume;
-    try {
-      await playAudioToEnd(audioRef.current);
-    } finally {
-      URL.revokeObjectURL(url);
-    }
-  };
-
   const speakWithWebAPI = (text: string) => speakDeviceText(text, language, speechRate, speechVolume);
 
   const speakWithElevenLabs = async (text: string, sequence: number) => {
     const accessToken = await getAccessToken();
     if (speechSequence.current !== sequence) throw new DOMException("Playback stopped.", "AbortError");
-    if (!accessToken) {
-      voiceClips.current.clear();
-      voiceSession.current = null;
-      throw new Error("Sign in required for enhanced voice");
-    }
-    if (voiceSession.current !== accessToken) {
-      voiceClips.current.clear();
-      voiceSession.current = accessToken;
-    }
-    const clipKey = `${language}:${text}`;
-    const cached = voiceClips.current.get(clipKey);
-    if (cached) {
-      await playBlob(cached);
-      return;
-    }
+    if (!accessToken) throw new Error("Sign in required for enhanced voice");
     const controller = new AbortController();
     speechRequest.current = controller;
     const timer = setTimeout(() => controller.abort(new DOMException("Voice request timed out.", "TimeoutError")), 12_000);
-    let blob: Blob;
     try {
       const res = await fetch(getApiUrl("/api/speak"), {
       method: "POST",
+      cache: "no-store",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
@@ -176,12 +149,9 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
       audioRef.current.playbackRate = speechRate;
       audioRef.current.preservesPitch = true;
       audioRef.current.volume = speechVolume;
-      blob = await playSpeechResponse(res, audioRef.current, controller.signal, () => clearTimeout(timer));
+      await playSpeechResponse(res, audioRef.current, controller.signal, () => clearTimeout(timer));
     } finally { clearTimeout(timer); }
     if (speechSequence.current !== sequence) throw new DOMException("Playback stopped.", "AbortError");
-    // Session-only, bounded cache. No learner audio is persisted or shared between accounts.
-    if (voiceClips.current.size >= 12) voiceClips.current.delete(voiceClips.current.keys().next().value!);
-    voiceClips.current.set(clipKey, blob);
   };
 
   const stopAudio = () => {
@@ -201,6 +171,22 @@ export const SentenceBuilder = ({ showWord, onOpenGuide }: SentenceBuilderProps)
     audioRef.current?.pause();
     stopDeviceSpeech();
   }, []);
+
+  useEffect(() => onPrivateSessionChange(() => {
+    speechSequence.current++;
+    speechRequest.current?.abort();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.removeAttribute?.("src");
+    }
+    stopDeviceSpeech();
+    recordedSentence.current = null;
+    setComposedText("");
+    setComposedSource("");
+    setShowComposed(false);
+    setIsSpeaking(false);
+    setIsComposing(false);
+  }), []);
 
   const speakText = async (spoken: string, sequence: number) => {
     setIsSpeaking(true);

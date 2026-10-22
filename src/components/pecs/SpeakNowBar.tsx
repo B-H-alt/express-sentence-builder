@@ -1,3 +1,4 @@
+import { onPrivateSessionChange } from "@/lib/privateSession";
 import { CircleHelp, Hand, MessageCircle, MoreHorizontal, OctagonAlert, Volume2 } from "lucide-react";
 import { useCardStore } from "@/store/cardStore";
 import { appText, translateCardLabel } from "@/lib/language";
@@ -5,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useEffect, useRef } from "react";
 import { getAccessToken } from "@/lib/supabase";
 import { getApiUrl } from "@/lib/runtimeUrls";
-import { playAudioToEnd } from "@/utils/play-audio";
+import { PartialSpeechError, playSpeechResponse } from "@/utils/stream-speech";
 import { speakDeviceText, stopDeviceSpeech } from "@/utils/device-speech";
 
 const quickMessages = [
@@ -29,7 +30,6 @@ export const SpeakNowBar = ({ phrases }: { phrases?: string[] }) => {
   const playback = useRef<HTMLAudioElement | null>(null);
   const pending = useRef<AbortController | null>(null);
   const sequence = useRef(0);
-  const clips = useRef(new Map<string, Blob>());
 
   useEffect(() => () => {
     sequence.current += 1;
@@ -37,6 +37,14 @@ export const SpeakNowBar = ({ phrases }: { phrases?: string[] }) => {
     playback.current?.pause();
     stopDeviceSpeech();
   }, []);
+
+  useEffect(() => onPrivateSessionChange(() => {
+    sequence.current++;
+    pending.current?.abort();
+    playback.current?.pause();
+    playback.current?.removeAttribute?.("src");
+    stopDeviceSpeech();
+  }), []);
 
   const speak = async (text: string) => {
     const current = ++sequence.current;
@@ -54,38 +62,31 @@ export const SpeakNowBar = ({ phrases }: { phrases?: string[] }) => {
         const token = await getAccessToken();
         if (current !== sequence.current) return;
         if (token) {
-          const key = `${language}:${text}`;
-          let blob = clips.current.get(key);
-          if (!blob) {
-            const timer = setTimeout(() => controller.abort(new DOMException("Voice request timed out.", "TimeoutError")), 12_000);
-            try {
-              const response = await fetch(getApiUrl("/api/speak"), {
-              method: "POST",
+          const timer = setTimeout(() => controller.abort(new DOMException("Voice request timed out.", "TimeoutError")), 12_000);
+          try {
+            const response = await fetch(getApiUrl("/api/speak"), {
+              method: "POST", cache: "no-store",
               headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-              body: JSON.stringify({ text }),
-              signal: controller.signal,
-              });
-              if (!response.ok || !response.headers.get("content-type")?.startsWith("audio/")) throw new Error("Enhanced voice unavailable");
-              blob = await response.blob();
-            } finally { clearTimeout(timer); }
+              body: JSON.stringify({ text }), signal: controller.signal,
+            });
+            if (!response.ok || !response.headers.get("content-type")?.startsWith("audio/")) throw new Error("Enhanced voice unavailable");
             if (current !== sequence.current) return;
-            if (clips.current.size >= 14) clips.current.clear();
-            clips.current.set(key, blob);
-          }
-          if (current !== sequence.current) return;
-          const url = URL.createObjectURL(blob);
-          const audio = new Audio(url);
-          playback.current = audio;
-          audio.volume = speechVolume;
-          audio.playbackRate = speechRate;
-          audio.preservesPitch = true;
-          try { await playAudioToEnd(audio); }
-          finally { URL.revokeObjectURL(url); }
+            const audio = new Audio();
+            playback.current = audio;
+            audio.volume = speechVolume;
+            audio.playbackRate = speechRate;
+            audio.preservesPitch = true;
+            await playSpeechResponse(response, audio, controller.signal, () => clearTimeout(timer));
+          } finally { clearTimeout(timer); }
           if (current === sequence.current) recordQuickPhrase(text);
           return;
         }
-      } catch {
+      } catch (error) {
         if (current !== sequence.current || (controller.signal.aborted && controller.signal.reason?.name !== "TimeoutError")) return;
+        if (error instanceof PartialSpeechError) {
+          toast({ title: language === "es" ? "No se pudo hablar" : "Speech couldn't play", description: error.message });
+          return;
+        }
         toast({ title: language === "es" ? "Usando la voz del dispositivo" : "Using device voice" });
       }
     }

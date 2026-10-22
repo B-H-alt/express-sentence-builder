@@ -1,3 +1,4 @@
+import { clearPrivateSession } from "./privateSession";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
@@ -12,15 +13,22 @@ let clientPromise: Promise<SupabaseClient | null> | null = null;
 export const getSupabase = async () => {
   if (!isCloudAccountConfigured) return null;
   if (!clientPromise) {
-    clientPromise = import("@supabase/supabase-js").then(({ createClient }) =>
-      createClient(supabaseUrl!, supabasePublishableKey!, {
+    clientPromise = import("@supabase/supabase-js").then(({ createClient }) => {
+      const client = createClient(supabaseUrl!, supabasePublishableKey!, {
         auth: {
           persistSession: true,
           autoRefreshToken: true,
           detectSessionInUrl: true,
         },
-      }),
-    );
+      });
+      let accountId: string | null | undefined;
+      client.auth.onAuthStateChange((event, session) => {
+        const nextAccount = session?.user.id ?? null;
+        if (event === "SIGNED_OUT" || (accountId !== undefined && accountId !== nextAccount)) clearPrivateSession();
+        accountId = nextAccount;
+      });
+      return client;
+    });
   }
   return clientPromise;
 };

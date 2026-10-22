@@ -29,7 +29,9 @@ const NATIVE_APP_ORIGINS = new Set([
 ]);
 
 export const setPrivateApiHeaders = (res: ApiResponse) => {
-  res.setHeader("Cache-Control", "no-store, max-age=0");
+  res.setHeader("Cache-Control", "private, no-store, max-age=0");
+  res.setHeader("CDN-Cache-Control", "no-store");
+  res.setHeader("Vercel-CDN-Cache-Control", "no-store");
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.setHeader("X-Content-Type-Options", "nosniff");
 };

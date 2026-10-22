@@ -1,6 +1,8 @@
+import { onPrivateSessionChange } from "@/lib/privateSession";
+import { activityCountsOnly } from "@/lib/sentencePrivacy";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { boardPersistence, registerBuiltinCardIds } from "@/lib/boardPersistence";
+import { boardPersistence } from "@/lib/boardPersistence";
 import { Card } from "@/pages/PecsApp";
 import { expandedVocabulary } from "@/lib/expandedVocabulary";
 import { defaultAccessibility, normalizeAccessibility, type AccessibilityPreferences } from "@/lib/accessibilityPreferences";
@@ -523,7 +525,6 @@ export const vocabularyLevelCounts = Object.fromEntries(
 ) as Record<VocabularyLevel, number>;
 
 export const USER_CARD_ID = "expressly-user-card";
-registerBuiltinCardIds(allCards.map(card => card.id));
 
 export const useCardStore = create<CardStore>()(
   persist(
@@ -862,3 +863,9 @@ export const useCardStore = create<CardStore>()(
     }
   )
 );
+
+// Auth changes and page exit discard message wording while preserving activity totals.
+onPrivateSessionChange(() => {
+  const state = useCardStore.getState();
+  useCardStore.setState({ sentence: [], recentCardIds: [], progressEntries: activityCountsOnly(state.progressEntries) });
+});

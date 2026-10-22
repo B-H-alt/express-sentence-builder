@@ -21,13 +21,13 @@ const waitFor = (target: EventTarget, event: string, signal: AbortSignal, start?
   try { start?.(); } catch (error) { cleanup(); reject(error); }
 });
 
-/** Play the first decodable MP3 frames immediately, retaining the completed clip for replay. */
+/** Play MP3 frames as they arrive. Return a byte count, never a retained recording. */
 export const playSpeechResponse = async (
   response: Response,
   audio: HTMLAudioElement,
   signal: AbortSignal,
   onDownloaded: () => void,
-): Promise<Blob> => {
+): Promise<number> => {
   const canStream = typeof MediaSource !== "undefined" && MediaSource.isTypeSupported("audio/mpeg") &&
     typeof audio.load === "function" && Boolean(response.body);
   let url: string | undefined;
@@ -52,7 +52,7 @@ export const playSpeechResponse = async (
       url = URL.createObjectURL(blob);
       audio.src = url;
       await playAudioToEnd(audio);
-      return blob;
+      return blob.size;
     }
 
     const media = new MediaSource();
@@ -64,7 +64,6 @@ export const playSpeechResponse = async (
     await opened;
     const buffer = media.addSourceBuffer("audio/mpeg");
     reader = response.body!.getReader();
-    const chunks: Uint8Array<ArrayBuffer>[] = [];
     let bytes = 0;
     // Attach rejection handlers immediately: playback can fail while the next chunk is pending.
     const playback = playAudioToEnd(audio);
@@ -77,7 +76,6 @@ export const playSpeechResponse = async (
           bytes += value.byteLength;
           if (bytes > MAX_AUDIO_BYTES) throw new Error("Audio response was too large.");
           const chunk = new Uint8Array(value);
-          chunks.push(chunk);
           await waitFor(buffer, "updateend", work.signal, () => buffer.appendBuffer(chunk));
         }
         work.signal.throwIfAborted();
@@ -90,7 +88,7 @@ export const playSpeechResponse = async (
       }
     };
     await Promise.all([playback, pump()]);
-    return new Blob(chunks, { type: "audio/mpeg" });
+    return bytes;
   } catch (error) {
     work.abort(error);
     if (reader) void reader.cancel().catch(() => {});
@@ -103,5 +101,7 @@ export const playSpeechResponse = async (
     signal.removeEventListener("abort", onAbort);
     audio.removeEventListener("playing", onPlaying, { capture: true });
     if (url) URL.revokeObjectURL(url);
+    audio.removeAttribute?.("src");
+    audio.load?.();
   }
 };

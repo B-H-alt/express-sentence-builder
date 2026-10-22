@@ -1,3 +1,4 @@
+import { activityCountsOnly, withoutSentenceDetails } from "./sentencePrivacy";
 import { z } from "zod";
 import { useCardStore } from "@/store/cardStore";
 import { defaultAccessibility } from "@/lib/accessibilityPreferences";
@@ -62,16 +63,16 @@ export const restoreBoardBackup = (backup: BoardBackup) => {
     accessibility: data.preferences.accessibility ?? { ...defaultAccessibility }, textSize: data.preferences.textSize,
     speechRate: data.preferences.speechRate, speechVolume: data.preferences.speechVolume,
     hiddenCategories: data.preferences.hiddenCategories, customCards, cards, cardUsage: data.cardUsage ?? {},
-    favorites: data.favorites.filter(id => byId.has(id)), recentCardIds: data.recentCards.filter(id => byId.has(id)),
-    savedPhrases: data.savedPhrases, progressEntries: data.progressHistory,
-    sentence: data.currentSentence.flatMap(item => { const card = byId.get(item.id); return card ? [{ ...card, text: item.text }] : []; }),
+    favorites: data.favorites.filter(id => byId.has(id)), recentCardIds: [],
+    savedPhrases: data.savedPhrases, progressEntries: activityCountsOnly(data.progressHistory as { id: string; completedAt: string; wordCount: number }[]),
+    sentence: [],
   };
   const oldData = localStorage.getItem("pecs-storage");
   const oldTheme = localStorage.getItem("expressly-theme");
   // Preflight the actual persisted payload before changing live state. Quota failures leave the board intact.
   const { cards: _cards, ...persisted } = restored;
   try {
-    localStorage.setItem("pecs-storage", JSON.stringify({ state: persisted, version: 15 }));
+    localStorage.setItem("pecs-storage", JSON.stringify({ state: withoutSentenceDetails(persisted), version: 15 }));
     if (data.preferences.theme) localStorage.setItem("expressly-theme", data.preferences.theme);
   } catch {
     if (localStorage.getItem("pecs-storage") !== oldData) {

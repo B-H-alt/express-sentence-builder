@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { seedLearner, blockThirdPartyWidgets } from "./helpers";
 
-test("Speak now uses enhanced voice, reuses clips, and falls back on failure", async ({ page }) => {
+test("Speak now streams enhanced voice without retaining clips and falls back on failure", async ({ page }) => {
   await seedLearner(page);
   await blockThirdPartyWidgets(page);
   const user = { id: "11111111-1111-4111-8111-111111111111", aud: "authenticated", role: "authenticated", email: "test@example.com", email_confirmed_at: new Date().toISOString(), app_metadata: {}, user_metadata: {}, created_at: new Date().toISOString() };
@@ -40,7 +40,7 @@ test("Speak now uses enhanced voice, reuses clips, and falls back on failure", a
   await page.getByRole("button", { name: "Speak Yes", exact: true }).click();
   await page.getByRole("button", { name: "Speak No", exact: true }).click();
   await expect(page.getByText("Using device voice", { exact: true })).toBeVisible();
-  expect(requests).toEqual(["Yes", "No"]);
+  expect(requests).toEqual(["Yes", "Yes", "No"]);
 
   // Hold one response while a newer phrase wins. Releasing stale audio must not play it.
   let releaseOld: () => void = () => {};
