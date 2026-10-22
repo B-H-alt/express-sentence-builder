@@ -11,6 +11,10 @@ interface ApiResponse {
   json: (body: unknown) => void;
   setHeader: (name: string, value: string) => void;
   end: (body?: unknown) => void;
+  write: (body: Uint8Array) => boolean;
+  once: (event: string, listener: () => void) => void;
+  off: (event: string, listener: () => void) => void;
+  destroy: () => void;
 }
 
 export const config = {
@@ -46,8 +50,13 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return;
   }
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10_000);
+  const disconnected = () => controller.abort();
+  res.once("close", disconnected);
+  let streaming = false;
   try {
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}`, {
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}/stream`, {
       method: "POST",
       headers: {
         "xi-api-key": apiKey,
@@ -59,7 +68,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         model_id: "eleven_flash_v2_5",
         voice_settings: { stability: 0.5, similarity_boost: 0.75, style: 0, use_speaker_boost: true },
       }),
-      signal: AbortSignal.timeout(10_000),
+      signal: controller.signal,
     });
     if (!response.ok) {
       const body = await response.json().catch(() => null) as { detail?: { status?: unknown } } | null;
@@ -81,15 +90,47 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       res.status(502).json({ error: "Voice response was too large." });
       return;
     }
-    const audio = Buffer.from(await response.arrayBuffer());
-    if (audio.byteLength > 5 * 1024 * 1024) {
-      res.status(502).json({ error: "Voice response was too large." });
-      return;
-    }
+    if (!response.body) throw new Error("Missing audio stream");
     res.setHeader("Content-Type", "audio/mpeg");
-    res.setHeader("Content-Length", String(audio.length));
-    res.status(200).end(audio);
+    res.setHeader("X-Accel-Buffering", "no");
+    res.status(200);
+    const reader = response.body.getReader();
+    let bytes = 0;
+    try {
+      while (true) {
+        controller.signal.throwIfAborted();
+        const { value, done } = await reader.read();
+        controller.signal.throwIfAborted();
+        if (done) break;
+        bytes += value.byteLength;
+        if (bytes > 5 * 1024 * 1024) throw new Error("Audio response too large");
+        streaming = true;
+        if (!res.write(value)) {
+          await new Promise<void>((resolve, reject) => {
+            const cleanup = () => { res.off("drain", drained); controller.signal.removeEventListener("abort", aborted); };
+            const drained = () => { cleanup(); resolve(); };
+            const aborted = () => { cleanup(); reject(new Error("Voice stream aborted")); };
+            if (controller.signal.aborted) { reject(new Error("Voice stream aborted")); return; }
+            res.once("drain", drained);
+            controller.signal.addEventListener("abort", aborted, { once: true });
+          });
+        }
+      }
+      if (!bytes) throw new Error("Empty audio response");
+      res.end();
+    } finally {
+      await reader.cancel().catch(() => {});
+      reader.releaseLock();
+    }
   } catch {
-    res.status(502).json({ error: "Voice service failed." });
+    if (streaming) res.destroy();
+    else {
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
+      res.status(502).json({ error: "Voice service failed." });
+    }
+  } finally {
+    clearTimeout(timeout);
+    controller.abort();
+    res.off("close", disconnected);
   }
 }
