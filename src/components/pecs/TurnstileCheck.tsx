@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { turnstileSiteKey } from "@/lib/captcha";
 
 declare global {
@@ -19,9 +19,11 @@ interface TurnstileCheckProps {
 
 export const TurnstileCheck = ({ onToken, resetKey }: TurnstileCheckProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [status, setStatus] = useState<"checking" | "verified" | "interaction" | "error">("checking");
 
   useEffect(() => {
     if (!turnstileSiteKey || !containerRef.current) return;
+    setStatus("checking");
     let widgetId: string | null = null;
     let cancelled = false;
 
@@ -31,9 +33,11 @@ export const TurnstileCheck = ({ onToken, resetKey }: TurnstileCheckProps) => {
         sitekey: turnstileSiteKey,
         theme: "auto",
         size: "flexible",
-        callback: (token: string) => onToken(token),
-        "expired-callback": () => onToken(""),
-        "error-callback": () => onToken(""),
+        appearance: "interaction-only",
+        callback: (token: string) => { setStatus("verified"); onToken(token); },
+        "before-interactive-callback": () => setStatus("interaction"),
+        "expired-callback": () => { setStatus("checking"); onToken(""); },
+        "error-callback": () => { setStatus("error"); onToken(""); },
       });
     };
 
@@ -49,6 +53,7 @@ export const TurnstileCheck = ({ onToken, resetKey }: TurnstileCheckProps) => {
       script.async = true;
       script.defer = true;
       script.addEventListener("load", render, { once: true });
+      script.addEventListener("error", () => { if (!cancelled) setStatus("error"); }, { once: true });
       document.head.appendChild(script);
     }
 
@@ -62,7 +67,10 @@ export const TurnstileCheck = ({ onToken, resetKey }: TurnstileCheckProps) => {
   if (!turnstileSiteKey) return null;
 
   return (
-    <div className="rounded-xl border border-border bg-muted/25 p-2" aria-label="Security check">
+    <div aria-label="Security check">
+      {status === "checking" && <p role="status" className="text-sm text-foreground/80">Checking security…</p>}
+      {status === "interaction" && <p className="mb-2 text-sm text-foreground/80">Complete this quick security check to continue.</p>}
+      {status === "error" && <p role="status" className="text-sm text-destructive">The security check could not load. Please reload and try again.</p>}
       <div ref={containerRef} />
     </div>
   );

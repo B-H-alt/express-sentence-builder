@@ -10,6 +10,20 @@ export const isCloudAccountConfigured = Boolean(
 
 let clientPromise: Promise<SupabaseClient | null> | null = null;
 
+export type SocialProvider = "google" | "apple";
+
+// Public Auth settings prevent sending users to a disabled provider's error page.
+export const isSocialProviderEnabled = async (provider: SocialProvider) => {
+  if (!isCloudAccountConfigured) return false;
+  const response = await fetch(`${supabaseUrl}/auth/v1/settings`, {
+    headers: { apikey: supabasePublishableKey! },
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!response.ok) throw new Error("Unable to check sign-in availability");
+  const settings: { external?: Partial<Record<SocialProvider, boolean>> } = await response.json();
+  return settings.external?.[provider] === true;
+};
+
 export const getSupabase = async () => {
   if (!isCloudAccountConfigured) return null;
   if (!clientPromise) {

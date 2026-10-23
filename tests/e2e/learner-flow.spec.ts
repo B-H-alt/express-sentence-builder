@@ -57,7 +57,7 @@ test("the signed-out parent account screen exposes the expected safe paths", asy
   await expect(page.getByPlaceholder("Password")).toBeVisible();
   await expect(page.getByRole("button", { name: "Forgot password?" })).toBeVisible();
 
-  await page.getByRole("button", { name: "Sign up" }).click();
+  await page.getByRole("tab", { name: "Create account", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Create your account" })).toBeVisible();
   await expect(page.getByText("I agree to the")).toBeVisible();
   await expect(page.getByRole("link", { name: "Terms of Use" })).toHaveAttribute("href", "/terms");

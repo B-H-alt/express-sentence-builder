@@ -1,9 +1,11 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import type { User } from "@supabase/supabase-js";
-import { AlertTriangle, Cloud, Download, KeyRound, LockKeyhole, LogOut, Mail, ShieldCheck, Trash2 } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
+import { AlertTriangle, Cloud, Download, KeyRound, LockKeyhole, LogOut, Mail, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { getSupabase, isCloudAccountConfigured } from "@/lib/supabase";
+import { getSupabase, isCloudAccountConfigured, isSocialProviderEnabled, type SocialProvider } from "@/lib/supabase";
 import { clearAccountStorage, switchAccountStorage } from "@/lib/accountStorage";
 import { isCaptchaConfigured } from "@/lib/captcha";
 import { TurnstileCheck } from "./TurnstileCheck";
@@ -16,11 +18,12 @@ interface ParentAccountDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-type AccountView = "sign-in" | "sign-up" | "confirm-email" | "forgot" | "reset";
+type AccountView = "sign-in" | "sign-up" | "confirm-email" | "other-methods" | "email-link" | "forgot" | "reset";
 const MIN_PASSWORD_LENGTH = 12;
 const MAX_PASSWORD_LENGTH = 128;
 const PASSWORD_REQUIREMENTS = "Use at least 12 characters with uppercase, lowercase, a number, and a symbol.";
 const ACCOUNT_AGREEMENT_VERSION = "2026-10-11";
+const SOCIAL_AGREEMENT_KEY = "expressly-social-agreement-v1";
 
 const isStrongPassword = (password: string) =>
   password.length >= MIN_PASSWORD_LENGTH &&
@@ -38,6 +41,7 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
   const [user, setUser] = useState<User | null>(null);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [socialProvider, setSocialProvider] = useState<SocialProvider | null>(null);
   const [resetCooldown, setResetCooldown] = useState(0);
   const [confirmationCooldown, setConfirmationCooldown] = useState(0);
   const [confirmationEmail, setConfirmationEmail] = useState("");
@@ -45,15 +49,21 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
   const [captchaToken, setCaptchaToken] = useState("");
   const [captchaResetKey, setCaptchaResetKey] = useState(0);
   const [agreementAccepted, setAgreementAccepted] = useState(false);
+  const [alternateReturnView, setAlternateReturnView] = useState<"sign-in" | "sign-up">("sign-in");
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const loginPending = useRef(false);
+  const messageRef = useRef<HTMLParagraphElement>(null);
   const confirmationTitleRef = useRef<HTMLHeadingElement>(null);
+  const accountTitleRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     if (open && view === "confirm-email") confirmationTitleRef.current?.focus();
   }, [open, view]);
 
+  useEffect(() => {
+    if (message) messageRef.current?.scrollIntoView({ block: "nearest" });
+  }, [message]);
 
   const openSignedInApp = () => window.location.replace(
     ["/caregiver", "/parent"].includes(window.location.pathname)
@@ -63,14 +73,56 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
 
   useEffect(() => {
     if (!isCloudAccountConfigured) return;
+    const callback = new URL(window.location.href);
+    const callbackHash = new URLSearchParams(callback.hash.slice(1));
+    if (callback.searchParams.has("error") || callbackHash.has("error")) {
+      window.sessionStorage.removeItem(SOCIAL_AGREEMENT_KEY);
+      setMessage("Sign-in was not completed. Please try Google or Apple again, or use your email and password.");
+      for (const key of ["error", "error_code", "error_description"]) {
+        callback.searchParams.delete(key);
+        callbackHash.delete(key);
+      }
+      callback.hash = callbackHash.toString();
+      window.history.replaceState(window.history.state, "", callback);
+    }
     let mounted = true;
     let unsubscribe: (() => void) | undefined;
 
     getSupabase().then((supabase) => {
       if (!supabase || !mounted) return;
+      let completingSocialSignIn = false;
+      const completeSocialSignIn = async (nextUser: User) => {
+        if (completingSocialSignIn) return;
+        completingSocialSignIn = true;
+        try {
+          const acceptedAt = window.sessionStorage.getItem(SOCIAL_AGREEMENT_KEY);
+          if (acceptedAt && !nextUser.user_metadata.account_agreement_accepted_at) {
+            const { error } = await supabase.auth.updateUser({
+              data: {
+                account_agreement_version: ACCOUNT_AGREEMENT_VERSION,
+                account_agreement_accepted_at: acceptedAt,
+              },
+            });
+            if (error) throw error;
+          }
+          if (!mounted) return;
+          window.sessionStorage.removeItem(SOCIAL_AGREEMENT_KEY);
+          switchAccountStorage(nextUser.id);
+          openSignedInApp();
+        } catch {
+          if (mounted) {
+            setMessage("You are signed in, but we could not save your account agreement. Please reload to try again.");
+          }
+          completingSocialSignIn = false;
+        }
+      };
       supabase.auth.getUser().then(({ data }) => {
         if (!mounted) return;
         setUser(data.user ?? null);
+        if (data.user && window.sessionStorage.getItem(SOCIAL_AGREEMENT_KEY)) {
+          void completeSocialSignIn(data.user);
+          return;
+        }
         if (switchAccountStorage(data.user?.id ?? null)) {
           if (data.user) openSignedInApp();
           else window.location.reload();
@@ -79,6 +131,14 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
       const { data } = supabase.auth.onAuthStateChange((event, session) => {
         if (!mounted) return;
         setUser(session?.user ?? null);
+        if (event === "SIGNED_IN" && session?.user && window.sessionStorage.getItem(SOCIAL_AGREEMENT_KEY)) {
+          // Supabase calls this listener while holding its Auth lock. Save
+          // agreement metadata after the listener returns, outside that lock.
+          window.setTimeout(() => {
+            if (mounted) void completeSocialSignIn(session.user);
+          }, 0);
+          return;
+        }
         if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
           const accountChanged = switchAccountStorage(session?.user?.id ?? null);
           if (event === "SIGNED_IN" && (accountChanged || loginPending.current)) {
@@ -138,6 +198,48 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
   const resetCaptcha = () => {
     setCaptchaToken("");
     setCaptchaResetKey((value) => value + 1);
+  };
+
+  const handleSocialSignIn = async (provider: SocialProvider) => {
+    if (loading) return;
+    if (!agreementAccepted) {
+      setMessage("Please read and accept the account agreement before continuing.");
+      return;
+    }
+    const name = provider === "google" ? "Google" : "Apple";
+    // The installed shell needs a system-browser flow and a verified app callback.
+    // Do not send Google credentials into an embedded web view or strand the
+    // resulting session in the website instead of signing into the installed app.
+    if (Capacitor.isNativePlatform()) {
+      setMessage(`${name} sign-in for the installed app is not ready yet. Please use email and password here, or visit www.expressly.us in your browser.`);
+      return;
+    }
+    setLoading(true);
+    setSocialProvider(provider);
+    setMessage("");
+    try {
+      const supabase = await getSupabase();
+      if (!supabase) throw new Error("Accounts unavailable");
+      if (!await isSocialProviderEnabled(provider)) {
+        finishRequest(`${name} sign-in is not available yet. Please try another sign-in method.`);
+        return;
+      }
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: getAccountRedirectUrl(),
+          skipBrowserRedirect: true,
+        },
+      });
+      if (error || !data.url) throw new Error("Sign-in unavailable");
+      window.sessionStorage.setItem(SOCIAL_AGREEMENT_KEY, new Date().toISOString());
+      window.location.assign(data.url);
+    } catch {
+      finishRequest(`We could not start ${name} sign-in. Check your connection and try again.`);
+    } finally {
+      setSocialProvider(null);
+      setLoading(false);
+    }
   };
 
   const handlePasswordSubmit = async (event: FormEvent) => {
@@ -389,7 +491,13 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto rounded-2xl border-border/70">
+      <DialogContent
+        className="max-h-[90vh] max-w-md overflow-y-auto rounded-2xl border-border/70"
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+          (confirmationTitleRef.current ?? accountTitleRef.current)?.focus();
+        }}
+      >
         {view === "confirm-email" && !user ? (
           <>
             <DialogHeader className="space-y-4 text-left">
@@ -436,13 +544,14 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
         ) : (
           <>
         <DialogHeader>
-          <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <ShieldCheck className="h-5 w-5" />
-          </div>
-          <DialogTitle>
+          <DialogTitle ref={accountTitleRef} tabIndex={-1} className="text-2xl focus:outline-none">
             {user && view !== "reset"
               ? "Your account"
-              : view === "sign-up"
+              : view === "other-methods"
+                ? "Other ways to continue"
+                : view === "email-link"
+                  ? "Sign in with an email link"
+                  : view === "sign-up"
                 ? "Create your account"
                 : view === "forgot"
                   ? "Reset your password"
@@ -450,15 +559,26 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
                     ? "Choose a new password"
                     : "Sign in to Expressly"}
           </DialogTitle>
-          <DialogDescription>
-            {view === "sign-up"
-              ? "Create a secure parent account for protected Expressly features."
-              : view === "forgot" || view === "reset"
-                ? "We’ll help you get back into your account."
-                : "Access protected parent and communication features."}
+          <DialogDescription className="text-base text-foreground/80">
+            {user && view !== "reset"
+              ? "Manage your Expressly account."
+              : view === "sign-up"
+              ? "For parents and caregivers. The learner does not need an email."
+              : view === "other-methods"
+                ? "Choose how you want to continue."
+                : view === "email-link"
+                  ? "We’ll email you a link that signs you in. No password needed. You must already have an account."
+                  : view === "forgot" || view === "reset"
+                    ? "We’ll help you get back into your account."
+                    : "Welcome back. Enter your email and password."}
           </DialogDescription>
         </DialogHeader>
 
+        {message && (
+          <p ref={messageRef} role="status" className="rounded-xl bg-muted px-3 py-2 text-sm text-foreground">
+            {message}
+          </p>
+        )}
         {!isCloudAccountConfigured ? (
           <div className="rounded-xl border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
             Cloud accounts are not configured on this version of Expressly.
@@ -530,10 +650,59 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
               </div>
             )}
           </div>
+        ) : view === "other-methods" ? (
+          <div className="space-y-5">
+            <div className="space-y-3">
+              <AccountAgreement accepted={agreementAccepted} onAcceptedChange={setAgreementAccepted} />
+              <Button
+                type="button"
+                className="h-11 w-full border border-[#747775] bg-white font-medium text-[#1f1f1f] hover:bg-[#f2f2f2]"
+                onClick={() => handleSocialSignIn("google")}
+                disabled={loading || !agreementAccepted}
+              >
+                <img src="/auth/google.png" alt="" className="h-5 w-5" />
+                {socialProvider === "google" ? "Connecting to Google…" : "Continue with Google"}
+              </Button>
+              <Button
+                type="button"
+                className="h-11 w-full overflow-hidden bg-black p-0 text-white hover:bg-black/90"
+                onClick={() => handleSocialSignIn("apple")}
+                disabled={loading || !agreementAccepted}
+                aria-label={socialProvider === "apple" ? "Connecting to Apple" : "Continue with Apple"}
+              >
+                {socialProvider === "apple"
+                  ? "Connecting to Apple…"
+                  : <img src="/auth/apple-continue.png" alt="" className="h-11 max-w-full object-contain" />}
+              </Button>
+            </div>
+            {alternateReturnView === "sign-in" && (
+              <Button variant="outline" className="min-h-11 w-full" onClick={() => changeView("email-link")} disabled={loading}>
+                <KeyRound className="mr-2 h-4 w-4" />
+                Sign in without a password
+              </Button>
+            )}
+            <div className="text-center">
+              <TextButton onClick={() => { if (!loading) changeView(alternateReturnView); }}>Back to email and password</TextButton>
+            </div>
+          </div>
+        ) : view === "email-link" ? (
+          <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); void handleMagicLink(); }}>
+            <div className="space-y-2">
+              <FieldLabel htmlFor="account-email">Email</FieldLabel>
+              <EmailField email={email} setEmail={setEmail} />
+            </div>
+            <TurnstileCheck onToken={setCaptchaToken} resetKey={captchaResetKey} />
+            <Button type="submit" className="min-h-11 w-full" disabled={loading || (isCaptchaConfigured && !captchaToken)}>
+              {loading ? "Sending…" : "Send sign-in link"}
+            </Button>
+            <div className="text-center">
+              <TextButton onClick={() => changeView("sign-in")}>Back to sign in</TextButton>
+            </div>
+          </form>
         ) : view === "forgot" ? (
           <form className="space-y-4" onSubmit={handleForgotPassword}>
             <div className="space-y-2">
-              <FieldLabel>Email</FieldLabel>
+              <FieldLabel htmlFor="account-email">Email</FieldLabel>
               <EmailField email={email} setEmail={setEmail} />
             </div>
             <TurnstileCheck onToken={setCaptchaToken} resetKey={captchaResetKey} />
@@ -566,67 +735,48 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
             </Button>
           </form>
         ) : (
-          <form className="space-y-4" onSubmit={handlePasswordSubmit}>
-            <div className="space-y-2">
-              <FieldLabel>Email</FieldLabel>
-              <EmailField email={email} setEmail={setEmail} />
-            </div>
-            <PasswordFields
-              password={password}
-              confirmPassword={confirmPassword}
-              setPassword={setPassword}
-              setConfirmPassword={setConfirmPassword}
-              includeConfirmation={view === "sign-up"}
-            />
-            {view === "sign-up" && (
-              <AccountAgreement accepted={agreementAccepted} onAcceptedChange={setAgreementAccepted} />
-            )}
-            <TurnstileCheck onToken={setCaptchaToken} resetKey={captchaResetKey} />
-            <Button
-              className="w-full"
-              type="submit"
-              disabled={loading || (view === "sign-up" && !agreementAccepted) || (isCaptchaConfigured && !captchaToken)}
-            >
-              {loading ? "Please wait…" : view === "sign-up" ? "Create parent account" : "Sign in"}
-            </Button>
-            {view === "sign-in" && (
-              <div className="space-y-3 text-center">
-                <TextButton onClick={() => changeView("forgot")}>Forgot password?</TextButton>
-                <div className="flex items-center gap-3 text-xs text-muted-foreground before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
-                  or
+          <Tabs value={view} onValueChange={(nextView) => changeView(nextView as AccountView)}>
+            <TabsList className="mb-4 grid h-12 w-full grid-cols-2 text-foreground/80" aria-label="Account access">
+              <TabsTrigger className="h-10 text-base" value="sign-in" disabled={loading}>Sign in</TabsTrigger>
+              <TabsTrigger className="h-10 text-base" value="sign-up" disabled={loading}>Create account</TabsTrigger>
+            </TabsList>
+            <TabsContent value={view} tabIndex={-1} className="mt-0">
+              <form className="space-y-4" onSubmit={handlePasswordSubmit}>
+                <div className="space-y-2">
+                  <FieldLabel htmlFor="account-email">Email</FieldLabel>
+                  <EmailField email={email} setEmail={setEmail} />
                 </div>
+                <PasswordFields
+                  password={password}
+                  confirmPassword={confirmPassword}
+                  setPassword={setPassword}
+                  setConfirmPassword={setConfirmPassword}
+                  includeConfirmation={view === "sign-up"}
+                />
+                {view === "sign-up" && <AccountAgreement accepted={agreementAccepted} onAcceptedChange={setAgreementAccepted} />}
+                <TurnstileCheck onToken={setCaptchaToken} resetKey={captchaResetKey} />
                 <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={handleMagicLink}
-                  disabled={loading || (isCaptchaConfigured && !captchaToken)}
+                  className="min-h-11 w-full"
+                  type="submit"
+                  disabled={loading || (view === "sign-up" && !agreementAccepted) || (isCaptchaConfigured && !captchaToken)}
                 >
-                  <KeyRound className="mr-2 h-4 w-4" />
-                  Email me a sign-in link
+                  {loading ? "Please wait…" : view === "sign-up" ? "Create parent account" : "Sign in"}
                 </Button>
+                {view === "sign-in" && (
+                  <div className="text-center">
+                    <TextButton onClick={() => changeView("forgot")}>Forgot password?</TextButton>
+                  </div>
+                )}
+              </form>
+              <div className="mt-5 border-t border-border pt-4 text-center">
+                <TextButton onClick={() => {
+                  if (loading) return;
+                  setAlternateReturnView(view === "sign-up" ? "sign-up" : "sign-in");
+                  changeView("other-methods");
+                }}>Other ways to continue</TextButton>
               </div>
-            )}
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              This account belongs to the parent or caregiver. The learner does not need an email.
-            </p>
-            <p className="text-center text-sm text-muted-foreground">
-              {view === "sign-up" ? "Already have an account? " : "Don’t have an account? "}
-              <button
-                type="button"
-                onClick={() => changeView(view === "sign-up" ? "sign-in" : "sign-up")}
-                className="font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                {view === "sign-up" ? "Sign in" : "Sign up"}
-              </button>
-            </p>
-          </form>
-        )}
-
-        {message && (
-          <p role="status" className="rounded-xl bg-muted px-3 py-2 text-sm text-foreground">
-            {message}
-          </p>
+            </TabsContent>
+          </Tabs>
         )}
           </>
         )}
@@ -635,21 +785,22 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
   );
 };
 
-const FieldLabel = ({ children }: { children: string }) => (
-  <label className="text-sm font-medium">{children}</label>
+const FieldLabel = ({ children, htmlFor }: { children: string; htmlFor?: string }) => (
+  <label htmlFor={htmlFor} className="text-sm font-medium">{children}</label>
 );
 
 const EmailField = ({ email, setEmail }: { email: string; setEmail: (value: string) => void }) => (
   <div className="relative">
     <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
     <input
+      id="account-email"
       type="email"
       autoComplete="email"
       required
       value={email}
       onChange={(event) => setEmail(event.target.value)}
       placeholder="parent@example.com"
-      className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-sm outline-none ring-offset-background focus:ring-2 focus:ring-ring"
+      className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-base outline-none ring-offset-background focus:ring-2 focus:ring-ring"
     />
   </div>
 );
@@ -663,10 +814,11 @@ const PasswordFields = ({ password, confirmPassword, setPassword, setConfirmPass
 }) => (
   <div className="space-y-3">
     <div className="space-y-2">
-      <FieldLabel>Password</FieldLabel>
+      <FieldLabel htmlFor="account-password">Password</FieldLabel>
       <div className="relative">
         <LockKeyhole className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <input
+          id="account-password"
           type="password"
           autoComplete={includeConfirmation ? "new-password" : "current-password"}
           required
@@ -675,7 +827,7 @@ const PasswordFields = ({ password, confirmPassword, setPassword, setConfirmPass
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder={includeConfirmation ? `At least ${MIN_PASSWORD_LENGTH} characters` : "Password"}
-          className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-sm outline-none ring-offset-background focus:ring-2 focus:ring-ring"
+          className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-base outline-none ring-offset-background focus:ring-2 focus:ring-ring"
         />
       </div>
       {includeConfirmation && (
@@ -686,10 +838,11 @@ const PasswordFields = ({ password, confirmPassword, setPassword, setConfirmPass
     </div>
     {includeConfirmation && (
       <div className="space-y-2">
-        <FieldLabel>Confirm password</FieldLabel>
+        <FieldLabel htmlFor="account-password-confirm">Confirm password</FieldLabel>
         <div className="relative">
           <LockKeyhole className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
+            id="account-password-confirm"
             type="password"
             autoComplete="new-password"
             required
@@ -698,7 +851,7 @@ const PasswordFields = ({ password, confirmPassword, setPassword, setConfirmPass
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
             placeholder="Enter it again"
-            className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-sm outline-none ring-offset-background focus:ring-2 focus:ring-ring"
+            className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-base outline-none ring-offset-background focus:ring-2 focus:ring-ring"
           />
         </div>
       </div>
