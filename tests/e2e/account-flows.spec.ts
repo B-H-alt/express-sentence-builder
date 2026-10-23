@@ -25,10 +25,80 @@ test("sign-up requires agreement and sends the confirmation redirect", async ({ 
   await expect(submit).toBeDisabled();
   await page.locator("#account-agreement").check();
   await submit.click();
-  await expect(page.getByRole("status")).toContainText("Check your email");
+  await expect(page.getByRole("heading", { name: "Account created", exact: true })).toBeVisible();
+  await expect(page.getByRole("dialog")).toContainText("Check your email to confirm your account");
+  await expect(page.getByRole("dialog")).toContainText("test@example.com");
+  await expect(page.getByPlaceholder("Enter it again")).toHaveCount(0);
+  await expect(page.getByRole("dialog").locator("form")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Continue with Google", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Resend email in/ })).toBeDisabled();
+  await expect(page.getByRole("heading", { name: "Account created", exact: true })).toBeFocused();
+  await page.screenshot({ path: `artifacts/signup-confirmation-${test.info().project.name}.png` });
   expect(payload.email).toBe("test@example.com");
   expect(payload.data).toMatchObject({ account_agreement_version: "2026-10-11" });
   expect(new URL(requestUrl).searchParams.get("redirect_to")).toMatch(/\/pecs-app\?account=sign-in$/);
+});
+
+test("confirmation resend handles delivery errors and allows a retry", async ({ page }) => {
+  await page.route("**/auth/v1/signup**", route => route.fulfill({ json: { user: { id: "signup-test", email: "test@example.com" }, session: null } }));
+  let resendCount = 0;
+  await page.route("**/auth/v1/resend**", route => {
+    resendCount++;
+    const payload = route.request().postDataJSON();
+    expect(payload.email).toBe("test@example.com");
+    expect(payload.type).toBe("signup");
+    expect(new URL(route.request().url()).searchParams.get("redirect_to")).toMatch(/\/pecs-app\?account=sign-in$/);
+    return resendCount === 1
+      ? route.fulfill({ status: 500, json: { msg: "Error sending confirmation email" } })
+      : route.fulfill({ json: {} });
+  });
+  await openAccount(page);
+  await page.clock.install();
+  await page.getByRole("button", { name: "Sign up", exact: true }).click();
+  await page.getByPlaceholder("parent@example.com").fill("test@example.com");
+  await page.getByPlaceholder("At least 12 characters", { exact: true }).fill("Test-password-123!");
+  await page.getByPlaceholder("Enter it again").fill("Test-password-123!");
+  await page.locator("#account-agreement").check();
+  await page.getByRole("button", { name: "Create parent account", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Account created", exact: true })).toBeVisible();
+  await page.clock.runFor(61_000);
+  await page.getByRole("button", { name: "Resend confirmation email", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("We could not resend the email");
+  await page.getByRole("button", { name: "Resend confirmation email", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("Confirmation email requested");
+  expect(resendCount).toBe(2);
+  await page.getByRole("button", { name: "Back to sign in", exact: true }).click();
+  await expect(page.getByPlaceholder("parent@example.com")).toHaveValue("test@example.com");
+  await expect(page.getByPlaceholder("Password", { exact: true })).toHaveValue("");
+});
+
+test("failed signup does not show a successful confirmation screen", async ({ page }) => {
+  await page.route("**/auth/v1/signup**", route => route.fulfill({ status: 500, json: { msg: "Error sending confirmation email" } }));
+  await openAccount(page);
+  await page.getByRole("button", { name: "Sign up", exact: true }).click();
+  await page.getByPlaceholder("parent@example.com").fill("test@example.com");
+  await page.getByPlaceholder("At least 12 characters", { exact: true }).fill("Test-password-123!");
+  await page.getByPlaceholder("Enter it again").fill("Test-password-123!");
+  await page.locator("#account-agreement").check();
+  await page.getByRole("button", { name: "Create parent account", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("We could not create your account or send the confirmation email");
+  await expect(page.getByRole("heading", { name: "Account created", exact: true })).toHaveCount(0);
+});
+
+test("an obscured repeat signup offers sign-in without claiming a new account", async ({ page }) => {
+  await page.route("**/auth/v1/signup**", route => route.fulfill({ json: { user: { id: "obscured", email: "test@example.com", identities: [] }, session: null } }));
+  await openAccount(page);
+  await page.getByRole("button", { name: "Sign up", exact: true }).click();
+  await page.getByPlaceholder("parent@example.com").fill("test@example.com");
+  await page.getByPlaceholder("At least 12 characters", { exact: true }).fill("Test-password-123!");
+  await page.getByPlaceholder("Enter it again").fill("Test-password-123!");
+  await page.locator("#account-agreement").check();
+  await page.getByRole("button", { name: "Create parent account", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Check your email or sign in", exact: true })).toBeVisible();
+  await expect(page.getByRole("dialog")).not.toContainText("Check your email to confirm your account");
+  await page.getByRole("button", { name: "Back to sign in", exact: true }).click();
+  await page.getByRole("button", { name: "Forgot password?", exact: true }).click();
+  await expect(page.getByPlaceholder("parent@example.com")).toHaveValue("test@example.com");
 });
 
 test("incorrect password leaves a clear message and permits retry", async ({ page }) => {

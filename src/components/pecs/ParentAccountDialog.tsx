@@ -16,7 +16,7 @@ interface ParentAccountDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-type AccountView = "sign-in" | "sign-up" | "forgot" | "reset";
+type AccountView = "sign-in" | "sign-up" | "confirm-email" | "forgot" | "reset";
 const MIN_PASSWORD_LENGTH = 12;
 const MAX_PASSWORD_LENGTH = 128;
 const PASSWORD_REQUIREMENTS = "Use at least 12 characters with uppercase, lowercase, a number, and a symbol.";
@@ -39,12 +39,21 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [resetCooldown, setResetCooldown] = useState(0);
+  const [confirmationCooldown, setConfirmationCooldown] = useState(0);
+  const [confirmationEmail, setConfirmationEmail] = useState("");
+  const [signupMayExist, setSignupMayExist] = useState(false);
   const [captchaToken, setCaptchaToken] = useState("");
   const [captchaResetKey, setCaptchaResetKey] = useState(0);
   const [agreementAccepted, setAgreementAccepted] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const loginPending = useRef(false);
+  const confirmationTitleRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    if (open && view === "confirm-email") confirmationTitleRef.current?.focus();
+  }, [open, view]);
+
 
   const openSignedInApp = () => window.location.replace(
     ["/caregiver", "/parent"].includes(window.location.pathname)
@@ -102,6 +111,14 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
     }, 1000);
     return () => window.clearInterval(timer);
   }, [resetCooldown]);
+
+  useEffect(() => {
+    if (confirmationCooldown <= 0) return;
+    const timer = window.setInterval(() => {
+      setConfirmationCooldown((seconds) => Math.max(0, seconds - 1));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [confirmationCooldown]);
 
   const finishRequest = (nextMessage: string) => {
     setMessage(nextMessage);
@@ -168,12 +185,20 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
       setPassword("");
       setConfirmPassword("");
       if (error) {
-        finishRequest("We could not create the account. Check your information or try again later.");
+        finishRequest(error.status === 429
+          ? "Too many attempts. Please wait a minute before trying again."
+          : "We could not create your account or send the confirmation email. Please try again in a moment.");
         return;
       }
-      finishRequest(data.session
-        ? "Account created. You are signed in."
-        : "Account created. Check your email to confirm it before signing in.");
+      if (data.session) {
+        finishRequest("Account created. You are signed in.");
+      } else {
+        setConfirmationEmail(address);
+        setSignupMayExist(data.user?.identities?.length === 0);
+        setConfirmationCooldown(60);
+        setView("confirm-email");
+        finishRequest("");
+      }
       return;
     }
 
@@ -191,6 +216,37 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
     }
     loginPending.current = false;
     finishRequest(error ? "The email or password is incorrect." : "Signed in securely.");
+  };
+
+  const handleResendConfirmation = async () => {
+    if (loading || confirmationCooldown > 0) return;
+    setLoading(true);
+    setMessage("");
+    try {
+      const supabase = await getSupabase();
+      if (!supabase) throw new Error("Accounts unavailable");
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: confirmationEmail,
+        options: {
+          emailRedirectTo: getAccountRedirectUrl(),
+          captchaToken: captchaToken || undefined,
+        },
+      });
+      resetCaptcha();
+      if (error) {
+        if (error.status === 429) setConfirmationCooldown(60);
+        finishRequest(error.status === 429
+          ? "Please wait a minute before requesting another confirmation email."
+          : "We could not resend the email. Please try again in a moment.");
+        return;
+      }
+      setConfirmationCooldown(60);
+      finishRequest("Confirmation email requested. Check your inbox and spam folder. If you already confirmed this email, sign in instead.");
+    } catch {
+      resetCaptcha();
+      finishRequest("We could not reach the email service. Check your connection and try again.");
+    }
   };
 
   const handleMagicLink = async () => {
@@ -334,6 +390,51 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto rounded-2xl border-border/70">
+        {view === "confirm-email" && !user ? (
+          <>
+            <DialogHeader className="space-y-4 text-left">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Mail className="h-6 w-6" aria-hidden="true" />
+              </div>
+              <DialogTitle ref={confirmationTitleRef} tabIndex={-1} className="text-2xl leading-tight focus:outline-none">
+                {signupMayExist ? "Check your email or sign in" : "Account created"}
+              </DialogTitle>
+              <DialogDescription className="text-base leading-relaxed text-foreground">
+                {signupMayExist
+                  ? "If you have used this email before, sign in or reset your password. For a new account, check your email for a confirmation link."
+                  : "Check your email to confirm your account. Open the confirmation message and select the link before signing in."}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-5">
+              <p className="break-words rounded-xl bg-muted px-4 py-3 text-base font-medium">{confirmationEmail}</p>
+              <p className="text-sm leading-relaxed text-foreground/80">
+                Look for an email from Expressly. It may take a few minutes. Check your spam or junk folder, too.
+              </p>
+              {message && <p role="status" className="rounded-xl bg-muted px-4 py-3 text-sm">{message}</p>}
+              <TurnstileCheck onToken={setCaptchaToken} resetKey={captchaResetKey} />
+              <div className="space-y-3">
+                <Button className="min-h-11 w-full" onClick={() => changeView("sign-in")} disabled={loading}>
+                  Back to sign in
+                </Button>
+                <Button
+                  variant="outline"
+                  className="min-h-11 w-full"
+                  onClick={handleResendConfirmation}
+                  disabled={loading || confirmationCooldown > 0 || (isCaptchaConfigured && !captchaToken)}
+                >
+                  {loading ? "Sending…" : confirmationCooldown > 0 ? `Resend email in ${confirmationCooldown}s` : "Resend confirmation email"}
+                </Button>
+                <div className="text-center">
+                  <TextButton onClick={() => { if (!loading) changeView("sign-up"); }}>Use a different email</TextButton>
+                </div>
+              </div>
+              <p className="text-sm leading-relaxed text-foreground/80">
+                Already have an account with this email? Sign in or reset your password instead.
+              </p>
+            </div>
+          </>
+        ) : (
+          <>
         <DialogHeader>
           <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <ShieldCheck className="h-5 w-5" />
@@ -526,6 +627,8 @@ export const ParentAccountDialog = ({ open, onOpenChange }: ParentAccountDialogP
           <p role="status" className="rounded-xl bg-muted px-3 py-2 text-sm text-foreground">
             {message}
           </p>
+        )}
+          </>
         )}
       </DialogContent>
     </Dialog>
